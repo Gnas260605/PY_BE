@@ -1,0 +1,35 @@
+# Virtual environments
+.venv/
+backend/.venv/
+env/
+venv/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Testing & Coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local Environment Secrets (NEVER COMMIT)
+.env
+**/.env
+backend/.env
+
+# Local runtime logs
+*.log
+backend/*.log
+
+# Temporary test artifacts
+backend/role_recheck_summary.json
+
+# Keep test results evidence markdown
+!tests/results/*.md
+!tests/results/.gitkeep

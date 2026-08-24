@@ -1,0 +1,558 @@
+{
+	"info": {
+		"_postman_id": "cs466-helpdesk-api-collection",
+		"name": "CS466 Helpdesk API Collection (Role-based)",
+		"description": "Bộ Collection kiểm thử toàn diện 19 API hệ thống CS466 theo phân quyền 3 vai trò: ADMIN, TECHNICIAN, USER.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tech_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_user_id",
+			"value": "4",
+			"type": "string"
+		},
+		{
+			"key": "created_device_id",
+			"value": "4",
+			"type": "string"
+		},
+		{
+			"key": "created_ticket_id",
+			"value": "2",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "01. Public & Auth",
+			"item": [
+				{
+					"name": "GET Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "POST Login - ADMIN",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('admin_token', data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"CS466@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "POST Login - TECHNICIAN",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('tech_token', data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"tech01\",\n  \"password\": \"CS466@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "POST Login - USER",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('user_token', data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user01\",\n  \"password\": \"CS466@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "POST Login - Sai Password (Expect 401)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"WrongPass\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "02. Role ADMIN",
+			"item": [
+				{
+					"name": "GET Danh sách Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users?role=USER&status=ACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{"key": "role", "value": "USER"},
+								{"key": "status", "value": "ACTIVE"}
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Tạo User Mới",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('created_user_id', data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user02\",\n  \"password\": \"CS466@123\",\n  \"ho_ten\": \"Nguyen Van B\",\n  \"email\": \"user02@cs466.local\",\n  \"vai_tro\": \"USER\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "GET Chi tiết User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{created_user_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{created_user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Cập nhật User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ho_ten\": \"Nguyen Van B (Updated)\",\n  \"email\": \"vanb_new@cs466.local\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{created_user_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{created_user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Vô hiệu hóa User (INACTIVE)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"INACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{created_user_id}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{created_user_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Kích hoạt lại User (ACTIVE)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{created_user_id}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "{{created_user_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "POST Thêm Thiết bị mới",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('created_device_id', data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_thiet_bi\": \"PC-002\",\n  \"ten_thiet_bi\": \"May tinh Marketing\",\n  \"loai_thiet_bi\": \"COMPUTER\",\n  \"vi_tri\": \"Phong Marketing\",\n  \"trang_thai\": \"ACTIVE\",\n  \"mo_ta\": \"Dell Optiplex i7\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["devices"]
+						}
+					}
+				},
+				{
+					"name": "GET Danh sách Thiết bị (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["devices"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Gán Kỹ thuật viên cho Ticket",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"technician_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/assign",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "assign"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "03. Role USER",
+			"item": [
+				{
+					"name": "POST Tạo Ticket mới",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const data = pm.response.json();",
+									"    pm.collectionVariables.set('created_ticket_id', data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{user_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Man hinh PC-001 khong len nguon\",\n  \"description\": \"Bat nguon man hinh nhung khong len tin hieu.\",\n  \"device_id\": 1,\n  \"category\": \"INCIDENT\",\n  \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets"]
+						}
+					}
+				},
+				{
+					"name": "GET Danh sách Ticket của tôi",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets"]
+						}
+					}
+				},
+				{
+					"name": "GET Chi tiết Ticket",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}"]
+						}
+					}
+				},
+				{
+					"name": "GET Lịch sử xử lý Ticket",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/history",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "history"]
+						}
+					}
+				},
+				{
+					"name": "SECURITY TEST: User truy cập Users (Expect 403)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "04. Role TECHNICIAN",
+			"item": [
+				{
+					"name": "GET Danh sách Ticket được phân công",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{tech_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tickets?status=ASSIGNED",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets"],
+							"query": [
+								{"key": "status", "value": "ASSIGNED"}
+							]
+						}
+					}
+				},
+				{
+					"name": "PATCH Đổi trạng thái sang IN_PROGRESS",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Đổi trạng thái sang RESOLVED",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"RESOLVED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "PATCH Đóng Ticket (CLOSE)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"note\": \"Da thay adapter nguon man hinh moi, hoat dong on dinh.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/close",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "close"]
+						}
+					}
+				},
+				{
+					"name": "GET Kiểm tra Full Lịch sử sau khi Đóng",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{tech_token}}"}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/history",
+							"host": ["{{baseUrl}}"],
+							"path": ["tickets", "{{created_ticket_id}}", "history"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
