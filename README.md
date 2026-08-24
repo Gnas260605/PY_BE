@@ -1,58 +1,103 @@
-# CS466 - Nhóm 1: Hệ Thống Quản Lý Bảo Trì & Yêu Cầu Dịch Vụ CNTT
+# CS466 Helpdesk Project
 
-Repository chính thức chứa toàn bộ mã nguồn Backend, Cơ sở dữ liệu, Frontend, Kịch bản kiểm thử (Tests), Postman Collection và Tài liệu tích hợp của Nhóm 1 - Môn CS466.
+Monorepo cho nhom CS466 gom backend FastAPI, database MySQL, frontend web, Postman collection, test evidence, va tai lieu tich hop.
 
-📖 **Tài liệu hướng dẫn chi tiết:** Xem file **[HUONG_DAN_CHAY_DU_AN.md](file:///d:/Individua_Project/Python_Project/HUONG_DAN_CHAY_DU_AN.md)** để biết cách cấu hình database, đổi mật khẩu MySQL và chạy dự án cho từng vai trò.
+## Current backend status
 
----
+- Backend contract da khoa va da pass 19/19 API regression.
+- Auth dung JWT Bearer (`HS256`) voi secret doc tu environment.
+- Khong dung hard-coded JWT secret.
+- Login response contract:
 
-## 📁 Cấu trúc Thư mục Dự án
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "ho_ten": "System Administrator",
+    "email": "admin@cs466.local",
+    "vai_tro": "ADMIN",
+    "trang_thai": "ACTIVE"
+  }
+}
+```
 
-- `backend/`: Mã nguồn Backend Python FastAPI (19 RESTful APIs chuẩn, xác thực JWT, RBAC).
-- `database/`: Cấu trúc bảng (`schema.sql`), dữ liệu mẫu (`seed.sql`), và tài liệu đặc tả DB.
-- `frontend/`: Giao diện web người dùng, mã nguồn JavaScript ([api.js](file:///d:/Individua_Project/Python_Project/frontend/js/api.js)), và tài liệu [API_INTEGRATION_GUIDE.md](file:///d:/Individua_Project/Python_Project/frontend/API_INTEGRATION_GUIDE.md).
-- `tests/`: Kịch bản kiểm thử tự động toàn bộ 19 API theo 3 vai trò ([run_role_based_tests.py](file:///d:/Individua_Project/Python_Project/tests/run_role_based_tests.py)) và báo cáo kết quả ([tests/results/](file:///d:/Individua_Project/Python_Project/tests/results/)).
-- `postman/`: Bộ sưu tập [CS466_Helpdesk_Postman_Collection.json](file:///d:/Individua_Project/Python_Project/postman/CS466_Helpdesk_Postman_Collection.json) và hướng dẫn test [POSTMAN_TEST_GUIDE.md](file:///d:/Individua_Project/Python_Project/postman/POSTMAN_TEST_GUIDE.md).
-- `perl/`: Scripts và báo cáo phân tích Log định dạng chuẩn.
-- `docs/`: Đặc tả hợp đồng API (`api-contract.md`), kiến trúc (`architecture.md`), định dạng log (`log-format.md`).
+## Repo layout
 
----
+- `backend/` FastAPI app va modules auth, users, devices, tickets.
+- `database/` SQL schema va seed data. Khong sua schema neu task khong thuoc owner DB.
+- `frontend/` web client va tai lieu tich hop API.
+- `postman/` collection va huong dan test theo role.
+- `tests/` script regression va markdown evidence.
+- `docs/` API contract, log format, va tai lieu bo tro.
 
-## ⚡ Khởi chạy nhanh Backend (Quick Start)
+## Environment convention
 
-### 1. Cấu hình file `.env`
-Tạo file `.env` từ `.env.example` và điền mật khẩu MySQL của bạn:
+Dung `root/.env` lam nguon cau hinh chinh cho Docker Compose.
+
+Backend cung ho tro doc `backend/.env` khi chay local bang `uvicorn`, nhung hai file nay phai dong bo gia tri.
+
+Bat buoc cung cap:
+
+- `MYSQL_HOST`
+- `MYSQL_PORT`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `JWT_SECRET_KEY`
+- `JWT_ALGORITHM=HS256`
+- `JWT_EXPIRE_MINUTES=480`
+
+Khoi tao nhanh:
+
 ```powershell
 Copy-Item .env.example .env
 Copy-Item .env.example backend/.env
 ```
 
-### 2. Khởi tạo Cơ sở dữ liệu
-Nạp 2 file SQL vào MySQL:
+Sau do cap nhat gia tri local trong 2 file `.env`:
+
+- `MYSQL_PASSWORD`
+- `JWT_SECRET_KEY`
+- cac bien MySQL khac neu may local khong dung `127.0.0.1:3306/root`
+
+Khong commit secret that vao repo.
+
+## Database setup
+
 ```powershell
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS cs466_helpdesk;"
 mysql -u root -p cs466_helpdesk < database/schema.sql
 mysql -u root -p cs466_helpdesk < database/seed.sql
 ```
 
-### 3. Chạy Backend Server
+## Run backend locally
+
 ```powershell
-cd backend
+Set-Location backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-- **Health check:** `http://127.0.0.1:8000/api/health`
-- **Tài liệu Swagger UI tương tác:** `http://127.0.0.1:8000/docs`
+Smoke endpoints:
 
----
+- Health: `http://127.0.0.1:8000/api/health`
+- Swagger: `http://127.0.0.1:8000/docs`
 
-## 🎨 Dành cho Lập trình viên Frontend (FE)
-- **Tài liệu API chi tiết:** Xem [frontend/API_INTEGRATION_GUIDE.md](file:///d:/Individua_Project/Python_Project/frontend/API_INTEGRATION_GUIDE.md)
-- **Tài khoản demo:**
-  - Quản trị viên: `admin` / `CS466@123` (Role: `ADMIN`)
-  - Kỹ thuật viên: `tech01` / `CS466@123` (Role: `TECHNICIAN`)
-  - Người dùng: `user01` / `CS466@123` (Role: `USER`)
-- **Module JavaScript có sẵn:** `frontend/js/api.js`
+## Demo accounts from seed data
+
+- `admin / CS466@123`
+- `tech01 / CS466@123`
+- `user01 / CS466@123`
+
+## Team handoff references
+
+- API contract: [docs/api-contract.md](/D:/Individua_Project/Python_Project/docs/api-contract.md)
+- Log format: [docs/log-format.md](/D:/Individua_Project/Python_Project/docs/log-format.md)
+- Backend guide: [backend/README.md](/D:/Individua_Project/Python_Project/backend/README.md)
+- Frontend guide: [frontend/API_INTEGRATION_GUIDE.md](/D:/Individua_Project/Python_Project/frontend/API_INTEGRATION_GUIDE.md)
+- Postman guide: [postman/POSTMAN_TEST_GUIDE.md](/D:/Individua_Project/Python_Project/postman/POSTMAN_TEST_GUIDE.md)

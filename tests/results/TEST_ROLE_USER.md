@@ -1,5 +1,5 @@
 # KẾT QUẢ KIỂM THỬ API CHI TIẾT — VAI TRÒ: USER
-> **Thời gian chạy:** 2026-08-24 13:07:27  
+> **Thời gian chạy:** 2026-08-24 13:59:00  
 > **Môi trường:** Local FastAPI (Python 3.12 + MySQL 8.0)  
 > **Tổng số test cases:** 9 | **Thành công:** 9 | **Thất bại:** 0  
 > **Đánh giá tổng thể:** **`PASSED`**
@@ -10,15 +10,15 @@
 
 | ID | Tên kịch bản | Method | Endpoint | Expected | Actual | Thời gian | Trạng thái |
 |:---|:---|:---:|:---|:---:|:---:|:---:|:---:|
-| `USR-01` | Đăng nhập USER thành công | `POST` | `/api/login` | `200` | `200` | 223.71ms | ✅ PASS |
-| `USR-02` | User tạo Ticket yêu cầu hỗ trợ mới | `POST` | `/api/tickets` | `201` | `201` | 17.21ms | ✅ PASS |
+| `USR-01` | Đăng nhập USER thành công | `POST` | `/api/login` | `200` | `200` | 250.66ms | ✅ PASS |
+| `USR-02` | User tạo Ticket yêu cầu hỗ trợ mới | `POST` | `/api/tickets` | `201` | `201` | 16.71ms | ✅ PASS |
 | `USR-03` | User xem danh sách Ticket của mình | `GET` | `/api/tickets` | `200` | `200` | 13.24ms | ✅ PASS |
-| `USR-04` | User xem chi tiết Ticket của mình | `GET` | `/api/tickets/2` | `200` | `200` | 13.14ms | ✅ PASS |
-| `USR-05` | User chỉnh sửa thông tin Ticket | `PATCH` | `/api/tickets/2` | `200` | `200` | 24.32ms | ✅ PASS |
-| `USR-06` | User xem lịch sử xử lý Ticket | `GET` | `/api/tickets/2/history` | `200` | `200` | 18.88ms | ✅ PASS |
-| `USR-07` | Security: User truy cập Quản lý Users (Expect 403) | `GET` | `/api/users` | `403` | `403` | 10.41ms | ✅ PASS |
-| `USR-08` | Security: User thêm Thiết bị mới (Expect 403) | `POST` | `/api/devices` | `403` | `403` | 10.74ms | ✅ PASS |
-| `USR-09` | Security: User gán Kỹ thuật viên (Expect 403) | `PATCH` | `/api/tickets/2/assign` | `403` | `403` | 10.23ms | ✅ PASS |
+| `USR-04` | User xem chi tiết Ticket của mình | `GET` | `/api/tickets/2` | `200` | `200` | 12.07ms | ✅ PASS |
+| `USR-05` | User chỉnh sửa thông tin Ticket | `PATCH` | `/api/tickets/2` | `200` | `200` | 17.09ms | ✅ PASS |
+| `USR-06` | User xem lịch sử xử lý Ticket | `GET` | `/api/tickets/2/history` | `200` | `200` | 11.89ms | ✅ PASS |
+| `USR-07` | Security: User truy cập Quản lý Users (Expect 403) | `GET` | `/api/users` | `403` | `403` | 7.04ms | ✅ PASS |
+| `USR-08` | Security: User thêm Thiết bị mới (Expect 403) | `POST` | `/api/devices` | `403` | `403` | 11.13ms | ✅ PASS |
+| `USR-09` | Security: User gán Kỹ thuật viên (Expect 403) | `PATCH` | `/api/tickets/2/assign` | `403` | `403` | 8.92ms | ✅ PASS |
 
 ---
 
@@ -28,7 +28,7 @@
 - **Mô tả:** Đăng nhập tài khoản user01
 - **Request:** `POST /api/login`
 - **HTTP Status:** Kỳ vọng `200` | Thực tế `200` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `223.71 ms`
+- **Thời gian xử lý:** `250.66 ms`
 ```json
 // Request Body:
 {
@@ -39,9 +39,8 @@
 ```json
 // Response Body:
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJ1c2VyMDEiLCJyb2xlIjoiVVNFUiIsImV4cCI6MTc4NzU4MDQ0N30.Ku9eAZ5ogSidztJwnfLyAknBVCDhyUDp6A2ioLscw1Q",
+  "access_token": "<redacted>",
   "token_type": "bearer",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwidXNlcm5hbWUiOiJ1c2VyMDEiLCJyb2xlIjoiVVNFUiIsImV4cCI6MTc4NzU4MDQ0N30.Ku9eAZ5ogSidztJwnfLyAknBVCDhyUDp6A2ioLscw1Q",
   "user": {
     "id": 3,
     "username": "user01",
@@ -57,7 +56,7 @@
 - **Mô tả:** Tạo ticket mới, trạng thái mặc định ban đầu là OPEN
 - **Request:** `POST /api/tickets`
 - **HTTP Status:** Kỳ vọng `201` | Thực tế `201` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `17.21 ms`
+- **Thời gian xử lý:** `16.71 ms`
 ```json
 // Request Body:
 {
@@ -80,8 +79,8 @@
   "user_id": 3,
   "device_id": 1,
   "technician_id": null,
-  "created_at": "2026-08-24T13:07:27",
-  "updated_at": "2026-08-24T13:07:27",
+  "created_at": "2026-08-24T13:59:00",
+  "updated_at": "2026-08-24T13:59:00",
   "resolved_at": null,
   "closed_at": null
 }
@@ -105,8 +104,8 @@
     "user_id": 3,
     "device_id": 2,
     "technician_id": 2,
-    "created_at": "2026-08-24T13:07:26",
-    "updated_at": "2026-08-24T13:07:27",
+    "created_at": "2026-08-24T13:58:59",
+    "updated_at": "2026-08-24T13:59:00",
     "resolved_at": null,
     "closed_at": null
   },
@@ -120,8 +119,8 @@
     "user_id": 3,
     "device_id": 1,
     "technician_id": null,
-    "created_at": "2026-08-24T13:07:27",
-    "updated_at": "2026-08-24T13:07:27",
+    "created_at": "2026-08-24T13:59:00",
+    "updated_at": "2026-08-24T13:59:00",
     "resolved_at": null,
     "closed_at": null
   }
@@ -132,7 +131,7 @@
 - **Mô tả:** Lấy chi tiết ticket kèm thông tin người tạo và thiết bị
 - **Request:** `GET /api/tickets/2`
 - **HTTP Status:** Kỳ vọng `200` | Thực tế `200` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `13.14 ms`
+- **Thời gian xử lý:** `12.07 ms`
 ```json
 // Response Body:
 {
@@ -145,8 +144,8 @@
   "user_id": 3,
   "device_id": 1,
   "technician_id": null,
-  "created_at": "2026-08-24T13:07:27",
-  "updated_at": "2026-08-24T13:07:27",
+  "created_at": "2026-08-24T13:59:00",
+  "updated_at": "2026-08-24T13:59:00",
   "resolved_at": null,
   "closed_at": null,
   "creator": {
@@ -174,7 +173,7 @@
 - **Mô tả:** Cập nhật tiêu đề và nâng mức ưu tiên
 - **Request:** `PATCH /api/tickets/2`
 - **HTTP Status:** Kỳ vọng `200` | Thực tế `200` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `24.32 ms`
+- **Thời gian xử lý:** `17.09 ms`
 ```json
 // Request Body:
 {
@@ -194,8 +193,8 @@
   "user_id": 3,
   "device_id": 1,
   "technician_id": null,
-  "created_at": "2026-08-24T13:07:27",
-  "updated_at": "2026-08-24T13:07:27",
+  "created_at": "2026-08-24T13:59:00",
+  "updated_at": "2026-08-24T13:59:00",
   "resolved_at": null,
   "closed_at": null
 }
@@ -205,7 +204,7 @@
 - **Mô tả:** Xem timeline các hành động CREATED, UPDATED của ticket
 - **Request:** `GET /api/tickets/2/history`
 - **HTTP Status:** Kỳ vọng `200` | Thực tế `200` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `18.88 ms`
+- **Thời gian xử lý:** `11.89 ms`
 ```json
 // Response Body:
 [
@@ -216,7 +215,7 @@
     "new_status": "OPEN",
     "detail": "Ticket created",
     "performed_by": 3,
-    "performed_at": "2026-08-24T13:07:27"
+    "performed_at": "2026-08-24T13:59:00"
   },
   {
     "id": 4,
@@ -225,7 +224,7 @@
     "new_status": "OPEN",
     "detail": "Updated fields: title, priority",
     "performed_by": 3,
-    "performed_at": "2026-08-24T13:07:27"
+    "performed_at": "2026-08-24T13:59:00"
   }
 ]
 ```
@@ -234,7 +233,7 @@
 - **Mô tả:** User không được phép truy cập module Users
 - **Request:** `GET /api/users`
 - **HTTP Status:** Kỳ vọng `403` | Thực tế `403` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `10.41 ms`
+- **Thời gian xử lý:** `7.04 ms`
 ```json
 // Response Body:
 {
@@ -247,7 +246,7 @@
 - **Mô tả:** User không được phép tạo thiết bị mới
 - **Request:** `POST /api/devices`
 - **HTTP Status:** Kỳ vọng `403` | Thực tế `403` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `10.74 ms`
+- **Thời gian xử lý:** `11.13 ms`
 ```json
 // Request Body:
 {
@@ -267,7 +266,7 @@
 - **Mô tả:** User không được phép gán kỹ thuật viên
 - **Request:** `PATCH /api/tickets/2/assign`
 - **HTTP Status:** Kỳ vọng `403` | Thực tế `403` $\rightarrow$ **✅ PASS (Thành công)**
-- **Thời gian xử lý:** `10.23 ms`
+- **Thời gian xử lý:** `8.92 ms`
 ```json
 // Request Body:
 {

@@ -50,10 +50,18 @@ MYSQL_PASSWORD=Mật_Khẩu_MySQL_Của_Bạn_Ở_Đây
 # ========================================================
 # ⬇️ CẤU HÌNH JWT AUTHENTICATION
 # ========================================================
-JWT_SECRET_KEY=cs466_sang_backend_secret_key_2026
+JWT_SECRET_KEY=change-me-jwt-secret-key-cs466
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=480
 ```
+
+> ⚠️ **Lưu ý bảo mật quan trọng:**
+> 1. Luôn sao chép từ `.env.example` sang `.env` và `backend/.env`.
+> 2. Tự đặt mật khẩu MySQL cá nhân (`MYSQL_PASSWORD`).
+> 3. Tự đổi `JWT_SECRET_KEY` thành chuỗi bí mật an toàn trên môi trường của bạn.
+> 4. Tuyệt đối **KHÔNG commit file `.env`** lên Git repository.
+> 5. Giữ nguyên thuật toán `JWT_ALGORITHM=HS256` và thời gian sống `JWT_EXPIRE_MINUTES=480` (8 tiếng).
+
 
 ---
 

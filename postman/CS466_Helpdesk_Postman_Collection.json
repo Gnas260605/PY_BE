@@ -67,7 +67,7 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const data = pm.response.json();",
-									"    pm.collectionVariables.set('admin_token', data.token);",
+									"    pm.collectionVariables.set('admin_token', data.access_token);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -99,7 +99,7 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const data = pm.response.json();",
-									"    pm.collectionVariables.set('tech_token', data.token);",
+									"    pm.collectionVariables.set('tech_token', data.access_token);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -131,7 +131,7 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const data = pm.response.json();",
-									"    pm.collectionVariables.set('user_token', data.token);",
+									"    pm.collectionVariables.set('user_token', data.access_token);",
 									"}"
 								],
 								"type": "text/javascript"

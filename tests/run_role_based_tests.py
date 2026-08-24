@@ -88,6 +88,10 @@ class TestTracker:
         except Exception:
             body_json = response.text
 
+        raw_body_json = body_json
+        if isinstance(body_json, dict):
+            body_json = self._sanitize_response_body(body_json)
+
         passed = status_code == expected_status
 
         record = {
@@ -101,11 +105,18 @@ class TestTracker:
             "expected_status": expected_status,
             "actual_status": status_code,
             "duration_ms": duration_ms,
+            "raw_response_body": raw_body_json,
             "response_body": body_json,
             "passed": passed,
         }
         self.tests.append(record)
         return record
+
+    def _sanitize_response_body(self, payload: dict) -> dict:
+        sanitized = dict(payload)
+        if "access_token" in sanitized:
+            sanitized["access_token"] = "<redacted>"
+        return sanitized
 
     def export_markdown(self, output_filepath: str) -> None:
         total = len(self.tests)
@@ -198,7 +209,7 @@ def run_all_tests():
         expected_status=200, json_body={"username": "admin", "password": "CS466@123"},
         description="Đăng nhập tài khoản admin lấy Bearer token"
     )
-    admin_token = res_login["response_body"].get("access_token") or res_login["response_body"].get("token", "")
+    admin_token = res_login["raw_response_body"].get("access_token", "")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
 
@@ -378,7 +389,7 @@ def run_all_tests():
         expected_status=200, json_body={"username": "user01", "password": "CS466@123"},
         description="Đăng nhập tài khoản user01"
     )
-    user_token = res_user_login["response_body"].get("access_token") or res_user_login["response_body"].get("token", "")
+    user_token = res_user_login["raw_response_body"].get("access_token", "")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
 
@@ -462,7 +473,7 @@ def run_all_tests():
         expected_status=200, json_body={"username": "tech01", "password": "CS466@123"},
         description="Đăng nhập tài khoản tech01"
     )
-    tech_token = res_tech_login["response_body"].get("access_token") or res_tech_login["response_body"].get("token", "")
+    tech_token = res_tech_login["raw_response_body"].get("access_token", "")
     tech_headers = {"Authorization": f"Bearer {tech_token}"}
 
 

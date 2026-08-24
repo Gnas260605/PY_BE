@@ -31,7 +31,6 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("MYSQL_PASSWORD", "DB_PASSWORD"),
     )
     jwt_secret_key: str = Field(
-        default="cs466_sang_backend_secret_key_2026",
         validation_alias=AliasChoices("JWT_SECRET_KEY"),
     )
 

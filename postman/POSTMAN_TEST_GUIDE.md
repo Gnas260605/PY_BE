@@ -20,14 +20,16 @@ Tạo một **Environment** mới trong Postman (ví dụ: `CS466_Local`) và c�
 | `created_device_id`| `4` | `4` | ID device tạo trong bài test |
 | `created_ticket_id`| `2` | `2` | ID ticket tạo trong bài test |
 
-> **Mẹo tự động lưu Token trong Postman:**  
-> Ở tab **Tests** của Request `POST /api/login`, chèn đoạn script:
+> **Meo tu dong luu token trong Postman:**  
+> O tab **Tests** cua request `POST /api/login`, chen doan script:
 > ```javascript
 > if (pm.response.code === 200) {
 >     const data = pm.response.json();
->     if (data.vai_tro === "ADMIN") pm.environment.set("admin_token", data.token);
->     if (data.vai_tro === "TECHNICIAN") pm.environment.set("tech_token", data.token);
->     if (data.vai_tro === "USER") pm.environment.set("user_token", data.token);
+>     const role = data.user?.vai_tro;
+>     const token = data.access_token;
+>     if (role === "ADMIN") pm.environment.set("admin_token", token);
+>     if (role === "TECHNICIAN") pm.environment.set("tech_token", token);
+>     if (role === "USER") pm.environment.set("user_token", token);
 > }
 > ```
 

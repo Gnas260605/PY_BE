@@ -43,10 +43,10 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
-    const token = data.access_token || data.token;
+    const token = data.access_token;
     if (token) {
       localStorage.setItem("access_token", token);
-      localStorage.setItem("current_user", JSON.stringify(data.user || data));
+      localStorage.setItem("current_user", JSON.stringify(data.user));
     }
     return data;
   },
