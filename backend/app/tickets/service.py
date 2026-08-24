@@ -290,8 +290,9 @@ def update_ticket_status(
 
         if current_user["vai_tro"] == "TECHNICIAN":
             _ensure_technician_scope(ticket, current_user)
-            if ticket["status"] == "OPEN" and payload.status == "ASSIGNED":
-                raise BadRequestError("INVALID_TRANSITION")
+
+        if ticket["status"] == "OPEN" and payload.status == "ASSIGNED":
+            raise BadRequestError("INVALID_TRANSITION")
 
         _ensure_transition_allowed(ticket["status"], payload.status)
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -23,20 +24,28 @@ if BACKEND_DIR not in sys.path:
 from starlette.testclient import TestClient
 from app.main import app
 from app.db.connection import connection_scope
+from app.core.config import get_settings
 
 client = TestClient(app)
 
 
+def ensure_test_database() -> None:
+    database_name = get_settings().mysql_database.strip().lower()
+    if not database_name.endswith("_test"):
+        raise RuntimeError("REFUSING_TO_RESET_NON_TEST_DATABASE")
+
+
+def strip_use_statement(sql_text: str) -> str:
+    return re.sub(r"USE\s+cs466_helpdesk\s*;", "", sql_text, flags=re.IGNORECASE)
+
+
 def reset_database():
     """Reset database to initial seed state before running tests."""
-    schema_path = os.path.join(ROOT_DIR, "database", "schema.sql")
+    ensure_test_database()
     seed_path = os.path.join(ROOT_DIR, "database", "seed.sql")
 
-
-    with open(schema_path, "r", encoding="utf-8") as f:
-        schema_sql = f.read()
     with open(seed_path, "r", encoding="utf-8") as f:
-        seed_sql = f.read()
+        seed_sql = strip_use_statement(f.read())
 
     with connection_scope() as conn:
         cursor = conn.cursor()
