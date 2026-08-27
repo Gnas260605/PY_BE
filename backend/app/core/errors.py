@@ -9,12 +9,6 @@ from fastapi.responses import JSONResponse
 logger = logging.getLogger(__name__)
 
 
-class ContractNotLockedError(Exception):
-    def __init__(self, message: str = "CONTRACT_NOT_LOCKED") -> None:
-        self.message = message
-        super().__init__(message)
-
-
 class ApiError(Exception):
     def __init__(self, status_code: int, detail: str) -> None:
         self.status_code = status_code
@@ -66,18 +60,6 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content={
                 "detail": exc.detail,
-                "path": str(request.url.path),
-            },
-        )
-
-    @app.exception_handler(ContractNotLockedError)
-    async def contract_not_locked_handler(
-        request: Request, exc: ContractNotLockedError
-    ) -> JSONResponse:
-        return JSONResponse(
-            status_code=501,
-            content={
-                "detail": exc.message,
                 "path": str(request.url.path),
             },
         )

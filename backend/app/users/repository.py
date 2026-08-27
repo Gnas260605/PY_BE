@@ -147,7 +147,6 @@ def create_user(
             query,
             (username, password_hash, ho_ten, email, vai_tro, trang_thai),
         )
-        connection.commit()
         return int(cursor.lastrowid)
 
 
@@ -165,7 +164,6 @@ def update_user(
     """
     with connection.cursor() as cursor:
         cursor.execute(query, tuple(params))
-        connection.commit()
 
 
 def update_user_status(connection: MySQLConnection, user_id: int, status: str) -> None:
@@ -176,4 +174,3 @@ def update_user_status(connection: MySQLConnection, user_id: int, status: str) -
     """
     with connection.cursor() as cursor:
         cursor.execute(query, (status, user_id))
-        connection.commit()

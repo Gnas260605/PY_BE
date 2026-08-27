@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from app.core.errors import BadRequestError, ConflictError, NotFoundError
+import mysql.connector
+
+from app.core.errors import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.db.connection import connection_scope
 from app.devices import repository
 from app.devices.schemas import (
@@ -45,15 +47,23 @@ def create_device(payload: CreateDeviceRequest) -> dict:
         if duplicate is not None:
             raise ConflictError("DUPLICATE_DEVICE_CODE")
 
-        device_id = repository.create_device(
-            connection,
-            ma_thiet_bi=payload.ma_thiet_bi,
-            ten_thiet_bi=payload.ten_thiet_bi,
-            loai_thiet_bi=payload.loai_thiet_bi,
-            vi_tri=payload.vi_tri,
-            trang_thai=payload.trang_thai,
-            mo_ta=payload.mo_ta,
-        )
+        try:
+            device_id = repository.create_device(
+                connection,
+                ma_thiet_bi=payload.ma_thiet_bi,
+                ten_thiet_bi=payload.ten_thiet_bi,
+                loai_thiet_bi=payload.loai_thiet_bi,
+                vi_tri=payload.vi_tri,
+                trang_thai=payload.trang_thai,
+                mo_ta=payload.mo_ta,
+            )
+            connection.commit()
+        except mysql.connector.IntegrityError as exc:
+            connection.rollback()
+            raise ConflictError("DUPLICATE_DEVICE_CODE") from exc
+        except Exception:
+            connection.rollback()
+            raise
         created_device = repository.get_device_by_id(connection, device_id)
 
     logger.info("DEVICE_CREATED device_id=%s code=%s", device_id, payload.ma_thiet_bi)
@@ -84,6 +94,9 @@ def update_device(
     allowed_fields = ADMIN_ALLOWED_FIELDS
     if current_user["vai_tro"] == "TECHNICIAN":
         allowed_fields = TECHNICIAN_ALLOWED_FIELDS
+        disallowed_fields = set(requested_updates) - TECHNICIAN_ALLOWED_FIELDS
+        if disallowed_fields:
+            raise ForbiddenError("FORBIDDEN")
 
     updates = {
         key: value for key, value in requested_updates.items() if key in allowed_fields
@@ -106,7 +119,15 @@ def update_device(
             if duplicate is not None:
                 raise ConflictError("DUPLICATE_DEVICE_CODE")
 
-        repository.update_device(connection, device_id, updates)
+        try:
+            repository.update_device(connection, device_id, updates)
+            connection.commit()
+        except mysql.connector.IntegrityError as exc:
+            connection.rollback()
+            raise ConflictError("DUPLICATE_DEVICE_CODE") from exc
+        except Exception:
+            connection.rollback()
+            raise
         updated_device = repository.get_device_by_id(connection, device_id)
 
     logger.info(

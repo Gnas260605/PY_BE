@@ -28,10 +28,10 @@ FIELD_TO_COLUMN = {
     "priority": "muc_do_uu_tien",
 }
 ALLOWED_TRANSITIONS = {
-    "OPEN": {"ASSIGNED"},
+    "OPEN": set(),
     "ASSIGNED": {"IN_PROGRESS"},
     "IN_PROGRESS": {"RESOLVED"},
-    "RESOLVED": {"CLOSED"},
+    "RESOLVED": set(),
     "CLOSED": set(),
 }
 
@@ -291,16 +291,11 @@ def update_ticket_status(
         if current_user["vai_tro"] == "TECHNICIAN":
             _ensure_technician_scope(ticket, current_user)
 
-        if ticket["status"] == "OPEN" and payload.status == "ASSIGNED":
-            raise BadRequestError("INVALID_TRANSITION")
-
         _ensure_transition_allowed(ticket["status"], payload.status)
 
         updates: dict[str, object] = {"trang_thai": payload.status}
         if payload.status == "RESOLVED":
             updates["resolved_at"] = "CURRENT_TIMESTAMP"
-        elif payload.status == "CLOSED":
-            updates["closed_at"] = "CURRENT_TIMESTAMP"
 
         try:
             repository.update_ticket_fields(connection, ticket_id, updates)

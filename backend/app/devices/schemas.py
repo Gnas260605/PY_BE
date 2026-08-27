@@ -62,12 +62,17 @@ class CreateDeviceRequest(BaseModel):
     trang_thai: str = "ACTIVE"
     mo_ta: str | None = None
 
+    model_config = ConfigDict(extra="forbid")
+
 
 
     @field_validator("ma_thiet_bi", "ten_thiet_bi")
     @classmethod
     def strip_required(cls, value: str) -> str:
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("required field must not be blank")
+        return normalized
 
     @field_validator("loai_thiet_bi", "vi_tri", "mo_ta")
     @classmethod
@@ -94,12 +99,17 @@ class UpdateDeviceRequest(BaseModel):
     trang_thai: str | None = None
     mo_ta: str | None = None
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("ma_thiet_bi", "ten_thiet_bi")
     @classmethod
     def strip_required(cls, value: str | None) -> str | None:
         if value is None:
             return value
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("required field must not be blank")
+        return normalized
 
     @field_validator("loai_thiet_bi", "vi_tri", "mo_ta")
     @classmethod

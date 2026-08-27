@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.security import validate_bcrypt_password_input
+
 
 VALID_ROLES = {"USER", "TECHNICIAN", "ADMIN"}
 VALID_STATUSES = {"ACTIVE", "INACTIVE"}
@@ -63,15 +65,28 @@ class CreateUserRequest(BaseModel):
     email: str | None = Field(default=None, max_length=120)
     vai_tro: str
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("username")
     @classmethod
     def normalize_username(cls, value: str) -> str:
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("username must not be blank")
+        return normalized
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_bcrypt_password_input(value)
 
     @field_validator("ho_ten")
     @classmethod
     def normalize_name(cls, value: str) -> str:
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("ho_ten must not be blank")
+        return normalized
 
     @field_validator("email")
     @classmethod
@@ -99,12 +114,17 @@ class UpdateUserRequest(BaseModel):
     email: str | None = Field(default=None, max_length=120)
     vai_tro: str | None = None
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("ho_ten")
     @classmethod
     def normalize_name(cls, value: str | None) -> str | None:
         if value is None:
             return value
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("ho_ten must not be blank")
+        return normalized
 
     @field_validator("email")
     @classmethod
@@ -131,6 +151,8 @@ class UpdateUserRequest(BaseModel):
 
 class UpdateUserStatusRequest(BaseModel):
     status: str
+
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("status")
     @classmethod

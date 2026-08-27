@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+import mysql.connector
+
 from app.core.errors import BadRequestError, ConflictError, NotFoundError, UnauthorizedError
 from app.core.security import hash_password, verify_password
 from app.db.connection import connection_scope
@@ -28,7 +30,16 @@ def authenticate_user(username: str, password: str) -> dict:
         logger.info("LOGIN_FAILED username=%s reason=inactive", normalized_username)
         raise UnauthorizedError("AUTH_FAILED")
 
-    if not verify_password(password, str(user["password_hash"])):
+    try:
+        password_valid = verify_password(password, str(user["password_hash"]))
+    except Exception as exc:
+        logger.exception(
+            "LOGIN_FAILED username=%s reason=password_hash_error",
+            normalized_username,
+        )
+        raise UnauthorizedError("AUTH_FAILED") from exc
+
+    if not password_valid:
         logger.info("LOGIN_FAILED username=%s reason=invalid_password", normalized_username)
         raise UnauthorizedError("AUTH_FAILED")
 
@@ -57,15 +68,26 @@ def create_user(payload: CreateUserRequest) -> dict:
         if duplicate is not None:
             raise ConflictError("DUPLICATE_USER")
 
-        user_id = repository.create_user(
-            connection,
-            username=payload.username,
-            password_hash=hash_password(payload.password),
-            ho_ten=payload.ho_ten,
-            email=str(payload.email) if payload.email else None,
-            vai_tro=payload.vai_tro,
-            trang_thai="ACTIVE",
-        )
+        try:
+            user_id = repository.create_user(
+                connection,
+                username=payload.username,
+                password_hash=hash_password(payload.password),
+                ho_ten=payload.ho_ten,
+                email=str(payload.email) if payload.email else None,
+                vai_tro=payload.vai_tro,
+                trang_thai="ACTIVE",
+            )
+            connection.commit()
+        except ValueError as exc:
+            connection.rollback()
+            raise BadRequestError("INVALID_INPUT") from exc
+        except mysql.connector.IntegrityError as exc:
+            connection.rollback()
+            raise ConflictError("DUPLICATE_USER") from exc
+        except Exception:
+            connection.rollback()
+            raise
         created_user = repository.get_user_by_id(connection, user_id)
 
     logger.info("USER_CREATED user_id=%s username=%s role=%s", user_id, payload.username, payload.vai_tro)
@@ -101,7 +123,15 @@ def update_user(user_id: int, payload: UpdateUserRequest) -> dict:
         if duplicate is not None:
             raise ConflictError("DUPLICATE_USER")
 
-        repository.update_user(connection, user_id, updates)
+        try:
+            repository.update_user(connection, user_id, updates)
+            connection.commit()
+        except mysql.connector.IntegrityError as exc:
+            connection.rollback()
+            raise ConflictError("DUPLICATE_USER") from exc
+        except Exception:
+            connection.rollback()
+            raise
         updated_user = repository.get_user_by_id(connection, user_id)
 
     logger.info("USER_UPDATED user_id=%s fields=%s", user_id, ",".join(sorted(updates.keys())))
@@ -117,7 +147,12 @@ def update_user_status(user_id: int, payload: UpdateUserStatusRequest) -> dict:
         if existing_user is None:
             raise NotFoundError("USER_NOT_FOUND")
 
-        repository.update_user_status(connection, user_id, payload.status)
+        try:
+            repository.update_user_status(connection, user_id, payload.status)
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
         updated_user = repository.get_user_by_id(connection, user_id)
 
     logger.info("USER_STATUS_CHANGED user_id=%s status=%s", user_id, payload.status)

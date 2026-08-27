@@ -117,7 +117,6 @@ def create_device(
             query,
             (ma_thiet_bi, ten_thiet_bi, loai_thiet_bi, vi_tri, trang_thai, mo_ta),
         )
-        connection.commit()
         return int(cursor.lastrowid)
 
 
@@ -135,4 +134,3 @@ def update_device(
     """
     with connection.cursor() as cursor:
         cursor.execute(query, tuple(params))
-        connection.commit()

@@ -11,8 +11,21 @@ from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
 
 
-def hash_password(password: str) -> str:
+MAX_BCRYPT_PASSWORD_BYTES = 72
+
+
+def validate_bcrypt_password_input(password: str) -> str:
+    if not password.strip():
+        raise ValueError("password must not be blank")
+
     password_bytes = password.encode("utf-8")
+    if len(password_bytes) > MAX_BCRYPT_PASSWORD_BYTES:
+        raise ValueError("password exceeds bcrypt byte limit")
+    return password
+
+
+def hash_password(password: str) -> str:
+    password_bytes = validate_bcrypt_password_input(password).encode("utf-8")
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
 

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -49,6 +49,28 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @field_validator("app_port", "mysql_port")
+    @classmethod
+    def validate_port(cls, value: int) -> int:
+        if not 1 <= value <= 65535:
+            raise ValueError("port must be between 1 and 65535")
+        return value
+
+    @field_validator("jwt_expire_minutes")
+    @classmethod
+    def validate_jwt_expire_minutes(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("JWT_EXPIRE_MINUTES must be greater than 0")
+        return value
+
+    @field_validator("jwt_secret_key")
+    @classmethod
+    def validate_jwt_secret_key(cls, value: str) -> str:
+        secret = value.strip()
+        if not secret:
+            raise ValueError("JWT_SECRET_KEY is required")
+        return secret
 
 
 @lru_cache

@@ -85,7 +85,10 @@ class CreateTicketRequest(BaseModel):
     @field_validator("title", "description")
     @classmethod
     def strip_required(cls, value: str) -> str:
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("required field must not be blank")
+        return normalized
 
     @field_validator("category")
     @classmethod
@@ -132,9 +135,13 @@ class TicketDetailResponse(TicketSummaryResponse):
 class AssignTicketRequest(BaseModel):
     technician_id: int
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class UpdateTicketStatusRequest(BaseModel):
     status: str
+
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("status")
     @classmethod
@@ -147,6 +154,8 @@ class UpdateTicketStatusRequest(BaseModel):
 
 class CloseTicketRequest(BaseModel):
     note: str | None = Field(default=None, max_length=500)
+
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("note")
     @classmethod
@@ -180,7 +189,10 @@ class UpdateTicketRequest(BaseModel):
     def strip_optional(cls, value: str | None) -> str | None:
         if value is None:
             return value
-        return value.strip()
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("required field must not be blank")
+        return normalized
 
     @field_validator("category")
     @classmethod
