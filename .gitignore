@@ -33,3 +33,12 @@ backend/role_recheck_summary.json
 # Keep test results evidence markdown
 !tests/results/*.md
 !tests/results/.gitkeep
+
+# AI Agent, Prompt & Codex configurations
+.agents/
+AGENTS.md
+Promt/
+prompt/
+prompts/
+.codex/
+*.prompt.md
