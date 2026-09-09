@@ -1,0 +1,210 @@
+# Kế hoạch Triển khai QA Test Suite CS466 Helpdesk (FastAPI + MySQL)
+
+## 1. Mục tiêu và Phạm vi Tuyệt đối
+
+- **Thư mục cho phép**: Chỉ tạo và chỉnh sửa file trong `tests/**` và `postman/**`.
+- **Thư mục đóng băng (LOCKED)**: Tuyệt đối **KHÔNG** sửa `backend/**`, `database/**`, `docs/**`.
+- **Backend freeze commit**: `e2b610838226b2c414caf6d3c01c78af5405c08f`.
+- Mọi khiếm khuyết phát hiện ở backend sẽ được test runner thu thập và lập **Bug Report**, không tự ý sửa source backend.
+
+---
+
+## 2. Các Cải Tiến Then Chốt
+
+### 🎯 2.1. Ma Trận Độc Lập 19/19 API (Access & Contract Coverage)
+Tách rõ kiểm thử 19/19 API độc lập khỏi role flow narrative. Bảng phân định rõ phạm vi quyền truy cập (Role Access) và kịch bản Negative/Boundary tương ứng cho từng endpoint:
+
+| # | API Endpoint | Method | Phân Quyền Hợp Lệ (Role Access) | Phân Quyền Bị Chặn (403 Forbidden) | Negative / Boundary Check |
+|---|:---|:---:|:---|:---|:---|
+| 1 | `/api/health` | GET | Public (Mọi role) | Không có | - |
+| 2 | `/api/login` | POST | Public (Mọi role) | Không có | Sai pass (401), Inactive (401), Thiếu field (400) |
+| 3 | `/api/users` | GET | `ADMIN` | `USER`, `TECHNICIAN` | Query filter sai enum (400) |
+| 4 | `/api/users` | POST | `ADMIN` | `USER`, `TECHNICIAN` | Trùng username/email (409), Thiếu field (400) |
+| 5 | `/api/users/{id}` | GET | `ADMIN` | `USER`, `TECHNICIAN` | User ID không tồn tại (404) |
+| 6 | `/api/users/{id}` | PATCH | `ADMIN` | `USER`, `TECHNICIAN` | Không có field cập nhật (400), User không tồn tại (404) |
+| 7 | `/api/users/{id}/status` | PATCH | `ADMIN` | `USER`, `TECHNICIAN` | Status không hợp lệ (400), User không tồn tại (404) |
+| 8 | `/api/devices` | GET | `ADMIN`, `TECHNICIAN` | `USER` | Query filter không hợp lệ (400) |
+| 9 | `/api/devices` | POST | `ADMIN` | `USER`, `TECHNICIAN` | Trùng mã thiết bị (409), Thiếu field (400) |
+| 10 | `/api/devices/{id}` | GET | `ADMIN`, `TECHNICIAN` | `USER` | Device ID không tồn tại (404) |
+| 11 | `/api/devices/{id}` | PATCH | `ADMIN` (all), `TECH` (chỉ `trang_thai`, `mo_ta`) | `USER` (403), `TECH` sửa field cấm (403) | Không có update field (400), Device không tồn tại (404) |
+| 12 | `/api/tickets` | GET | `ADMIN` (all), `USER` (own), `TECH` (assigned) | Không có (Mỗi role có view scope riêng) | Query filter status/priority sai (400) |
+| 13 | `/api/tickets` | POST | `ADMIN`, `USER` | `TECHNICIAN` | Device ID không tồn tại (404), Thiếu field (400) |
+| 14 | `/api/tickets/{id}` | GET | `ADMIN`, `USER` (chính chủ), `TECH` (được gán) | `USER` xem vé người khác (403 IDOR), `TECH` xem vé chưa gán (403) | Ticket ID không tồn tại (404) |
+| 15 | `/api/tickets/{id}` | PATCH | `ADMIN`, `USER` (chính chủ & status `OPEN`) | `USER` sửa vé người khác hoặc vé không phải OPEN (403), `TECH` (403) | Không có update field (400), Ticket không tồn tại (404) |
+| 16 | `/api/tickets/{id}/assign` | PATCH | `ADMIN` | `USER`, `TECHNICIAN` | Gán user role USER (400), Ticket đã CLOSED (400), Tech ID không tồn tại (404) |
+| 17 | `/api/tickets/{id}/status` | PATCH | `ADMIN`, `TECHNICIAN` (được gán) | `USER` (403), `TECH` không được gán (403) | Chuyển sai quy trình OPEN->ASSIGNED, RESOLVED->CLOSED (400) |
+| 18 | `/api/tickets/{id}/close` | PATCH | `ADMIN`, `TECHNICIAN` (được gán) | `USER` (403), `TECH` không được gán (403) | Vé chưa RESOLVED (400), Vé đã CLOSED (re-close) (400) |
+| 19 | `/api/tickets/{id}/history` | GET | `ADMIN`, `USER` (chính chủ), `TECH` (được gán) | `USER` xem lịch sử vé người khác (403 IDOR), `TECH` xem vé chưa gán (403) | Ticket ID không tồn tại (404) |
+
+---
+
+### 🛡️ 2.2. Phân Tách Trách Nhiệm Test Files
+Tách bạch rõ ràng giữa Hardening, CORS, và Error Handling:
+
+1. **`test_request_hardening.py`** (Chỉ tập trung Schema / Forbidden Fields / No DB Mutation):
+   - Gửi trường lạ/cấm vào `POST /api/tickets` (`user_id`, `status`, `technician_id`, `injected_field`) $\to$ kỳ vọng bị từ chối `400 Bad Request`.
+   - Gửi trường lạ/cấm vào `PATCH /api/tickets/{id}` (`status`, `technician_id`, `user_id`, `closed_at`, `resolved_at`) $\to$ kỳ vọng bị từ chối `400 Bad Request`.
+   - Gửi trường lạ vào `POST /api/login` $\to$ kỳ vọng `400 Bad Request`.
+   - **Xác minh không đột biến DB (No DB Mutation)**: Truy vấn trực tiếp cơ sở dữ liệu sau khi gửi payload xấu để chứng minh dữ liệu trong DB hoàn toàn không bị thay đổi hoặc chèn sai lệch.
+2. **`test_cors.py`** (Chỉ tập trung CORS & Preflight):
+   - `OPTIONS` preflight tới `/api/login`, `/api/tickets` với các Origin hợp lệ (`http://127.0.0.1:3000`, `http://localhost:3000`, `http://127.0.0.1:5500`, `http://localhost:5500`).
+   - Kiểm tra các response headers: `access-control-allow-origin`, `access-control-allow-methods`, `access-control-allow-headers`.
+   - Kiểm tra Origin không hợp lệ (ví dụ `http://evil-attacker.com`) $\to$ không trả về header cho phép.
+3. **`test_error_handling.py`** (Tách riêng ma trận mã lỗi HTTP & Sanitizer):
+   - `400`: `INVALID_INPUT`, `INVALID_TRANSITION`, `NO_ALLOWED_FIELDS`.
+   - `401`: `MISSING_TOKEN`, `INVALID_TOKEN`, `TOKEN_EXPIRED`, `AUTH_FAILED`, `INVALID_CREDENTIALS`.
+   - `403`: `FORBIDDEN`.
+   - `404`: `NOT_FOUND`, `TICKET_NOT_FOUND`, `DEVICE_NOT_FOUND`, `TECHNICIAN_NOT_FOUND`.
+   - `409`: `CONFLICT`, `DUPLICATE_DEVICE_CODE`.
+   - **Xử lý 500 an toàn (Non-destructive 500 Sanitizer Test)**:
+     - Tuyệt đối không can thiệp phá hỏng dữ liệu database kiểm thử.
+     - Sử dụng cơ chế an toàn: monkeypatch/mock một dependency phụ trợ của một endpoint kiểm thử hoặc trigger an toàn để kích hoạt unhandled exception handler của FastAPI.
+     - Xác nhận response trả về đúng format sanitized: `{"detail": "INTERNAL_SERVER_ERROR", "path": "..."}` với mã `500`.
+     - Xác nhận không rò rỉ: Zero stack trace, raw SQL query, database credentials, hoặc internal secrets.
+
+---
+
+### 📜 2.3. History Test Phân Lập “Business Record”
+- Lọc lịch sử chính xác theo `ticket_id` cụ thể của test run độc lập.
+- Xác minh đúng chuỗi 5 business actions:
+  1. `CREATED` (new_status='OPEN')
+  2. `ASSIGNED` (old_status='OPEN', new_status='ASSIGNED')
+  3. `STATUS_CHANGED` (old_status='ASSIGNED', new_status='IN_PROGRESS')
+  4. `STATUS_CHANGED` (old_status='IN_PROGRESS', new_status='RESOLVED')
+  5. `CLOSED` (old_status='RESOLVED', new_status='CLOSED')
+- Kiểm tra nghiêm ngặt: Hành động `CLOSED` **chỉ xuất hiện duy nhất 1 lần**, `performed_at` tăng dần theo thời gian.
+
+---
+
+### 🔒 2.4. Data Isolation Với Dynamic Suffix
+- Toàn bộ dữ liệu sinh trong test (trừ 3 tài khoản seed `admin`, `tech01`, `user01`) đều sử dụng timestamp động:
+  - Username: `qa_user_{ts}_{hex}`
+  - Email: `qa_user_{ts}@cs466.local`
+  - Device Code: `QA-DEV-{ts}`
+  - Ticket Title: `[QA-{ts}] ...`
+- Giúp các test chạy nhiều lần hoặc chạy song song không bao giờ bị đụng độ dữ liệu cũ.
+
+---
+
+### 🤖 2.5. Tự Động Hóa Xuất Bug Report Chuẩn 15 Trường
+- Tích hợp `BugReportCollector` trong test suite. Khi phát hiện sai khác contract hoặc lỗi hệ thống, tự động xuất theo mẫu chuẩn:
+
+```
+================================================================================
+BUG REPORT TEMPLATE
+================================================================================
+BUG_ID:         BUG-CS466-<MODULE>-<NUMBER>
+MODULE:         <AUTH | USERS | DEVICES | TICKETS | CORE>
+ENDPOINT:       <HTTP_METHOD> <URL_PATH>
+ROLE:           <ADMIN | TECHNICIAN | USER | UNAUTHENTICATED>
+SEVERITY:       <CRITICAL | HIGH | MEDIUM | LOW>
+PRECONDITION:   <Điều kiện tiên quyết trước khi gọi API>
+STEPS:          1. ... 2. ...
+EXPECTED:       <Kết quả kỳ vọng theo Contract>
+ACTUAL:         <Kết quả thực tế nhận được>
+HTTP_STATUS:    Expected: <Code> | Actual: <Code>
+REQUEST:        Headers: <Redacted> | Body: <JSON>
+RESPONSE:       Status: <Code> | Body: <JSON>
+DB_STATE:       <Trạng thái dữ liệu liên quan trong DB>
+BACKEND_COMMIT: e2b610838226b2c414caf6d3c01c78af5405c08f
+REPRODUCIBLE:   <YES | NO>
+================================================================================
+```
+
+---
+
+## 3. Cấu Trúc File Dự Kiến
+
+```
+tests/
+├── conftest.py                             # Pytest fixtures: client, auth headers, isolated db
+├── helpers.py                              # Dynamic data generator, DB assert no mutation, bug collector
+├── run_role_based_tests.py                 # Runner tích hợp role flow + 19 API matrix + markdown export
+├── api/
+│   ├── test_login_contract.py              # Login contract (3 role, cấm token/password/password_hash)
+│   ├── test_auth_negative.py               # Token tampering, expired, invalid sig, inactive, no leak
+│   ├── test_rbac_idor.py                   # Role-based permissions, IDOR cross-user protection
+│   ├── test_request_hardening.py           # Extra fields forbid, no DB mutation check
+│   ├── test_cors.py                        # OPTIONS preflight, allowed origins, CORS headers
+│   └── test_error_handling.py              # Error matrix (400, 401, 403, 404, 409, 500 sanitized)
+└── integration/
+    └── test_ticket_lifecycle.py            # Vòng đời 5 bước, negative transitions, DB & history audit
+```
+
+---
+
+## 4. Kế Hoạch Triển Khai Chi Tiết Từng Bước (Tasks)
+
+### Bước 1 — Chuẩn bị môi trường & An toàn Cơ sở Dữ liệu
+- [ ] Verify HEAD_COMMIT_SHA (`git rev-parse HEAD` khớp `e2b610838226b2c414caf6d3c01c78af5405c08f`).
+- [ ] Verify DB safety protection (chạy `run_role_based_tests.py` với `MYSQL_DATABASE=cs466_helpdesk` bắt buộc ném `RuntimeError("REFUSING_TO_RESET_NON_TEST_DATABASE")`).
+- [ ] Cấu hình môi trường test (`MYSQL_DATABASE=cs466_helpdesk_test`, `JWT_SECRET_KEY=...`).
+- [ ] Verify health endpoint (`GET /api/health` trả về `200` với `{"status": "ok"}`).
+
+### Bước 2 — Dựng khung Pytest & Helper Modules
+- [ ] Tạo `tests/helpers.py`: Dynamic unique suffixes, assertion không đột biến DB, `BugReportCollector`.
+- [ ] Tạo `tests/conftest.py`: Fixture `client`, test database fixture an toàn, fixture tokens/headers cho 3 roles.
+
+### Bước 3 — Login Contract & Auth Negative
+- [ ] Tạo `tests/api/test_login_contract.py`: Assert login 3 roles trả về `access_token`, `token_type: "bearer"`, `user: {...}`; KHÔNG chứa `token`, `password`, `password_hash`.
+- [ ] Tạo `tests/api/test_auth_negative.py`: Token hết hạn, sai chữ ký, thiếu `sub`, token rác, tài khoản `INACTIVE`, request không token $\to$ 401/403, không leak traceback/secrets.
+
+### Bước 4 — RBAC + IDOR + Duplicate
+- [ ] Tạo `tests/api/test_rbac_idor.py`:
+  - ADMIN: Tạo duplicate user $\to$ 409, duplicate device $\to$ 409.
+  - USER: Tạo ticket (user_id lấy từ token), list chỉ thấy vé của mình, gọi vé người khác $\to$ 403 (IDOR).
+  - TECH: Chỉ thấy vé được gán, cập nhật thiết bị chỉ được sửa `trang_thai`/`mo_ta`, field cấm $\to$ 403.
+  - USER & TECH gọi các route trái thẩm quyền $\to$ 403.
+
+### Bước 5 — Vòng Đời Ticket & Chuyển Trạng Thái Sai Quy Trình
+- [ ] Tạo `tests/integration/test_ticket_lifecycle.py` (Phần 1 - Transitions):
+  - Chu trình hợp lệ: `OPEN` $\to$ `ASSIGNED` $\to$ `IN_PROGRESS` $\to$ `RESOLVED` $\to$ `CLOSED`.
+  - Negative: `OPEN` $\to$ `ASSIGNED` qua PATCH `/status` $\to$ 400.
+  - Negative: `RESOLVED` $\to$ `CLOSED` qua PATCH `/status` $\to$ 400.
+  - Negative: `CLOSED` gọi `/close` lần 2 (re-close) $\to$ 400.
+
+### Bước 6 — History Timeline & Kiểm Tra DB Trực Tiếp
+- [ ] Mở rộng `tests/integration/test_ticket_lifecycle.py` (Phần 2 - Audit & DB State):
+  - Lọc chính xác theo `ticket_id` của lượt test, assert đúng 5 records: `CREATED`, `ASSIGNED`, `STATUS_CHANGED`, `STATUS_CHANGED`, `CLOSED`.
+  - Assert `CLOSED` duy nhất 1 lần, `performed_at` tăng dần.
+  - Truy vấn DB trực tiếp bằng `connection_scope()`: `status == 'CLOSED'`, `technician_id IS NOT NULL`, `resolved_at IS NOT NULL`, `closed_at IS NOT NULL`.
+
+### Bước 7 — Request Body Hardening, CORS & Error Code Matrix
+- [ ] Tạo `tests/api/test_request_hardening.py`: Gửi extra/forbidden fields vào `POST /api/tickets`, `PATCH /api/tickets/{id}`, `POST /api/login` $\to$ 400, assert DB không bị đột biến.
+- [ ] Tạo `tests/api/test_cors.py`: `OPTIONS` preflight với allowed origins $\to$ 200 + headers; test disallowed origins.
+- [ ] Tạo `tests/api/test_error_handling.py`: Kiểm tra ma trận lỗi 400, 401, 403, 404, 409 và kiểm tra non-destructive sanitizer lỗi 500 (không làm hỏng database).
+
+### Bước 8 — Chạy Full Suite, Cập Nhật Postman & Báo Cáo
+- [ ] Cập nhật [postman/CS466_Helpdesk_Postman_Collection.json](file:///d:/pyhton/postman/CS466_Helpdesk_Postman_Collection.json): phủ đủ 19 APIs, chuẩn hóa biến token `data.access_token`, `data.user.vai_tro`, không commit token thật.
+- [ ] Chạy full test suites: `pytest tests/api tests/integration -v` và `python tests/run_role_based_tests.py`.
+- [ ] Tái tạo 3 file evidence: `tests/results/TEST_ROLE_ADMIN.md`, `TEST_ROLE_USER.md`, `TEST_ROLE_TECHNICIAN.md`.
+- [ ] Xuất bảng ma trận độc lập 19/19 API và điền kết quả thực tế vào khối `QA_FINAL_RESULT`.
+
+---
+
+## 5. Mẫu Khối Tổng Kết Cuối Cùng (`QA_FINAL_RESULT` Template)
+
+Khối này sẽ được test runner và QA tổng hợp điền kết quả thực tế sau khi chạy toàn bộ test suite:
+
+```
+================================================================================
+QA_FINAL_RESULT
+================================================================================
+BACKEND_COMMIT:         e2b610838226b2c414caf6d3c01c78af5405c08f
+OVERALL_STATUS:         <PASS | PASS_WITH_WARNINGS | FAIL>
+API_COVERAGE:           <Passed: X/19>
+FLOW_LOGIN_CONTRACT:    <PASS | FAIL>
+FLOW_AUTH_NEGATIVE:     <PASS | FAIL>
+FLOW_RBAC_IDOR:         <PASS | FAIL>
+FLOW_TICKET_LIFECYCLE:  <PASS | FAIL>
+FLOW_HISTORY_AUDIT:     <PASS | FAIL>
+FLOW_DB_STATE_VERIFY:   <PASS | FAIL>
+FLOW_REQUEST_HARDENING: <PASS | FAIL>
+FLOW_CORS:              <PASS | FAIL>
+FLOW_ERROR_HANDLING:    <PASS | FAIL>
+TEST_DB_SAFETY:         <PASS | FAIL>
+DATA_ISOLATION:         <PASS | FAIL>
+SECRET_SCAN:            <PASS | FAIL>
+BACKEND_FILES_CHANGED:  <NONE | LIST_OF_FILES>
+================================================================================
+```
