@@ -53,8 +53,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/health",
-							"host": ["{{baseUrl}}"],
-							"path": ["health"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
 						}
 					}
 				},
@@ -77,7 +81,10 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -85,8 +92,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
 						}
 					}
 				},
@@ -109,7 +120,10 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -117,8 +131,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
 						}
 					}
 				},
@@ -141,7 +159,10 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -149,8 +170,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
 						}
 					}
 				},
@@ -159,7 +184,10 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -167,8 +195,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
 						}
 					}
 				}
@@ -182,15 +214,28 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users?role=USER&status=ACTIVE",
-							"host": ["{{baseUrl}}"],
-							"path": ["users"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							],
 							"query": [
-								{"key": "role", "value": "USER"},
-								{"key": "status", "value": "ACTIVE"}
+								{
+									"key": "role",
+									"value": "USER"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								}
 							]
 						}
 					}
@@ -214,8 +259,14 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -223,8 +274,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/users",
-							"host": ["{{baseUrl}}"],
-							"path": ["users"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
 						}
 					}
 				},
@@ -233,12 +288,20 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users/{{created_user_id}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "{{created_user_id}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{created_user_id}}"
+							]
 						}
 					}
 				},
@@ -247,8 +310,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -256,8 +325,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/users/{{created_user_id}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "{{created_user_id}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{created_user_id}}"
+							]
 						}
 					}
 				},
@@ -266,8 +340,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -275,8 +355,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/users/{{created_user_id}}/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "{{created_user_id}}", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{created_user_id}}",
+								"status"
+							]
 						}
 					}
 				},
@@ -285,8 +371,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -294,8 +386,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/users/{{created_user_id}}/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["users", "{{created_user_id}}", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{created_user_id}}",
+								"status"
+							]
 						}
 					}
 				},
@@ -318,8 +416,14 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -327,8 +431,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/devices",
-							"host": ["{{baseUrl}}"],
-							"path": ["devices"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices"
+							]
 						}
 					}
 				},
@@ -337,12 +445,19 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/devices",
-							"host": ["{{baseUrl}}"],
-							"path": ["devices"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices"
+							]
 						}
 					}
 				},
@@ -351,8 +466,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{admin_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -360,8 +481,66 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/assign",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "assign"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"assign"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Chi tiết Thiết bị",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/devices/{{created_device_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"{{created_device_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "PATCH Cập nhật Thiết bị",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"MAINTENANCE\",\n  \"mo_ta\": \"Đang bảo trì định kỳ\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/devices/{{created_device_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"devices",
+								"{{created_device_id}}"
+							]
 						}
 					}
 				}
@@ -389,8 +568,14 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{user_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -398,8 +583,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/tickets",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets"
+							]
 						}
 					}
 				},
@@ -408,12 +597,19 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/tickets",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets"
+							]
 						}
 					}
 				},
@@ -422,12 +618,20 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}"
+							]
 						}
 					}
 				},
@@ -436,12 +640,21 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/history",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "history"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"history"
+							]
 						}
 					}
 				},
@@ -450,12 +663,49 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{user_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/users",
-							"host": ["{{baseUrl}}"],
-							"path": ["users"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "PATCH Chỉnh sửa Ticket",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Màn hình máy tính không lên (Cập nhật: Đã thử dây khác)\",\n  \"priority\": \"URGENT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}"
+							]
 						}
 					}
 				}
@@ -469,14 +719,24 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{tech_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tech_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/tickets?status=ASSIGNED",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets"
+							],
 							"query": [
-								{"key": "status", "value": "ASSIGNED"}
+								{
+									"key": "status",
+									"value": "ASSIGNED"
+								}
 							]
 						}
 					}
@@ -486,8 +746,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tech_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -495,8 +761,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"status"
+							]
 						}
 					}
 				},
@@ -505,8 +777,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tech_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -514,8 +792,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"status"
+							]
 						}
 					}
 				},
@@ -524,8 +808,14 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{tech_token}}"},
-							{"key": "Content-Type", "value": "application/json"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tech_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
 						],
 						"body": {
 							"mode": "raw",
@@ -533,8 +823,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/close",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "close"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"close"
+							]
 						}
 					}
 				},
@@ -543,12 +839,21 @@
 					"request": {
 						"method": "GET",
 						"header": [
-							{"key": "Authorization", "value": "Bearer {{tech_token}}"}
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tech_token}}"
+							}
 						],
 						"url": {
 							"raw": "{{baseUrl}}/tickets/{{created_ticket_id}}/history",
-							"host": ["{{baseUrl}}"],
-							"path": ["tickets", "{{created_ticket_id}}", "history"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tickets",
+								"{{created_ticket_id}}",
+								"history"
+							]
 						}
 					}
 				}
