@@ -12,7 +12,7 @@ def render_login_view() -> None:
         ui.navigate.to("/dashboard")
         return
 
-    with ui.element("div").classes("min-h-screen flex items-center justify-center px-4"):
+    with ui.element("div").classes("login-backdrop"):
         with ui.card().classes("glass-card w-full max-w-md p-8 rounded-3xl shadow-xl border border-slate-100"):
             with ui.column().classes("w-full items-center gap-2 mb-4"):
                 ui.icon("support_agent").classes("text-5xl text-blue-600")
