@@ -10,7 +10,6 @@ NiceGUI được pin `2.24.2` để tương thích với backend đang pin `fast
 - `common/`: style, formatter, validator, component UI dùng chung.
 - `services/`: service layer cho Auth, Users, Devices, Tickets.
 - `views/`: màn hình chia theo role `auth`, `admin`, `technician`, `user`.
-- `index.html`, `pages/`, `js/`, `assets/css/`: UI HTML/JS legacy, được giữ lại để không mất phần đang có.
 
 ## Chạy frontend Python
 
