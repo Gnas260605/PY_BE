@@ -10,6 +10,8 @@ __pycache__/
 *$py.class
 *.so
 *.pyd
+.nicegui/
+**/.nicegui/
 
 # Testing & Coverage
 .pytest_cache/
