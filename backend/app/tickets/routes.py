@@ -11,6 +11,7 @@ from app.tickets.schemas import (
     CloseTicketRequest,
     CreateTicketCommentRequest,
     CreateTicketRequest,
+    DashboardStatsResponse,
     TicketCommentResponse,
     TicketDetailResponse,
     TicketHistoryResponse,
@@ -24,6 +25,7 @@ from app.tickets.service import (
     close_ticket,
     create_ticket,
     create_ticket_comment,
+    get_dashboard_stats,
     get_ticket_detail,
     get_ticket_history,
     list_ticket_comments,
@@ -34,6 +36,17 @@ from app.tickets.service import (
 
 
 router = APIRouter()
+
+
+@router.get(
+    "/dashboard/stats",
+    response_model=DashboardStatsResponse,
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def get_dashboard_stats_route(
+    current_user: dict = Depends(get_current_user),
+) -> DashboardStatsResponse:
+    return get_dashboard_stats(current_user=current_user)
 
 
 @router.get(

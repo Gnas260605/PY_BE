@@ -31,5 +31,8 @@ class DeviceService:
         service_cache.clear()
         return response
 
+    async def get_device_tickets(self, device_id: int) -> list[dict[str, Any]]:
+        return await http_client.get(f"/devices/{device_id}/tickets")
+
 
 device_service = DeviceService()

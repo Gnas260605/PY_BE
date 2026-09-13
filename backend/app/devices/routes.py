@@ -15,9 +15,11 @@ from app.devices.schemas import (
 from app.devices.service import (
     create_device,
     get_device_detail,
+    list_device_tickets,
     list_devices,
     update_device,
 )
+from app.tickets.schemas import TicketSummaryResponse
 
 
 router = APIRouter()
@@ -70,3 +72,13 @@ def update_device_route(
     current_user: dict = Depends(get_current_user),
 ) -> dict:
     return update_device(device_id, payload, current_user=current_user)
+
+
+@router.get(
+    "/devices/{device_id}/tickets",
+    response_model=list[TicketSummaryResponse],
+    dependencies=[Depends(require_roles("ADMIN", "TECHNICIAN"))],
+)
+def list_device_tickets_route(device_id: int) -> list[dict]:
+    return list_device_tickets(device_id)
+

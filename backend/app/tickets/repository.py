@@ -414,3 +414,73 @@ def get_comment_by_id(connection: MySQLConnection, comment_id: int) -> dict[str,
             "created_at": row["created_at"],
         }
 
+
+def get_dashboard_stats(connection: MySQLConnection, role: str, user_id: int) -> dict[str, Any]:
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute("SELECT COUNT(*) AS count FROM DEVICES")
+        total_devices = int(cursor.fetchone()["count"])
+
+        cursor.execute("SELECT COUNT(*) AS count FROM USERS WHERE trang_thai = 'ACTIVE'")
+        total_users = int(cursor.fetchone()["count"])
+
+        params = []
+        where_clauses = []
+        if role == "USER":
+            where_clauses.append("user_id = %s")
+            params.append(user_id)
+        elif role == "TECHNICIAN":
+            where_clauses.append("(technician_id = %s OR technician_id IS NULL)")
+            params.append(user_id)
+
+        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+
+        status_query = f"SELECT trang_thai, COUNT(*) AS count FROM TICKETS {where_sql} GROUP BY trang_thai"
+        cursor.execute(status_query, tuple(params))
+        status_counts = {"OPEN": 0, "ASSIGNED": 0, "IN_PROGRESS": 0, "RESOLVED": 0, "CLOSED": 0}
+        for row in cursor.fetchall():
+            if row["trang_thai"] in status_counts:
+                status_counts[row["trang_thai"]] = int(row["count"])
+
+        priority_query = f"SELECT muc_do_uu_tien, COUNT(*) AS count FROM TICKETS {where_sql} GROUP BY muc_do_uu_tien"
+        cursor.execute(priority_query, tuple(params))
+        priority_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "URGENT": 0}
+        for row in cursor.fetchall():
+            if row["muc_do_uu_tien"] in priority_counts:
+                priority_counts[row["muc_do_uu_tien"]] = int(row["count"])
+
+        cat_query = f"SELECT loai_yeu_cau, COUNT(*) AS count FROM TICKETS {where_sql} GROUP BY loai_yeu_cau"
+        cursor.execute(cat_query, tuple(params))
+        category_counts = {"INCIDENT": 0, "SERVICE_REQUEST": 0, "MAINTENANCE": 0}
+        for row in cursor.fetchall():
+            if row["loai_yeu_cau"] in category_counts:
+                category_counts[row["loai_yeu_cau"]] = int(row["count"])
+
+        total_tickets = sum(status_counts.values())
+
+        urgent_clauses = list(where_clauses)
+        urgent_params = list(params)
+        urgent_clauses.append("trang_thai IN ('OPEN', 'ASSIGNED', 'IN_PROGRESS')")
+        urgent_where_sql = f"WHERE {' AND '.join(urgent_clauses)}"
+        urgent_query = f"""
+            SELECT id, tieu_de AS title, mo_ta AS description, loai_yeu_cau AS category,
+                   muc_do_uu_tien AS priority, trang_thai AS status, user_id, device_id,
+                   technician_id, created_at, updated_at, resolved_at, closed_at
+            FROM TICKETS
+            {urgent_where_sql}
+            ORDER BY FIELD(muc_do_uu_tien, 'URGENT', 'HIGH', 'MEDIUM', 'LOW'), created_at DESC
+            LIMIT 5
+        """
+        cursor.execute(urgent_query, tuple(urgent_params))
+        urgent_tickets = cursor.fetchall()
+
+        return {
+            "total_tickets": total_tickets,
+            "total_devices": total_devices,
+            "total_users": total_users,
+            "status_counts": status_counts,
+            "priority_counts": priority_counts,
+            "category_counts": category_counts,
+            "urgent_tickets": urgent_tickets,
+        }
+
+

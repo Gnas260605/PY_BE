@@ -238,3 +238,14 @@ class TicketCommentResponse(BaseModel):
     content: str
     created_at: datetime
 
+
+class DashboardStatsResponse(BaseModel):
+    total_tickets: int
+    total_devices: int
+    total_users: int
+    status_counts: dict[str, int]
+    priority_counts: dict[str, int]
+    category_counts: dict[str, int]
+    urgent_tickets: list[TicketSummaryResponse]
+
+

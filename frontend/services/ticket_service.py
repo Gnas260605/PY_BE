@@ -81,6 +81,9 @@ class TicketService:
         service_cache.clear()
         return response
 
+    async def get_dashboard_stats(self) -> dict[str, Any]:
+        return await http_client.get("/dashboard/stats")
+
     @staticmethod
     def next_statuses(current_status: str | None) -> list[str]:
         return NEXT_STATUSES.get(current_status or "", [])

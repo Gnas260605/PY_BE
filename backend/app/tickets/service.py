@@ -10,6 +10,7 @@ from app.tickets.schemas import (
     CloseTicketRequest,
     CreateTicketCommentRequest,
     CreateTicketRequest,
+    DashboardStatsResponse,
     TicketCommentResponse,
     TicketDetailResponse,
     TicketHistoryResponse,
@@ -434,4 +435,24 @@ def create_ticket_comment(
     if new_comment is None:
         raise NotFoundError("COMMENT_NOT_FOUND")
     return TicketCommentResponse(**new_comment)
+
+
+def get_dashboard_stats(*, current_user: dict) -> DashboardStatsResponse:
+    role = current_user["vai_tro"]
+    user_id = int(current_user["id"])
+
+    with connection_scope() as connection:
+        stats = repository.get_dashboard_stats(connection, role, user_id)
+
+    urgent_tickets = [TicketSummaryResponse(**t) for t in stats["urgent_tickets"]]
+    return DashboardStatsResponse(
+        total_tickets=stats["total_tickets"],
+        total_devices=stats["total_devices"],
+        total_users=stats["total_users"],
+        status_counts=stats["status_counts"],
+        priority_counts=stats["priority_counts"],
+        category_counts=stats["category_counts"],
+        urgent_tickets=urgent_tickets,
+    )
+
 

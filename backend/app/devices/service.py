@@ -140,3 +140,12 @@ def update_device(
     if updated_device is None:
         raise NotFoundError("DEVICE_NOT_FOUND")
     return updated_device
+
+
+def list_device_tickets(device_id: int) -> list[dict]:
+    with connection_scope() as connection:
+        device = repository.get_device_by_id(connection, device_id)
+        if device is None:
+            raise NotFoundError("DEVICE_NOT_FOUND")
+        return repository.list_device_tickets(connection, device_id)
+

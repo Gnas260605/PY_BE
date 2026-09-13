@@ -212,7 +212,48 @@ Request body cho phep bat ky tap con nao cua:
 
 Response `200`: `DeviceResponse`
 
+#### `GET /devices/{id}/tickets`
+
+Roles: `ADMIN`, `TECHNICIAN`
+
+Response `200`: `TicketSummaryResponse[]`
+
+Danh sách tất cả các sự cố / yêu cầu bảo trì đã từng phát sinh trên thiết bị.
+
 ### Ticket management
+
+#### `GET /dashboard/stats`
+
+Roles: `USER`, `TECHNICIAN`, `ADMIN`
+
+Response `200`:
+
+```json
+{
+  "total_tickets": 8,
+  "total_devices": 7,
+  "total_users": 6,
+  "status_counts": {
+    "OPEN": 2,
+    "ASSIGNED": 1,
+    "IN_PROGRESS": 2,
+    "RESOLVED": 2,
+    "CLOSED": 1
+  },
+  "priority_counts": {
+    "LOW": 1,
+    "MEDIUM": 3,
+    "HIGH": 2,
+    "URGENT": 2
+  },
+  "category_counts": {
+    "INCIDENT": 3,
+    "SERVICE_REQUEST": 3,
+    "MAINTENANCE": 2
+  },
+  "urgent_tickets": [ ... ]
+}
+```
 
 #### `GET /tickets`
 

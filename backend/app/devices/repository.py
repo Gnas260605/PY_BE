@@ -134,3 +134,29 @@ def update_device(
     """
     with connection.cursor() as cursor:
         cursor.execute(query, tuple(params))
+
+
+def list_device_tickets(connection: MySQLConnection, device_id: int) -> list[dict[str, Any]]:
+    query = """
+        SELECT
+            t.id,
+            t.tieu_de AS title,
+            t.mo_ta AS description,
+            t.loai_yeu_cau AS category,
+            t.muc_do_uu_tien AS priority,
+            t.trang_thai AS status,
+            t.user_id,
+            t.device_id,
+            t.technician_id,
+            t.created_at,
+            t.updated_at,
+            t.resolved_at,
+            t.closed_at
+        FROM TICKETS t
+        WHERE t.device_id = %s
+        ORDER BY t.created_at DESC
+    """
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute(query, (device_id,))
+        return cursor.fetchall()
+
