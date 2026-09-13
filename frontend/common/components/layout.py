@@ -29,8 +29,8 @@ def app_shell(title: str, content: Callable[[dict], None]) -> None:
         return
 
     role = user.get("vai_tro", "USER")
-    navbar(title, user, logout_and_go_home)
-    sidebar(role)
+    drawer = sidebar(role)
+    navbar(title, user, logout_and_go_home, on_toggle_sidebar=drawer.toggle if drawer else None)
     bottom_nav(role)
 
     with ui.element("main").classes(RESPONSIVE_PAGE):
