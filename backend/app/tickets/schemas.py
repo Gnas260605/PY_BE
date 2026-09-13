@@ -213,3 +213,28 @@ class UpdateTicketRequest(BaseModel):
         if normalized not in VALID_TICKET_PRIORITIES:
             raise ValueError("priority must be LOW, MEDIUM, HIGH, or URGENT")
         return normalized
+
+
+class CreateTicketCommentRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("content")
+    @classmethod
+    def strip_content(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("content must not be blank")
+        return normalized
+
+
+class TicketCommentResponse(BaseModel):
+    id: int
+    ticket_id: int
+    user_id: int
+    user_name: str
+    user_role: str
+    content: str
+    created_at: datetime
+

@@ -339,6 +339,52 @@ Response `200`:
 ]
 ```
 
+#### `GET /tickets/{id}/comments`
+
+Roles: `USER`, `TECHNICIAN`, `ADMIN`
+
+Response `200`:
+
+```json
+[
+  {
+    "id": 1,
+    "ticket_id": 1,
+    "user_id": 2,
+    "user_name": "Ky thuat vien 01",
+    "user_role": "TECHNICIAN",
+    "content": "Dang kiem tra thiet bi",
+    "created_at": "2026-08-24T10:15:00"
+  }
+]
+```
+
+#### `POST /tickets/{id}/comments`
+
+Roles: `USER`, `TECHNICIAN`, `ADMIN`
+
+Request:
+
+```json
+{
+  "content": "Noi dung trao doi hoac phan hoi ve su co"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "id": 1,
+  "ticket_id": 1,
+  "user_id": 3,
+  "user_name": "Nguoi dung 01",
+  "user_role": "USER",
+  "content": "Noi dung trao doi hoac phan hoi ve su co",
+  "created_at": "2026-08-24T10:20:00"
+}
+```
+
 ## Response models
 
 ### `UserResponse`

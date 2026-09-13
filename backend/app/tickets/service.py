@@ -8,7 +8,9 @@ from app.tickets import repository
 from app.tickets.schemas import (
     AssignTicketRequest,
     CloseTicketRequest,
+    CreateTicketCommentRequest,
     CreateTicketRequest,
+    TicketCommentResponse,
     TicketDetailResponse,
     TicketHistoryResponse,
     TicketListQuery,
@@ -388,3 +390,48 @@ def get_ticket_history(ticket_id: int, *, current_user: dict) -> list[TicketHist
         history_rows = repository.get_ticket_history(connection, ticket_id)
 
     return [TicketHistoryResponse(**row) for row in history_rows]
+
+
+def list_ticket_comments(ticket_id: int, *, current_user: dict) -> list[TicketCommentResponse]:
+    with connection_scope() as connection:
+        ticket = repository.get_ticket_by_id(connection, ticket_id)
+        if ticket is None:
+            raise NotFoundError("TICKET_NOT_FOUND")
+        _ensure_visible(ticket, current_user)
+        comments = repository.list_comments(connection, ticket_id)
+
+    return [TicketCommentResponse(**comment) for comment in comments]
+
+
+def create_ticket_comment(
+    ticket_id: int,
+    payload: CreateTicketCommentRequest,
+    *,
+    current_user: dict,
+) -> TicketCommentResponse:
+    with connection_scope() as connection:
+        ticket = repository.get_ticket_by_id(connection, ticket_id)
+        if ticket is None:
+            raise NotFoundError("TICKET_NOT_FOUND")
+        _ensure_visible(ticket, current_user)
+
+        try:
+            comment_id = repository.create_comment(
+                connection,
+                ticket_id=ticket_id,
+                user_id=int(current_user["id"]),
+                content=payload.content,
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+        new_comment = repository.get_comment_by_id(connection, comment_id)
+
+    logger.info("TICKET_COMMENT_CREATED ticket_id=%s user_id=%s", ticket_id, current_user["id"])
+
+    if new_comment is None:
+        raise NotFoundError("COMMENT_NOT_FOUND")
+    return TicketCommentResponse(**new_comment)
+

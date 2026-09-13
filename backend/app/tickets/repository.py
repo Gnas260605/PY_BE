@@ -336,3 +336,81 @@ def get_ticket_history(connection: MySQLConnection, ticket_id: int) -> list[dict
             }
             for row in rows
         ]
+
+
+def create_comment(
+    connection: MySQLConnection,
+    ticket_id: int,
+    user_id: int,
+    content: str,
+) -> int:
+    query = """
+        INSERT INTO TICKET_COMMENTS (ticket_id, user_id, noi_dung)
+        VALUES (%s, %s, %s)
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, (ticket_id, user_id, content))
+        return int(cursor.lastrowid)
+
+
+def list_comments(connection: MySQLConnection, ticket_id: int) -> list[dict[str, Any]]:
+    query = """
+        SELECT
+            c.id,
+            c.ticket_id,
+            c.user_id,
+            COALESCE(u.ho_ten, u.username, 'Unknown') AS user_name,
+            COALESCE(u.vai_tro, 'USER') AS user_role,
+            c.noi_dung AS content,
+            c.created_at
+        FROM TICKET_COMMENTS c
+        LEFT JOIN USERS u ON c.user_id = u.id
+        WHERE c.ticket_id = %s
+        ORDER BY c.created_at ASC, c.id ASC
+    """
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute(query, (ticket_id,))
+        rows = cursor.fetchall()
+        return [
+            {
+                "id": row["id"],
+                "ticket_id": row["ticket_id"],
+                "user_id": row["user_id"],
+                "user_name": row["user_name"],
+                "user_role": row["user_role"],
+                "content": row["content"],
+                "created_at": row["created_at"],
+            }
+            for row in rows
+        ]
+
+
+def get_comment_by_id(connection: MySQLConnection, comment_id: int) -> dict[str, Any] | None:
+    query = """
+        SELECT
+            c.id,
+            c.ticket_id,
+            c.user_id,
+            COALESCE(u.ho_ten, u.username, 'Unknown') AS user_name,
+            COALESCE(u.vai_tro, 'USER') AS user_role,
+            c.noi_dung AS content,
+            c.created_at
+        FROM TICKET_COMMENTS c
+        LEFT JOIN USERS u ON c.user_id = u.id
+        WHERE c.id = %s
+    """
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute(query, (comment_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return {
+            "id": row["id"],
+            "ticket_id": row["ticket_id"],
+            "user_id": row["user_id"],
+            "user_name": row["user_name"],
+            "user_role": row["user_role"],
+            "content": row["content"],
+            "created_at": row["created_at"],
+        }
+

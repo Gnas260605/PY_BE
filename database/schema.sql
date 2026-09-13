@@ -181,3 +181,30 @@ CREATE TABLE IF NOT EXISTS TICKET_HISTORY (
     KEY idx_history_actor (nguoi_thuc_hien_id),
     KEY idx_history_action (hanh_dong)
 ) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
+-- 5. BẢNG TICKET_COMMENTS (Bình luận / trao đổi trong ticket)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS TICKET_COMMENTS (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ticket_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    noi_dung TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    CONSTRAINT fk_comments_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES TICKETS(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_comments_user
+        FOREIGN KEY (user_id)
+        REFERENCES USERS(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    KEY idx_comments_ticket (ticket_id, created_at)
+) ENGINE=InnoDB;

@@ -9,7 +9,9 @@ from app.core.errors import BadRequestError
 from app.tickets.schemas import (
     AssignTicketRequest,
     CloseTicketRequest,
+    CreateTicketCommentRequest,
     CreateTicketRequest,
+    TicketCommentResponse,
     TicketDetailResponse,
     TicketHistoryResponse,
     TicketListQuery,
@@ -21,8 +23,10 @@ from app.tickets.service import (
     assign_ticket,
     close_ticket,
     create_ticket,
+    create_ticket_comment,
     get_ticket_detail,
     get_ticket_history,
+    list_ticket_comments,
     list_tickets,
     update_ticket,
     update_ticket_status,
@@ -147,3 +151,30 @@ def get_ticket_history_route(
     current_user: dict = Depends(get_current_user),
 ) -> list[TicketHistoryResponse]:
     return get_ticket_history(ticket_id, current_user=current_user)
+
+
+@router.get(
+    "/tickets/{ticket_id}/comments",
+    response_model=list[TicketCommentResponse],
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def list_ticket_comments_route(
+    ticket_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> list[TicketCommentResponse]:
+    return list_ticket_comments(ticket_id, current_user=current_user)
+
+
+@router.post(
+    "/tickets/{ticket_id}/comments",
+    response_model=TicketCommentResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def create_ticket_comment_route(
+    ticket_id: int,
+    payload: CreateTicketCommentRequest,
+    current_user: dict = Depends(get_current_user),
+) -> TicketCommentResponse:
+    return create_ticket_comment(ticket_id, payload, current_user=current_user)
+

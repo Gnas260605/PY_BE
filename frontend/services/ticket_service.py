@@ -73,9 +73,18 @@ class TicketService:
     async def get_history(self, ticket_id: int) -> list[dict[str, Any]]:
         return await http_client.get(f"/tickets/{ticket_id}/history")
 
+    async def list_comments(self, ticket_id: int) -> list[dict[str, Any]]:
+        return await http_client.get(f"/tickets/{ticket_id}/comments")
+
+    async def create_comment(self, ticket_id: int, content: str) -> dict[str, Any]:
+        response = await http_client.post(f"/tickets/{ticket_id}/comments", data={"content": content})
+        service_cache.clear()
+        return response
+
     @staticmethod
     def next_statuses(current_status: str | None) -> list[str]:
         return NEXT_STATUSES.get(current_status or "", [])
 
 
 ticket_service = TicketService()
+
