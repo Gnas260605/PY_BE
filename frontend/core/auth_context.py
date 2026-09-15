@@ -7,6 +7,14 @@ class AuthContext:
     def get_token() -> Optional[str]:
         return app.storage.user.get("access_token")
 
+    @property
+    def token(self) -> Optional[str]:
+        return self.get_token()
+
+    @property
+    def current_user(self) -> Optional[Dict[str, Any]]:
+        return self.get_current_user()
+
     @staticmethod
     def get_current_user() -> Optional[Dict[str, Any]]:
         return app.storage.user.get("current_user")

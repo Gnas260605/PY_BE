@@ -1,11 +1,9 @@
 from nicegui import ui
 
-
 PRIMARY = "#2563eb"
 SURFACE = "#ffffff"
 BACKGROUND = "#f8fafc"
 TEXT = "#0f172a"
-
 
 
 def apply_theme() -> None:
@@ -40,21 +38,6 @@ def apply_theme() -> None:
             direction: ltr;
             -webkit-font-smoothing: antialiased;
           }
-          .login-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            z-index: 10;
-            padding: 1rem;
-          }
           body {
             background-color: #f8fafc;
             color: #0f172a;
@@ -63,10 +46,23 @@ def apply_theme() -> None:
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
+          /* Compact top layout overrides */
+          .nicegui-content {
+            padding: 0 !important;
+          }
+          .q-header {
+            min-height: 48px !important;
+            height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
+          }
+          .q-page-container {
+            padding-top: 48px !important;
+          }
           /* Custom sleek scrollbar */
           ::-webkit-scrollbar {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
           }
           ::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -78,23 +74,17 @@ def apply_theme() -> None:
           ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
           }
-          /* Smooth card hover lift */
+          /* Card hover */
           .card-hover {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .card-hover:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.08);
-          }
-          /* Glassmorphic cards */
-          .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.07);
           }
           /* Quasar component refinements */
           .q-field--outlined .q-field__control {
-            border-radius: 12px !important;
+            border-radius: 10px !important;
             background: #ffffff;
             transition: border-color 0.2s ease;
           }
@@ -102,55 +92,134 @@ def apply_theme() -> None:
             border-color: #2563eb !important;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
           }
+          .q-field--dense .q-field__control, .q-field--dense .q-field__marginal {
+            height: 38px !important;
+          }
           .q-btn {
             border-radius: 10px !important;
             font-weight: 600 !important;
             text-transform: none !important;
             letter-spacing: 0.01em !important;
           }
-          .q-table__card {
-            border-radius: 16px !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+          /* Sleek Quasar table styling */
+          .q-table__container {
+            background-color: #ffffff !important;
+            border-radius: 14px !important;
+            box-shadow: none !important;
           }
           .q-table th {
+            font-size: 11px !important;
             font-weight: 700 !important;
-            color: #475569 !important;
-            font-size: 0.75rem !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.05em !important;
+            letter-spacing: 0.04em !important;
+            color: #64748b !important;
             background-color: #f8fafc !important;
-            padding: 12px 16px !important;
+            padding: 8px 14px !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            height: 38px !important;
           }
           .q-table td {
-            font-size: 0.875rem !important;
-            padding: 14px 16px !important;
+            font-size: 12px !important;
             color: #1e293b !important;
+            padding: 8px 14px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            height: 42px !important;
           }
           .q-table tbody tr:hover {
             background-color: #f8fafc !important;
           }
-          .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+          .q-table__bottom {
+            font-size: 12px !important;
+            color: #64748b !important;
+            padding: 6px 14px !important;
+            border-top: 1px solid #e2e8f0 !important;
+          }
+          /* Interactive selection cards */
+          .select-card {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            width: 100%;
+          }
+          .select-card:hover {
+            border-color: #93c5fd;
+            background-color: #f8fafc;
+          }
+          .select-card.active-blue {
+            border-color: #2563eb !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 0 0 1px #2563eb !important;
+          }
+          .select-card.active-red {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
+          }
+          .select-card.active-amber {
+            border-color: #f59e0b !important;
+            background-color: #fffbeb !important;
+            box-shadow: 0 0 0 1px #f59e0b !important;
+          }
+          /* Step circle */
+          .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #2563eb;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+          }
+          /* Dynamic animated login backdrop */
+          .login-bg {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.28) 0%, transparent 42%),
+                        radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.25) 0%, transparent 45%),
+                        radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 55%),
+                        linear-gradient(135deg, #090e1a 0%, #0f172a 45%, #1e1b4b 100%);
             overflow: hidden;
+            z-index: 10;
           }
-          .desktop-table-view {
-            display: block !important;
-            width: 100%;
+          .login-grid-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+            background-size: 32px 32px;
+            pointer-events: none;
           }
-          .mobile-card-view {
-            display: none !important;
-            width: 100%;
+          .login-card-glass {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.3);
           }
-          @media (max-width: 768px) {
-            .desktop-table-view {
-              display: none !important;
-            }
-            .mobile-card-view {
-              display: flex !important;
-            }
+          @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+          }
+          .floating-chip {
+            animation: floatSlow 6s ease-in-out infinite;
+          }
+          .floating-chip-delayed {
+            animation: floatSlow 8s ease-in-out infinite 2s;
           }
         </style>
         """

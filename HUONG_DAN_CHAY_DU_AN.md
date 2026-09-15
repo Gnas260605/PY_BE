@@ -178,13 +178,35 @@ async function loadTickets() {
 ```
 
 ### 4.4. Cách chạy giao diện Frontend cục bộ
-- **Cách 1 (VS Code):** Cài extension **Live Server**, click chuột phải vào file `frontend/pages/index.html` chọn **Open with Live Server**.
-- **Cách 2 (Python built-in server):**
+
+#### 🌟 Cách 1: Chạy Cổng thông tin Web Portal Hiện đại (Python NiceGUI - Khuyên dùng)
+Giao diện portal chính thức với đầy đủ 3 vai trò User, Technician L2 và Admin đã tích hợp sẵn:
+```powershell
+# 1. Mở Terminal mới và vào thư mục frontend
+cd frontend
+
+# 2. Kích hoạt môi trường ảo (nếu chưa có thì: python -m venv .venv)
+.venv\Scripts\activate
+
+# 3. Cài đặt thư viện frontend (NiceGUI, httpx, pydantic...)
+pip install -r requirements.txt
+
+# 4. Khởi chạy ứng dụng Frontend
+python app.py
+```
+👉 Truy cập trình duyệt tại: **`http://127.0.0.1:8500`**
+
+---
+
+#### 🌐 Cách 2: Chạy giao diện HTML/CSS/JS thuần (Tùy chọn phụ)
+- **Dùng Live Server (VS Code):** Click chuột phải vào file `frontend/pages/index.html` chọn **Open with Live Server**.
+- **Dùng Python HTTP Server:**
   ```powershell
   cd frontend
   python -m http.server 3000
   ```
   Truy cập trình duyệt: `http://127.0.0.1:3000/pages/`
+
 
 ---
 

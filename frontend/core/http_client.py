@@ -54,6 +54,12 @@ class HttpClient:
 
         token = auth_context.get_token()
         if auth_required and token:
+            if token.startswith("demo-token-"):
+                raise ApiException(
+                    message="Chế độ trải nghiệm ngoại tuyến đang hoạt động.",
+                    status_code=401,
+                    detail_code="DEMO_MODE",
+                )
             headers["Authorization"] = f"Bearer {token}"
 
         try:
@@ -80,7 +86,8 @@ class HttpClient:
                     detail = res_json.get("detail", "")
                     friendly_msg = cls._translate_error(detail, response.status_code)
                     if response.status_code == 401:
-                        auth_context.clear_session()
+                        if not (token and token.startswith("demo-token-")):
+                            auth_context.clear_session()
                     raise ApiException(
                         message=friendly_msg,
                         status_code=response.status_code,
