@@ -7,6 +7,8 @@ from app.db.connection import connection_scope
 from app.tickets import repository
 from app.tickets.schemas import (
     AssignTicketRequest,
+    BatchAssignTicketsRequest,
+    BatchUpdateTicketStatusRequest,
     CloseTicketRequest,
     CreateTicketCommentRequest,
     CreateTicketRequest,
@@ -283,6 +285,68 @@ def assign_ticket(
     return TicketSummaryResponse(**updated_ticket)
 
 
+def batch_assign_tickets(
+    payload: BatchAssignTicketsRequest,
+    *,
+    current_user: dict,
+) -> list[TicketSummaryResponse]:
+    with connection_scope() as connection:
+        technician = repository.get_user_basic_by_id(connection, payload.technician_id)
+        if technician is None:
+            raise NotFoundError("TECHNICIAN_NOT_FOUND")
+        if technician["vai_tro"] != "TECHNICIAN":
+            raise BadRequestError("INVALID_TECHNICIAN_ROLE")
+        if technician["trang_thai"] != "ACTIVE":
+            raise BadRequestError("INACTIVE_TECHNICIAN")
+
+        updated_tickets: list[dict] = []
+        try:
+            for ticket_id in payload.ticket_ids:
+                ticket = repository.get_ticket_by_id(connection, ticket_id)
+                if ticket is None:
+                    raise NotFoundError("TICKET_NOT_FOUND")
+                if ticket["status"] == "CLOSED":
+                    raise BadRequestError("INVALID_TICKET_STATE")
+
+                new_status = "ASSIGNED" if ticket["status"] == "OPEN" else ticket["status"]
+                repository.update_ticket_fields(
+                    connection,
+                    ticket_id,
+                    {
+                        "technician_id": payload.technician_id,
+                        "trang_thai": new_status,
+                    },
+                )
+                repository.insert_ticket_history(
+                    connection,
+                    ticket_id=ticket_id,
+                    actor_user_id=int(current_user["id"]),
+                    action="ASSIGNED",
+                    old_status=ticket["status"],
+                    new_status=new_status,
+                    detail=f"Batch assigned technician_id={payload.technician_id}",
+                )
+
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+        for ticket_id in payload.ticket_ids:
+            updated_ticket = repository.get_ticket_by_id(connection, ticket_id)
+            if updated_ticket is None:
+                raise NotFoundError("TICKET_NOT_FOUND")
+            updated_tickets.append(updated_ticket)
+
+    logger.info(
+        "TICKET_BATCH_ASSIGNED count=%s technician_id=%s admin_id=%s",
+        len(payload.ticket_ids),
+        payload.technician_id,
+        current_user["id"],
+    )
+    return [TicketSummaryResponse(**ticket) for ticket in updated_tickets]
+
+
 def update_ticket_status(
     ticket_id: int,
     payload: UpdateTicketStatusRequest,
@@ -332,6 +396,77 @@ def update_ticket_status(
     if updated_ticket is None:
         raise NotFoundError("TICKET_NOT_FOUND")
     return TicketSummaryResponse(**updated_ticket)
+
+
+def batch_update_ticket_status(
+    payload: BatchUpdateTicketStatusRequest,
+    *,
+    current_user: dict,
+) -> list[TicketSummaryResponse]:
+    with connection_scope() as connection:
+        updated_tickets: list[dict] = []
+        try:
+            for ticket_id in payload.ticket_ids:
+                ticket = repository.get_ticket_by_id(connection, ticket_id)
+                if ticket is None:
+                    raise NotFoundError("TICKET_NOT_FOUND")
+
+                if payload.status == "CLOSED":
+                    if ticket["status"] != "RESOLVED":
+                        raise BadRequestError("INVALID_TRANSITION")
+                    repository.update_ticket_fields(
+                        connection,
+                        ticket_id,
+                        {
+                            "trang_thai": "CLOSED",
+                            "closed_at": "CURRENT_TIMESTAMP",
+                        },
+                    )
+                    repository.insert_ticket_history(
+                        connection,
+                        ticket_id=ticket_id,
+                        actor_user_id=int(current_user["id"]),
+                        action="CLOSED",
+                        old_status="RESOLVED",
+                        new_status="CLOSED",
+                        detail=payload.note,
+                    )
+                    continue
+
+                _ensure_transition_allowed(ticket["status"], payload.status)
+                updates: dict[str, object] = {"trang_thai": payload.status}
+                if payload.status == "RESOLVED":
+                    updates["resolved_at"] = "CURRENT_TIMESTAMP"
+
+                repository.update_ticket_fields(connection, ticket_id, updates)
+                repository.insert_ticket_history(
+                    connection,
+                    ticket_id=ticket_id,
+                    actor_user_id=int(current_user["id"]),
+                    action="STATUS_CHANGED",
+                    old_status=ticket["status"],
+                    new_status=payload.status,
+                    detail=f"Batch status changed to {payload.status}",
+                )
+
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+        for ticket_id in payload.ticket_ids:
+            updated_ticket = repository.get_ticket_by_id(connection, ticket_id)
+            if updated_ticket is None:
+                raise NotFoundError("TICKET_NOT_FOUND")
+            updated_tickets.append(updated_ticket)
+
+    logger.info(
+        "TICKET_BATCH_STATUS_CHANGED count=%s status=%s admin_id=%s",
+        len(payload.ticket_ids),
+        payload.status,
+        current_user["id"],
+    )
+    return [TicketSummaryResponse(**ticket) for ticket in updated_tickets]
 
 
 def close_ticket(

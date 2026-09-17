@@ -38,3 +38,23 @@ class LoginResponse(BaseModel):
     user: LoginUserResponse
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CurrentUserResponse(LoginUserResponse):
+    pass
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=255)
+    new_password: str = Field(min_length=8, max_length=255)
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("current_password", "new_password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_bcrypt_password_input(value)
+
+
+class ChangePasswordResponse(BaseModel):
+    status: str

@@ -15,6 +15,7 @@ from app.devices.schemas import (
 from app.devices.service import (
     create_device,
     get_device_detail,
+    list_active_devices,
     list_device_tickets,
     list_devices,
     update_device,
@@ -50,6 +51,15 @@ def list_devices_route(
 )
 def create_device_route(payload: CreateDeviceRequest) -> dict:
     return create_device(payload)
+
+
+@router.get(
+    "/devices/active-list",
+    response_model=list[DeviceResponse],
+    dependencies=[Depends(require_roles("USER", "ADMIN", "TECHNICIAN"))],
+)
+def list_active_devices_route() -> list[dict]:
+    return list_active_devices()
 
 
 @router.get(

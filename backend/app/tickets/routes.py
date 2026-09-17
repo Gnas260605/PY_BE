@@ -8,6 +8,8 @@ from app.core.auth import get_current_user, require_roles
 from app.core.errors import BadRequestError
 from app.tickets.schemas import (
     AssignTicketRequest,
+    BatchAssignTicketsRequest,
+    BatchUpdateTicketStatusRequest,
     CloseTicketRequest,
     CreateTicketCommentRequest,
     CreateTicketRequest,
@@ -22,6 +24,8 @@ from app.tickets.schemas import (
 )
 from app.tickets.service import (
     assign_ticket,
+    batch_assign_tickets,
+    batch_update_ticket_status,
     close_ticket,
     create_ticket,
     create_ticket_comment,
@@ -88,6 +92,30 @@ def create_ticket_route(
     current_user: dict = Depends(get_current_user),
 ) -> TicketSummaryResponse:
     return create_ticket(payload, current_user=current_user)
+
+
+@router.patch(
+    "/tickets/batch-assign",
+    response_model=list[TicketSummaryResponse],
+    dependencies=[Depends(require_roles("ADMIN"))],
+)
+def batch_assign_tickets_route(
+    payload: BatchAssignTicketsRequest,
+    current_user: dict = Depends(get_current_user),
+) -> list[TicketSummaryResponse]:
+    return batch_assign_tickets(payload, current_user=current_user)
+
+
+@router.patch(
+    "/tickets/batch-status",
+    response_model=list[TicketSummaryResponse],
+    dependencies=[Depends(require_roles("ADMIN"))],
+)
+def batch_update_ticket_status_route(
+    payload: BatchUpdateTicketStatusRequest,
+    current_user: dict = Depends(get_current_user),
+) -> list[TicketSummaryResponse]:
+    return batch_update_ticket_status(payload, current_user=current_user)
 
 
 @router.get(

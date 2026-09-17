@@ -7,6 +7,7 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.devices.routes import router as devices_router
 from app.health.routes import router as health_router
+from app.reports.routes import router as reports_router
 from app.tickets.routes import router as tickets_router
 from app.users.routes import router as users_router
 
@@ -34,3 +35,4 @@ app.include_router(auth_router, prefix="/api", tags=["auth"])
 app.include_router(users_router, prefix="/api", tags=["users"])
 app.include_router(tickets_router, prefix="/api", tags=["tickets"])
 app.include_router(devices_router, prefix="/api", tags=["devices"])
+app.include_router(reports_router, prefix="/api", tags=["reports"])

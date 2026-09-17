@@ -138,6 +138,22 @@ class AssignTicketRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class BatchAssignTicketsRequest(BaseModel):
+    ticket_ids: list[int] = Field(min_length=1, max_length=100)
+    technician_id: int
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("ticket_ids")
+    @classmethod
+    def validate_ticket_ids(cls, value: list[int]) -> list[int]:
+        if any(ticket_id <= 0 for ticket_id in value):
+            raise ValueError("ticket_ids must contain positive ids")
+        if len(set(value)) != len(value):
+            raise ValueError("ticket_ids must not contain duplicates")
+        return value
+
+
 class UpdateTicketStatusRequest(BaseModel):
     status: str
 
@@ -150,6 +166,39 @@ class UpdateTicketStatusRequest(BaseModel):
         if normalized not in VALID_TICKET_STATUSES:
             raise ValueError("status must be OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, or CLOSED")
         return normalized
+
+
+class BatchUpdateTicketStatusRequest(BaseModel):
+    ticket_ids: list[int] = Field(min_length=1, max_length=100)
+    status: str
+    note: str | None = Field(default=None, max_length=500)
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("ticket_ids")
+    @classmethod
+    def validate_ticket_ids(cls, value: list[int]) -> list[int]:
+        if any(ticket_id <= 0 for ticket_id in value):
+            raise ValueError("ticket_ids must contain positive ids")
+        if len(set(value)) != len(value):
+            raise ValueError("ticket_ids must not contain duplicates")
+        return value
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if normalized not in VALID_TICKET_STATUSES:
+            raise ValueError("status must be OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, or CLOSED")
+        return normalized
+
+    @field_validator("note")
+    @classmethod
+    def normalize_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = value.strip()
+        return normalized or None
 
 
 class CloseTicketRequest(BaseModel):

@@ -45,6 +45,22 @@ def get_user_by_id(connection: MySQLConnection, user_id: int) -> dict[str, Any] 
         return cursor.fetchone()
 
 
+def get_user_with_password_by_id(
+    connection: MySQLConnection, user_id: int
+) -> dict[str, Any] | None:
+    query = f"""
+        SELECT
+            {USER_COLUMNS},
+            password_hash
+        FROM USERS
+        WHERE id = %s
+        LIMIT 1
+    """
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute(query, (user_id,))
+        return cursor.fetchone()
+
+
 def list_users(
     connection: MySQLConnection,
     *,
@@ -174,3 +190,17 @@ def update_user_status(connection: MySQLConnection, user_id: int, status: str) -
     """
     with connection.cursor() as cursor:
         cursor.execute(query, (status, user_id))
+
+
+def update_password_hash(
+    connection: MySQLConnection,
+    user_id: int,
+    password_hash: str,
+) -> None:
+    query = """
+        UPDATE USERS
+        SET password_hash = %s
+        WHERE id = %s
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, (password_hash, user_id))

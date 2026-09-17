@@ -38,6 +38,16 @@ def list_devices(query: DeviceListQuery) -> list[dict]:
         )
 
 
+def list_active_devices() -> list[dict]:
+    with connection_scope() as connection:
+        return repository.list_devices(
+            connection,
+            status="ACTIVE",
+            device_type=None,
+            keyword=None,
+        )
+
+
 def create_device(payload: CreateDeviceRequest) -> dict:
     with connection_scope() as connection:
         duplicate = repository.find_duplicate_device_code(
