@@ -74,6 +74,15 @@ def apply_theme() -> None:
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
+          .q-page-container {
+            padding-top: 48px !important;
+          }
+          main {
+            padding-top: 0.5rem !important;
+          }
+          main > :first-child {
+            margin-top: 0 !important;
+          }
           /* Custom sleek scrollbar */
           ::-webkit-scrollbar {
             width: 6px;

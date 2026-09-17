@@ -38,7 +38,7 @@ def render_user_mgmt_view() -> None:
         # =========================================================================
         # 2. PAGE HEADER (Enterprise Admin Console)
         # =========================================================================
-        with ui.row().classes("w-full justify-between items-center py-2.5 border-b border-slate-200 mb-3 flex-wrap gap-2"):
+        with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-200 mb-2.5 flex-wrap gap-2"):
             with ui.column().classes("gap-0.5"):
                 with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 font-medium"):
                     ui.label("Trang chủ")
@@ -58,12 +58,12 @@ def render_user_mgmt_view() -> None:
                 ).props("unelevated color=primary size=md").classes("h-[36px] rounded-lg font-medium shadow-2xs px-3.5 text-xs")
 
         # Container for Real Data Summary Strip
-        summary_container = ui.row().classes("w-full gap-2.5 mb-3 flex-wrap")
+        summary_container = ui.row().classes("w-full gap-2.5 mb-2.5 flex-wrap")
 
         # =========================================================================
         # 3. UNIFIED FILTER TOOLBAR
         # =========================================================================
-        with ui.card().classes("w-full p-2.5 rounded-lg bg-white border border-slate-200/90 shadow-2xs mb-3"):
+        with ui.card().classes("w-full p-2.5 rounded-lg bg-white border border-slate-200/90 shadow-2xs mb-2.5"):
             with ui.row().classes("w-full items-center gap-2 flex-wrap"):
                 search_input = (
                     ui.input(

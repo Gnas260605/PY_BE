@@ -46,7 +46,7 @@ def render_ticket_dispatch_view() -> None:
         # =========================================================================
         # 2. PAGE HEADER (Compact, Professional Workspace)
         # =========================================================================
-        with ui.row().classes("w-full justify-between items-center py-2.5 border-b border-slate-200 mb-3 flex-wrap gap-2"):
+        with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-200 mb-2.5 flex-wrap gap-2"):
             with ui.column().classes("gap-0.5"):
                 with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 font-medium"):
                     ui.label("Trang chủ")
