@@ -589,8 +589,8 @@ def render_ticket_dispatch_view() -> None:
                                                 "+ Gán KTV",
                                                 icon="person_add",
                                                 on_click=lambda tid=t_id, tit=t.get("title", ""): show_assign_dialog([tid], [tit]),
-                                            ).props("outline size=xs color=primary dense").classes(
-                                                "h-7 border-dashed text-[11px] font-semibold px-2 rounded hover:bg-blue-50"
+                                            ).props("outline size=sm color=primary dense").classes(
+                                                "h-8.5 border-dashed text-xs font-bold px-3 rounded-lg hover:bg-blue-50 shadow-2xs"
                                             )
 
                                     # 6. Updated Relative Time (With exact datetime tooltip)
@@ -610,7 +610,7 @@ def render_ticket_dispatch_view() -> None:
                                         ui.button(
                                             icon="arrow_forward",
                                             on_click=lambda tid=t_id: ui.navigate.to(f"/tickets/{tid}"),
-                                        ).props("flat round dense size=sm color=slate-500").classes("hover:text-primary hover:bg-slate-100")
+                                        ).props("outline dense size=sm color=slate-600").classes("w-8.5 h-8.5 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-primary shrink-0").tooltip("Xem chi tiết sự cố")
 
                     # Pagination Footer (Compact 1–25 / Total format)
                     with ui.row().classes("w-full justify-between items-center px-4 py-2.5 bg-slate-50/70 border-t border-slate-200 flex-wrap gap-2 text-xs text-slate-600"):

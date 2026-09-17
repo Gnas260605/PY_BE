@@ -403,22 +403,22 @@ def render_task_board_view() -> None:
                             ui.button(
                                 "⚡ Nhận xử lý ngay",
                                 on_click=lambda: (dialog.close(), handle_claim_ticket(ticket_id)),
-                            ).props("unelevated color=primary size=sm").classes("rounded font-bold text-xs")
+                            ).props("unelevated color=primary size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                         elif status == "ASSIGNED":
                             ui.button(
                                 "▶ Bắt đầu xử lý",
                                 on_click=lambda: (dialog.close(), handle_update_status(ticket_id, "IN_PROGRESS")),
-                            ).props("unelevated color=amber-700 size=sm").classes("rounded font-bold text-xs text-white")
+                            ).props("unelevated color=amber-700 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs text-white shadow-2xs")
                         elif status == "IN_PROGRESS":
                             ui.button(
                                 "✅ Đã khắc phục xong",
                                 on_click=lambda: (dialog.close(), open_resolution_dialog(ticket_id)),
-                            ).props("unelevated color=positive size=sm").classes("rounded font-bold text-xs")
+                            ).props("unelevated color=positive size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                         elif status == "RESOLVED":
                             ui.button(
                                 "🔒 Đóng & Bàn giao",
                                 on_click=lambda: (dialog.close(), open_close_dialog(ticket_id)),
-                            ).props("unelevated color=slate-800 size=sm").classes("rounded font-bold text-xs")
+                            ).props("unelevated color=slate-800 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
 
                     # Description
                     with ui.card().classes("w-full p-3 rounded-lg bg-slate-50 border border-slate-200/80 gap-1"):
@@ -491,7 +491,7 @@ def render_task_board_view() -> None:
                         ui.label("THIẾT BỊ & VỊ TRÍ").classes("w-44 shrink-0")
                         ui.label("CẬP NHẬT").classes("w-32 shrink-0")
                         ui.label("TRẠNG THÁI").classes("w-36 shrink-0")
-                        ui.label("THAO TÁC NHANH").classes("w-44 shrink-0 text-right")
+                        ui.label("THAO TÁC NHANH").classes("w-56 shrink-0 text-right")
 
                     # Table Rows
                     with ui.column().classes("w-full divide-y divide-slate-100 gap-0"):
@@ -584,33 +584,33 @@ def render_task_board_view() -> None:
                 with ui.row().classes("w-36 shrink-0 items-center no-wrap"):
                     status_badge(status)
 
-                # 6. Fast 1-Click Action Button
-                with ui.row().classes("w-44 shrink-0 justify-end items-center gap-1.5"):
+                # 6. Fast 1-Click Action Button (Large, Comfortable Touch Target)
+                with ui.row().classes("w-56 shrink-0 justify-end items-center gap-2"):
                     if is_unassigned or status == "OPEN":
                         ui.button(
                             "⚡ Nhận việc",
                             on_click=lambda tck_id=tck_id: handle_claim_ticket(tck_id),
-                        ).props("unelevated dense size=xs color=primary").classes("rounded-lg px-2.5 font-bold shadow-2xs text-[11px]")
+                        ).props("unelevated dense size=sm color=primary").classes("h-8.5 px-3.5 rounded-lg font-bold shadow-2xs text-xs")
                     elif status == "ASSIGNED":
                         ui.button(
                             "▶ Bắt đầu xử lý",
                             on_click=lambda tck_id=tck_id: handle_update_status(tck_id, "IN_PROGRESS"),
-                        ).props("unelevated dense size=xs color=amber-700").classes("rounded-lg px-2.5 font-bold text-white shadow-2xs text-[11px]")
+                        ).props("unelevated dense size=sm color=amber-700").classes("h-8.5 px-3.5 rounded-lg font-bold text-white shadow-2xs text-xs")
                     elif status == "IN_PROGRESS":
                         ui.button(
                             "✅ Khắc phục xong",
                             on_click=lambda tck_id=tck_id: open_resolution_dialog(tck_id),
-                        ).props("unelevated dense size=xs color=positive").classes("rounded-lg px-2.5 font-bold shadow-2xs text-[11px]")
+                        ).props("unelevated dense size=sm color=positive").classes("h-8.5 px-3.5 rounded-lg font-bold text-white shadow-2xs text-xs")
                     elif status == "RESOLVED":
                         ui.button(
                             "🔒 Đóng sự cố",
                             on_click=lambda tck_id=tck_id: open_close_dialog(tck_id),
-                        ).props("unelevated dense size=xs color=slate-800").classes("rounded-lg px-2.5 font-bold shadow-2xs text-[11px]")
+                        ).props("unelevated dense size=sm color=slate-800").classes("h-8.5 px-3.5 rounded-lg font-bold text-white shadow-2xs text-xs")
 
                     ui.button(
                         icon="visibility",
                         on_click=lambda tck_id=tck_id: show_ticket_drawer(tck_id),
-                    ).props("flat dense round size=xs color=slate-600").tooltip("Xem chi tiết & Ghi chú")
+                    ).props("outline dense size=sm color=slate-600").classes("h-8.5 w-8.5 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-primary shrink-0").tooltip("Xem chi tiết & Ghi chú")
 
         # =========================================================================
         # 9. RENDER KANBAN VIEW
@@ -673,22 +673,22 @@ def render_task_board_view() -> None:
                     ui.button(
                         "⚡ Nhận việc",
                         on_click=lambda tck_id=tck_id: handle_claim_ticket(tck_id),
-                    ).props("unelevated dense size=xs color=primary").classes("w-full font-semibold py-1 rounded text-xs")
+                    ).props("unelevated size=sm color=primary").classes("w-full h-8.5 font-bold rounded-lg text-xs shadow-2xs")
                 elif cur_status in ("OPEN", "ASSIGNED"):
                     ui.button(
                         "▶ Bắt đầu xử lý",
                         on_click=lambda tck_id=tck_id: handle_update_status(tck_id, "IN_PROGRESS"),
-                    ).props("unelevated dense size=xs color=amber-700").classes("w-full font-semibold py-1 rounded text-white text-xs")
+                    ).props("unelevated size=sm color=amber-700").classes("w-full h-8.5 font-bold rounded-lg text-white text-xs shadow-2xs")
                 elif cur_status == "IN_PROGRESS":
                     ui.button(
                         "✅ Khắc phục xong",
                         on_click=lambda tck_id=tck_id: open_resolution_dialog(tck_id),
-                    ).props("unelevated dense size=xs color=positive").classes("w-full font-semibold py-1 rounded text-xs")
+                    ).props("unelevated size=sm color=positive").classes("w-full h-8.5 font-bold text-white rounded-lg text-xs shadow-2xs")
                 elif cur_status == "RESOLVED":
                     ui.button(
                         "🔒 Đóng sự cố",
                         on_click=lambda tck_id=tck_id: open_close_dialog(tck_id),
-                    ).props("unelevated dense size=xs color=slate-800").classes("w-full font-semibold py-1 rounded text-xs")
+                    ).props("unelevated size=sm color=slate-800").classes("w-full h-8.5 font-bold text-white rounded-lg text-xs shadow-2xs")
 
         # =========================================================================
         # 10. DATA LOADER & RENDER ALL
