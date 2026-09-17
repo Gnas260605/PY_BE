@@ -6,9 +6,10 @@ from nicegui import ui
 from common.components import toast
 from common.components.empty_state import empty_state
 from common.components.layout import app_shell
+from common.components.loading import skeleton_loader
 from common.components.status_badge import priority_badge, status_badge
-from common.formatters import format_datetime, truncate
-from core.constants import CATEGORY_LABELS, TicketPriority
+from common.formatters import format_datetime, format_relative_time, truncate
+from core.constants import CATEGORY_LABELS, STATUS_LABELS, TicketPriority, TicketStatus
 from services.ticket_service import ticket_service
 from services.user_service import user_service
 
@@ -20,9 +21,9 @@ PRIORITY_WEIGHT = {
 }
 
 PRIORITY_BORDER_MAP = {
-    "URGENT": "border-l-4 border-l-rose-500 bg-rose-50/10",
+    "URGENT": "border-l-4 border-l-rose-500 bg-rose-50/15",
     "HIGH": "border-l-4 border-l-amber-500 bg-amber-50/10",
-    "MEDIUM": "border-l-4 border-l-sky-500 bg-white",
+    "MEDIUM": "border-l-4 border-l-sky-400 bg-white",
     "LOW": "border-l-4 border-l-slate-300 bg-white",
 }
 
@@ -34,56 +35,88 @@ def render_ticket_dispatch_view() -> None:
             ui.label("Bạn không có quyền truy cập màn hình giám sát sự cố.").classes("text-red-600")
             return
 
-        # 1. Header Section
-        with ui.row().classes("w-full justify-between items-center py-1 mb-3 border-b border-slate-200/80"):
+        # =========================================================================
+        # 1. PAGE HEADER (Compact, Professional)
+        # =========================================================================
+        with ui.row().classes("w-full justify-between items-center py-2 border-b border-slate-200/80 mb-3"):
             with ui.column().classes("gap-0.5"):
-                with ui.row().classes("items-center gap-2"):
-                    ui.label("Giám sát & Điều phối Sự cố").classes("text-xl font-bold text-slate-900 tracking-tight")
-                    ui.label("DISPATCH DECK").classes("text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200 uppercase")
-                ui.label("Trung tâm kiểm soát hàng đợi kỹ thuật, phân bổ tài nguyên và giám sát tiến độ xử lý.").classes("text-xs text-slate-500")
+                ui.label("Giám sát & Điều phối Sự cố").classes("text-xl font-bold text-slate-900 tracking-tight")
+                ui.label("Theo dõi, phân công và xử lý các yêu cầu hỗ trợ trong toàn hệ thống.").classes("text-xs text-slate-500")
 
-            ui.button("Tạo ticket mới", icon="add", on_click=lambda: ui.navigate.to("/user/tickets/new")).props("color=primary unelevated size=sm").classes("px-3 py-1.5 font-bold shadow-xs")
+            ui.button(
+                "Tạo ticket",
+                icon="add",
+                on_click=lambda: ui.navigate.to("/user/tickets/new"),
+            ).props("color=primary unelevated size=sm").classes("px-3.5 py-1.5 font-bold shadow-2xs rounded-lg")
 
-        # 2. Metric Strip (Linear / Vercel style)
-        metrics_container = ui.row().classes("w-full gap-3 mb-4 items-stretch")
+        # =========================================================================
+        # 2. STATE MANAGEMENT & REACTIVE REFRESHABLE
+        # =========================================================================
+        state: dict[str, Any] = {
+            "raw_tickets": [],
+            "technicians": [],
+            "active_tab": "ALL",
+            "is_loading": True,
+            "error": None,
+        }
 
-        # 3. Control & Filter Deck
-        active_tab = {"value": "ALL"}
-        tabs_row = ui.row().classes("w-full gap-1.5 items-center")
+        # Operational Summary KPIs Container
+        kpi_container = ui.row().classes("w-full gap-3 mb-3 items-stretch")
 
-        with ui.card().classes("w-full p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs mb-3"):
-            with ui.column().classes("w-full gap-3"):
-                # Top: Tab selector
-                tabs_row
+        # Segmented Filter Tabs Container
+        tabs_container = ui.row().classes("w-full gap-1.5 items-center mb-2.5 flex-wrap")
 
-                # Bottom: Search & Sort bar
-                with ui.row().classes("w-full gap-2.5 items-center flex-wrap"):
-                    keyword = ui.input(placeholder="Tìm kiếm sự cố theo tiêu đề, mã ticket...").props("outlined dense clearable debounce=300").classes("flex-1 min-w-[240px]")
-                    
-                    sort_selector = ui.select(
-                        {
-                            "NEWEST": "🕒 Mới nhất trước",
-                            "OLDEST": "⏳ Cũ nhất trước",
-                            "PRIORITY_HIGH": "⚡ Độ ưu tiên cao nhất",
-                            "UNASSIGNED_FIRST": "👤 Chưa giao KTV lên đầu",
-                        },
-                        value="NEWEST",
-                    ).props("outlined dense").classes("w-56")
+        # Search & Filter Toolbar
+        with ui.card().classes("w-full p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs mb-3"):
+            with ui.row().classes("w-full gap-2.5 items-center flex-wrap"):
+                keyword = ui.input(
+                    placeholder="Tìm theo tiêu đề, mã ticket, người gửi...",
+                ).props("outlined dense clearable debounce=300").classes("flex-1 min-w-[240px]")
 
-                    priority_filter = ui.select(
-                        {"ALL": "Tất cả mức ưu tiên", **{item.value: f"Ưu tiên: {item.value}" for item in TicketPriority}},
-                        value="ALL",
-                    ).props("outlined dense").classes("w-44")
+                status_select = ui.select(
+                    {"ALL": "Tất cả trạng thái", **{item.value: STATUS_LABELS.get(item.value, item.value) for item in TicketStatus}},
+                    value="ALL",
+                    label="Trạng thái",
+                ).props("outlined dense").classes("w-44")
 
-                    async def handle_manual_refresh() -> None:
-                        await reload_tickets()
-                        toast.success("Đã cập nhật danh sách sự cố mới nhất!")
+                priority_select = ui.select(
+                    {"ALL": "Tất cả mức ưu tiên", **{item.value: item.value for item in TicketPriority}},
+                    value="ALL",
+                    label="Mức ưu tiên",
+                ).props("outlined dense").classes("w-40")
 
-                    ui.button(icon="refresh", on_click=handle_manual_refresh).props("outline dense size=sm color=slate-700").classes("p-2 shrink-0")
+                technician_select = ui.select(
+                    {"ALL": "Tất cả KTV", "UNASSIGNED": "⚡ Chưa phân công"},
+                    value="ALL",
+                    label="Kỹ thuật viên",
+                ).props("outlined dense").classes("w-44")
 
-        # 4. Main List Container
-        ticket_container = ui.column().classes("w-full gap-2.5")
+                sort_select = ui.select(
+                    {
+                        "NEWEST": "🕒 Mới nhất trước",
+                        "OLDEST": "⏳ Cũ nhất trước",
+                        "PRIORITY_HIGH": "⚡ Ưu tiên cao nhất",
+                        "UNASSIGNED_FIRST": "👤 Chưa giao KTV trước",
+                    },
+                    value="NEWEST",
+                    label="Sắp xếp",
+                ).props("outlined dense").classes("w-48")
 
+                clear_filter_btn = ui.button("Xóa lọc", icon="filter_alt_off").props("flat dense size=sm color=slate-600").classes("text-xs font-semibold")
+                clear_filter_btn.set_visibility(False)
+
+                async def handle_refresh() -> None:
+                    await fetch_data(force_refresh=True)
+                    toast.success("Đã cập nhật danh sách sự cố mới nhất!")
+
+                ui.button(icon="refresh", on_click=handle_refresh).props("outline dense size=sm color=slate-700").classes("p-2 shrink-0")
+
+        # Ticket Incident List Container
+        list_container = ui.column().classes("w-full gap-2")
+
+        # =========================================================================
+        # 3. ASSIGN TECHNICIAN MODAL
+        # =========================================================================
         async def open_assign_modal(tck: dict[str, Any]) -> None:
             tck_id = tck["id"]
             dialog = ui.dialog()
@@ -96,32 +129,24 @@ def render_ticket_dispatch_view() -> None:
                     ui.label(tck.get("title", "-")).classes("text-xs font-bold text-slate-800 line-clamp-1")
                     ui.label(truncate(tck.get("description", ""), 80)).classes("text-[11px] text-slate-500 line-clamp-1")
 
-                tech_select = ui.select({}, label="Chọn Kỹ thuật viên tiếp nhận").props("outlined").classes("w-full")
-
-                techs_map: dict[int, str] = {}
-                try:
-                    techs = await user_service.list_technicians()
-                    techs_map = {t["id"]: t.get("ho_ten") or t.get("username") for t in techs}
-                    tech_select.options = {t["id"]: f"{t.get('ho_ten')} (@{t.get('username')})" for t in techs}
-                    tech_select.update()
-                except Exception as exc:
-                    toast.error(f"Lỗi tải danh sách KTV: {exc}")
+                tech_opts = {t["id"]: f"{t.get('ho_ten')} (@{t.get('username')})" for t in state["technicians"]}
+                tech_picker = ui.select(tech_opts, label="Chọn Kỹ thuật viên tiếp nhận").props("outlined").classes("w-full")
 
                 async def submit_assign() -> None:
-                    if not tech_select.value:
+                    if not tech_picker.value:
                         toast.warning("Vui lòng chọn Kỹ thuật viên.")
                         return
-                    selected_tech_id = int(tech_select.value)
-                    tech_name = techs_map.get(selected_tech_id, f"KTV #{selected_tech_id}")
+                    selected_tech_id = int(tech_picker.value)
+                    tech_name = next((t.get("ho_ten") for t in state["technicians"] if t["id"] == selected_tech_id), f"KTV #{selected_tech_id}")
                     try:
                         await ticket_service.assign_ticket(tck_id, selected_tech_id)
                         dialog.close()
                         toast.show_popup(
                             title="Phân công KTV thành công! 🎉",
-                            message=f"Ticket #{tck_id} đã được chuyển giao cho Kỹ thuật viên {tech_name}.",
+                            message=f"Ticket #{tck_id} đã được giao xử lý cho Kỹ thuật viên {tech_name}.",
                             type="success",
                         )
-                        await reload_tickets()
+                        await fetch_data(force_refresh=True)
                     except Exception as exc:
                         toast.show_popup(
                             title="Không thể phân công",
@@ -135,205 +160,309 @@ def render_ticket_dispatch_view() -> None:
                     ui.button("Lưu phân công", icon="check", on_click=submit_assign).props("color=primary unelevated")
             dialog.open()
 
-        async def reload_tickets() -> None:
-            try:
-                raw_tickets = await ticket_service.list_tickets(
-                    priority=None if priority_filter.value == "ALL" else priority_filter.value,
-                    keyword=keyword.value,
-                    refresh=True,
-                )
-            except Exception as exc:
-                ticket_container.clear()
-                with ticket_container:
-                    ui.label(f"Lỗi tải danh sách: {exc}").classes("text-sm text-red-600")
-                toast.show_popup("Lỗi kết nối", "Không thể tải dữ liệu từ server.", type="error", detail=str(exc))
+        # =========================================================================
+        # 4. RENDERERS (KPIs, Tabs, List Rows)
+        # =========================================================================
+        def render_kpi_strip() -> None:
+            raw = state["raw_tickets"]
+            unassigned_c = len([t for t in raw if not t.get("technician_id") and t.get("status") in ("OPEN", "ASSIGNED")])
+            urgent_c = len([t for t in raw if t.get("priority") in ("URGENT", "HIGH") and t.get("status") not in ("CLOSED", "RESOLVED")])
+            in_prog_c = len([t for t in raw if t.get("status") == "IN_PROGRESS"])
+            total_c = len(raw)
+
+            kpi_container.clear()
+            with kpi_container:
+                # KPI 1: Unassigned
+                with ui.card().classes(
+                    "flex-1 min-w-[170px] h-[80px] p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between "
+                    + ("bg-amber-500/15 border-amber-400 ring-2 ring-amber-400/20" if state["active_tab"] == "UNASSIGNED" else "bg-white border-slate-200 hover:border-amber-300 hover:bg-amber-50/20")
+                ).on("click", lambda: set_tab("UNASSIGNED")):
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label("CHỜ PHÂN CÔNG").classes("text-[10px] font-bold text-amber-700 uppercase tracking-wider")
+                        ui.label("Cần xử lý").classes("text-[9px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.2 rounded")
+                    with ui.row().classes("w-full justify-between items-baseline"):
+                        ui.label(str(unassigned_c)).classes("text-2xl font-extrabold text-amber-900 leading-none")
+                        ui.icon("person_add").classes("text-base text-amber-600")
+
+                # KPI 2: Urgent / High
+                with ui.card().classes(
+                    "flex-1 min-w-[170px] h-[80px] p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between "
+                    + ("bg-rose-500/15 border-rose-400 ring-2 ring-rose-400/20" if state["active_tab"] == "URGENT" else "bg-white border-slate-200 hover:border-rose-300 hover:bg-rose-50/20")
+                ).on("click", lambda: set_tab("URGENT")):
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label("KHẨN CẤP & CAO").classes("text-[10px] font-bold text-rose-700 uppercase tracking-wider")
+                        ui.label("Ưu tiên").classes("text-[9px] font-semibold text-rose-600 bg-rose-100 px-1.5 py-0.2 rounded")
+                    with ui.row().classes("w-full justify-between items-baseline"):
+                        ui.label(str(urgent_c)).classes("text-2xl font-extrabold text-rose-900 leading-none")
+                        ui.icon("bolt").classes("text-base text-rose-600")
+
+                # KPI 3: In Progress
+                with ui.card().classes(
+                    "flex-1 min-w-[170px] h-[80px] p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between "
+                    + ("bg-blue-500/15 border-blue-400 ring-2 ring-blue-400/20" if state["active_tab"] == "IN_PROGRESS" else "bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50/20")
+                ).on("click", lambda: set_tab("IN_PROGRESS")):
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label("ĐANG XỬ LÝ").classes("text-[10px] font-bold text-blue-700 uppercase tracking-wider")
+                        ui.label("Tiến hành").classes("text-[9px] font-semibold text-blue-600 bg-blue-100 px-1.5 py-0.2 rounded")
+                    with ui.row().classes("w-full justify-between items-baseline"):
+                        ui.label(str(in_prog_c)).classes("text-2xl font-extrabold text-blue-900 leading-none")
+                        ui.icon("sync").classes("text-base text-blue-600")
+
+                # KPI 4: Total Tickets
+                with ui.card().classes(
+                    "flex-1 min-w-[170px] h-[80px] p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between "
+                    + ("bg-slate-900 text-white border-slate-900 ring-2 ring-slate-900/20" if state["active_tab"] == "ALL" else "bg-white border-slate-200 hover:border-slate-400")
+                ).on("click", lambda: set_tab("ALL")):
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label("TỔNG SỰ CỐ").classes(f"text-[10px] font-bold uppercase tracking-wider {'text-slate-300' if state['active_tab'] == 'ALL' else 'text-slate-500'}")
+                        ui.label("Hệ thống").classes(f"text-[9px] font-semibold px-1.5 py-0.2 rounded {'bg-slate-800 text-slate-300' if state['active_tab'] == 'ALL' else 'bg-slate-100 text-slate-600'}")
+                    with ui.row().classes("w-full justify-between items-baseline"):
+                        ui.label(str(total_c)).classes(f"text-2xl font-extrabold leading-none {'text-white' if state['active_tab'] == 'ALL' else 'text-slate-900'}")
+                        ui.icon("view_list").classes(f"text-base {'text-slate-300' if state['active_tab'] == 'ALL' else 'text-slate-500'}")
+
+        def render_segmented_tabs() -> None:
+            raw = state["raw_tickets"]
+            unassigned_c = len([t for t in raw if not t.get("technician_id") and t.get("status") in ("OPEN", "ASSIGNED")])
+            urgent_c = len([t for t in raw if t.get("priority") in ("URGENT", "HIGH") and t.get("status") not in ("CLOSED", "RESOLVED")])
+            in_prog_c = len([t for t in raw if t.get("status") == "IN_PROGRESS"])
+            done_c = len([t for t in raw if t.get("status") in ("RESOLVED", "CLOSED")])
+            total_c = len(raw)
+
+            tabs_def = [
+                ("ALL", "Tất cả", total_c, "slate"),
+                ("UNASSIGNED", "Chưa phân công", unassigned_c, "amber"),
+                ("URGENT", "Khẩn cấp & Cao", urgent_c, "rose"),
+                ("IN_PROGRESS", "Đang xử lý", in_prog_c, "blue"),
+                ("DONE", "Đã xong", done_c, "emerald"),
+            ]
+
+            tabs_container.clear()
+            with tabs_container:
+                for key, label, count, color in tabs_def:
+                    is_active = state["active_tab"] == key
+                    btn_bg = "bg-slate-900 text-white shadow-2xs font-bold" if is_active else "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/70"
+                    badge_bg = "bg-slate-800 text-white" if is_active else f"bg-{color}-100 text-{color}-800"
+
+                    with ui.element("button").classes(
+                        f"px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-all {btn_bg}"
+                    ).on("click", lambda k=key: set_tab(k)):
+                        ui.label(label)
+                        ui.label(str(count)).classes(f"text-[10px] font-bold px-1.5 py-0.2 rounded-full {badge_bg}")
+
+        def set_tab(tab_key: str) -> None:
+            state["active_tab"] = tab_key
+            render_kpi_strip()
+            render_segmented_tabs()
+            render_list()
+
+        def apply_filtering_and_sorting() -> list[dict[str, Any]]:
+            raw = list(state["raw_tickets"])
+
+            # 1. Tab filter
+            t = state["active_tab"]
+            if t == "UNASSIGNED":
+                raw = [x for x in raw if not x.get("technician_id") and x.get("status") in ("OPEN", "ASSIGNED")]
+            elif t == "URGENT":
+                raw = [x for x in raw if x.get("priority") in ("URGENT", "HIGH")]
+            elif t == "IN_PROGRESS":
+                raw = [x for x in raw if x.get("status") == "IN_PROGRESS"]
+            elif t == "DONE":
+                raw = [x for x in raw if x.get("status") in ("RESOLVED", "CLOSED")]
+
+            # 2. Status filter
+            if status_select.value and status_select.value != "ALL":
+                raw = [x for x in raw if x.get("status") == status_select.value]
+
+            # 3. Priority filter
+            if priority_select.value and priority_select.value != "ALL":
+                raw = [x for x in raw if x.get("priority") == priority_select.value]
+
+            # 4. Technician filter
+            if technician_select.value and technician_select.value != "ALL":
+                if technician_select.value == "UNASSIGNED":
+                    raw = [x for x in raw if not x.get("technician_id")]
+                else:
+                    raw = [x for x in raw if str(x.get("technician_id")) == str(technician_select.value)]
+
+            # 5. Keyword search
+            kw = (keyword.value or "").strip().lower()
+            if kw:
+                raw = [
+                    x for x in raw
+                    if kw in str(x.get("id", "")).lower()
+                    or kw in str(x.get("title", "")).lower()
+                    or kw in str(x.get("description", "")).lower()
+                ]
+
+            # 6. Sorting
+            s = sort_select.value or "NEWEST"
+            if s == "NEWEST":
+                raw.sort(key=lambda x: int(x.get("id", 0)), reverse=True)
+            elif s == "OLDEST":
+                raw.sort(key=lambda x: int(x.get("id", 0)), reverse=False)
+            elif s == "PRIORITY_HIGH":
+                raw.sort(key=lambda x: (PRIORITY_WEIGHT.get(x.get("priority", "LOW"), 0), int(x.get("id", 0))), reverse=True)
+            elif s == "UNASSIGNED_FIRST":
+                raw.sort(key=lambda x: (1 if not x.get("technician_id") else 0, int(x.get("id", 0))), reverse=True)
+
+            return raw
+
+        def check_active_filters() -> None:
+            is_filtered = bool(
+                (keyword.value or "").strip()
+                or (status_select.value and status_select.value != "ALL")
+                or (priority_select.value and priority_select.value != "ALL")
+                or (technician_select.value and technician_select.value != "ALL")
+                or state["active_tab"] != "ALL"
+            )
+            clear_filter_btn.set_visibility(is_filtered)
+
+        def clear_all_filters() -> None:
+            keyword.set_value("")
+            status_select.set_value("ALL")
+            priority_select.set_value("ALL")
+            technician_select.set_value("ALL")
+            state["active_tab"] = "ALL"
+            render_kpi_strip()
+            render_segmented_tabs()
+            render_list()
+
+        clear_filter_btn.on_click(clear_all_filters)
+
+        def render_list() -> None:
+            check_active_filters()
+            list_container.clear()
+
+            if state["is_loading"]:
+                with list_container:
+                    skeleton_loader(count=5, height="h-20")
                 return
 
-            total_count = len(raw_tickets)
-            unassigned_tickets = [t for t in raw_tickets if not t.get("technician_id") and t.get("status") in ("OPEN", "ASSIGNED")]
-            urgent_tickets = [t for t in raw_tickets if t.get("priority") in ("URGENT", "HIGH") and t.get("status") not in ("CLOSED", "RESOLVED")]
-            in_progress_tickets = [t for t in raw_tickets if t.get("status") == "IN_PROGRESS"]
-            done_tickets = [t for t in raw_tickets if t.get("status") in ("RESOLVED", "CLOSED")]
+            if state["error"]:
+                with list_container:
+                    with ui.card().classes("w-full p-6 rounded-xl bg-red-50 border border-red-200 text-center items-center gap-2"):
+                        ui.icon("error", color="negative").classes("text-3xl")
+                        ui.label("Không thể tải danh sách sự cố.").classes("text-sm font-bold text-red-900")
+                        ui.label(state["error"]).classes("text-xs text-red-600 font-mono")
+                        ui.button("Thử lại", icon="refresh", on_click=lambda: fetch_data(force_refresh=True)).props("outline color=negative size=sm").classes("mt-2")
+                return
 
-            # 1. Render Metrics Strip
-            metrics_container.clear()
-            with metrics_container:
-                # Card 1: Unassigned (High Priority Focus)
-                with ui.card().classes(
-                    "flex-1 min-w-[170px] p-3.5 rounded-xl border transition-all cursor-pointer "
-                    + ("bg-amber-500/10 border-amber-400 ring-2 ring-amber-400/20" if active_tab["value"] == "UNASSIGNED" else "bg-white border-slate-200 hover:border-amber-300")
-                ).on("click", lambda: switch_tab("UNASSIGNED")):
-                    with ui.row().classes("items-center justify-between"):
-                        with ui.column().classes("gap-0"):
-                            ui.label("CHỜ PHÂN CÔNG").classes("text-[10px] font-bold text-amber-700 uppercase tracking-wider")
-                            ui.label(str(len(unassigned_tickets))).classes("text-xl font-extrabold text-amber-900")
-                        with ui.element("div").classes("w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700"):
-                            ui.icon("person_add").classes("text-base")
+            filtered_tickets = apply_filtering_and_sorting()
 
-                # Card 2: Urgent / High
-                with ui.card().classes(
-                    "flex-1 min-w-[170px] p-3.5 rounded-xl border transition-all cursor-pointer "
-                    + ("bg-rose-500/10 border-rose-400 ring-2 ring-rose-400/20" if active_tab["value"] == "URGENT" else "bg-white border-slate-200 hover:border-rose-300")
-                ).on("click", lambda: switch_tab("URGENT")):
-                    with ui.row().classes("items-center justify-between"):
-                        with ui.column().classes("gap-0"):
-                            ui.label("KHẨN CẤP & CAO").classes("text-[10px] font-bold text-rose-700 uppercase tracking-wider")
-                            ui.label(str(len(urgent_tickets))).classes("text-xl font-extrabold text-rose-900")
-                        with ui.element("div").classes("w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-700"):
-                            ui.icon("bolt").classes("text-base")
+            with list_container:
+                if not filtered_tickets:
+                    empty_state(
+                        title="Không tìm thấy sự cố nào phù hợp",
+                        subtitle="Hãy thử thay đổi từ khóa tìm kiếm hoặc làm mới các bộ lọc.",
+                        icon="search_off",
+                        action_label="Xóa tất cả bộ lọc",
+                        on_action=clear_all_filters,
+                    )
+                else:
+                    with ui.row().classes("w-full justify-between items-center px-1 mb-1"):
+                        ui.label(f"DANH SÁCH HIỂN THỊ ({len(filtered_tickets)} SỰ CỐ)").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
 
-                # Card 3: In Progress
-                with ui.card().classes(
-                    "flex-1 min-w-[170px] p-3.5 rounded-xl border transition-all cursor-pointer "
-                    + ("bg-blue-500/10 border-blue-400 ring-2 ring-blue-400/20" if active_tab["value"] == "IN_PROGRESS" else "bg-white border-slate-200 hover:border-blue-300")
-                ).on("click", lambda: switch_tab("IN_PROGRESS")):
-                    with ui.row().classes("items-center justify-between"):
-                        with ui.column().classes("gap-0"):
-                            ui.label("ĐANG XỬ LÝ").classes("text-[10px] font-bold text-blue-700 uppercase tracking-wider")
-                            ui.label(str(len(in_progress_tickets))).classes("text-xl font-extrabold text-blue-900")
-                        with ui.element("div").classes("w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700"):
-                            ui.icon("sync").classes("text-base")
-
-                # Card 4: Total
-                with ui.card().classes(
-                    "flex-1 min-w-[170px] p-3.5 rounded-xl border transition-all cursor-pointer "
-                    + ("bg-slate-900 text-white border-slate-900" if active_tab["value"] == "ALL" else "bg-white border-slate-200 hover:border-slate-400")
-                ).on("click", lambda: switch_tab("ALL")):
-                    with ui.row().classes("items-center justify-between"):
-                        with ui.column().classes("gap-0"):
-                            ui.label("TỔNG SỰ CỐ").classes(f"text-[10px] font-bold uppercase tracking-wider {'text-slate-300' if active_tab['value'] == 'ALL' else 'text-slate-500'}")
-                            ui.label(str(total_count)).classes(f"text-xl font-extrabold {'text-white' if active_tab['value'] == 'ALL' else 'text-slate-900'}")
-                        with ui.element("div").classes(f"w-8 h-8 rounded-lg flex items-center justify-center {'bg-slate-800 text-white' if active_tab['value'] == 'ALL' else 'bg-slate-100 text-slate-700'}"):
-                            ui.icon("view_list").classes("text-base")
-
-            def switch_tab(tab_key: str) -> None:
-                active_tab["value"] = tab_key
-                render_tabs()
-                render_incident_list()
-
-            def get_filtered() -> list[dict[str, Any]]:
-                t = active_tab["value"]
-                if t == "UNASSIGNED":
-                    return unassigned_tickets
-                elif t == "URGENT":
-                    return urgent_tickets
-                elif t == "IN_PROGRESS":
-                    return in_progress_tickets
-                elif t == "DONE":
-                    return done_tickets
-                return list(raw_tickets)
-
-            def sort_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-                mode = sort_selector.value or "NEWEST"
-                if mode == "NEWEST":
-                    return sorted(items, key=lambda x: int(x.get("id", 0)), reverse=True)
-                elif mode == "OLDEST":
-                    return sorted(items, key=lambda x: int(x.get("id", 0)), reverse=False)
-                elif mode == "PRIORITY_HIGH":
-                    return sorted(items, key=lambda x: (PRIORITY_WEIGHT.get(x.get("priority", "LOW"), 0), int(x.get("id", 0))), reverse=True)
-                elif mode == "UNASSIGNED_FIRST":
-                    return sorted(items, key=lambda x: (1 if not x.get("technician_id") else 0, int(x.get("id", 0))), reverse=True)
-                return sorted(items, key=lambda x: int(x.get("id", 0)), reverse=True)
-
-            def render_tabs() -> None:
-                tabs_row.clear()
-                with tabs_row:
-                    tab_defs = [
-                        ("ALL", "Tất cả", total_count, "slate"),
-                        ("UNASSIGNED", "Chưa giao KTV", len(unassigned_tickets), "amber"),
-                        ("URGENT", "Khẩn cấp & Cao", len(urgent_tickets), "rose"),
-                        ("IN_PROGRESS", "Đang xử lý", len(in_progress_tickets), "blue"),
-                        ("DONE", "Đã xong", len(done_tickets), "emerald"),
-                    ]
-                    for key, label, count, color in tab_defs:
-                        is_active = active_tab["value"] == key
-                        badge_bg = "bg-white text-slate-900" if is_active else f"bg-{color}-100 text-{color}-800"
-                        btn_bg = "bg-slate-900 text-white" if is_active else "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
-
-                        with ui.element("button").classes(
-                            f"px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all {btn_bg}"
-                        ).on("click", lambda k=key: switch_tab(k)):
-                            ui.label(label)
-                            ui.label(str(count)).classes(f"text-[10px] font-bold px-1.5 py-0.2 rounded-full {badge_bg}")
-
-            def render_incident_list() -> None:
-                ticket_container.clear()
-                filtered = get_filtered()
-                sorted_items = sort_items(filtered)
-
-                with ticket_container:
-                    if not sorted_items:
-                        empty_state(
-                            title="Không có sự cố nào trong mục này",
-                            subtitle="Bạn có thể chuyển sang tab khác hoặc điều chỉnh từ khóa tìm kiếm.",
-                            icon="task_alt",
-                        )
-                    else:
-                        with ui.row().classes("w-full justify-between items-center px-1 mb-1"):
-                            ui.label(f"HIỂN THỊ {len(sorted_items)} SỰ CỐ").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
-
-                        for tck in sorted_items:
+                    # Dense Incident Table-Cards
+                    with ui.column().classes("w-full divide-y divide-slate-100 rounded-xl bg-white border border-slate-200 shadow-2xs overflow-hidden"):
+                        for tck in filtered_tickets:
                             tck_id = tck.get("id")
                             prio = tck.get("priority", "LOW")
                             stat = tck.get("status", "OPEN")
                             tech_id = tck.get("technician_id")
-                            is_unassigned = not tech_id and stat in ("OPEN", "ASSIGNED")
-                            border_class = PRIORITY_BORDER_MAP.get(prio, "border-l-4 border-l-slate-300 bg-white")
+                            border_style = PRIORITY_BORDER_MAP.get(prio, "border-l-4 border-l-slate-300 bg-white")
                             cat_label = CATEGORY_LABELS.get(tck.get("category"), "Sự cố kỹ thuật")
+                            updated_str = format_relative_time(tck.get("updated_at"))
+                            exact_datetime = format_datetime(tck.get("updated_at"))
 
-                            with ui.card().classes(
-                                f"w-full p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-sm transition-all {border_class} gap-2.5"
-                            ):
-                                with ui.row().classes("w-full justify-between items-start gap-3"):
-                                    # Top info row
-                                    with ui.column().classes("gap-1 flex-1 min-w-[260px]"):
-                                        with ui.row().classes("items-center gap-2 flex-wrap"):
-                                            ui.label(f"#{tck_id}").classes("text-xs font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded")
-                                            ui.label(tck.get("title", "-")).classes("text-sm font-bold text-slate-900 leading-snug")
-                                            ui.label(cat_label).classes("text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200")
+                            # Tech display resolver
+                            tech_obj = next((t for t in state["technicians"] if t["id"] == tech_id), None)
+                            tech_name = (tech_obj.get("ho_ten") or tech_obj.get("username")) if tech_obj else (f"KTV #{tech_id}" if tech_id else None)
 
-                                        ui.label(truncate(tck.get("description", ""), 140)).classes("text-xs text-slate-600 line-clamp-1")
+                            with ui.row().classes(
+                                f"w-full justify-between items-center p-3.5 hover:bg-slate-50/80 transition-colors {border_style} gap-3 cursor-pointer"
+                            ).on("click", lambda tck_id=tck_id: ui.navigate.to(f"/tickets/{tck_id}")):
+                                # 1. Left Section (ID, Title, Category, Snippet)
+                                with ui.column().classes("gap-0.5 flex-1 min-w-[280px]"):
+                                    with ui.row().classes("items-center gap-2 flex-wrap no-wrap"):
+                                        ui.label(f"#{tck_id}").classes("text-xs font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded shrink-0")
+                                        ui.label(tck.get("title", "-")).classes("text-sm font-bold text-slate-900 leading-snug line-clamp-1")
+                                        ui.label(cat_label).classes("text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-0.2 rounded border border-slate-200 shrink-0")
 
-                                    # Badges column
-                                    with ui.row().classes("items-center gap-2 shrink-0"):
-                                        priority_badge(prio)
-                                        status_badge(stat)
+                                    ui.label(truncate(tck.get("description", ""), 110)).classes("text-xs text-slate-500 line-clamp-1")
 
-                                # Bottom Metadata & Action Bar
-                                with ui.row().classes("w-full justify-between items-center pt-2.5 border-t border-slate-100 text-xs text-slate-500 flex-wrap gap-2"):
-                                    with ui.row().classes("items-center gap-3"):
-                                        # Tech indicator
-                                        if tech_id:
-                                            with ui.row().classes("items-center gap-1.5 text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/60 font-semibold text-[11px]"):
-                                                ui.icon("engineering").classes("text-xs")
-                                                ui.label(f"KTV #{tech_id}")
-                                        else:
-                                            with ui.row().classes("items-center gap-1.5 text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-bold text-[11px]"):
-                                                ui.icon("error_outline").classes("text-xs text-amber-600")
-                                                ui.label("Chưa phân công KTV")
+                                # 2. Middle Section (Assignee & Relative Time)
+                                with ui.row().classes("items-center gap-4 shrink-0 min-w-[240px] justify-between md:justify-start"):
+                                    # Assignee status
+                                    if tech_id and tech_name:
+                                        with ui.row().classes("items-center gap-1.5 text-blue-700 bg-blue-50/90 px-2.5 py-0.5 rounded-full border border-blue-200/80 text-[11px] font-semibold shrink-0"):
+                                            ui.icon("engineering").classes("text-xs")
+                                            ui.label(tech_name)
+                                    else:
+                                        with ui.row().classes("items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300 font-bold text-[11px] shrink-0"):
+                                            ui.icon("error_outline").classes("text-xs text-amber-600")
+                                            ui.label("Chưa giao KTV")
 
-                                        ui.label(f"🕒 Cập nhật: {format_datetime(tck.get('updated_at'))}").classes("text-[11px] text-slate-400")
+                                    # Updated timestamp with tooltip
+                                    with ui.row().classes("items-center gap-1 text-slate-400 text-[11px] shrink-0"):
+                                        ui.icon("schedule").classes("text-xs")
+                                        time_label = ui.label(updated_str).classes("hover:text-slate-700")
+                                        time_label.tooltip(f"Cập nhật: {exact_datetime}")
 
-                                    with ui.row().classes("items-center gap-2"):
-                                        if stat in ("OPEN", "ASSIGNED"):
-                                            ui.button(
-                                                "Phân công KTV",
-                                                icon="person_add",
-                                                on_click=lambda tck=tck: open_assign_modal(tck),
-                                            ).props("unelevated dense size=sm color=primary").classes("px-3 text-xs font-bold")
+                                # 3. Right Section (Badges & Actions)
+                                with ui.row().classes("items-center gap-2 shrink-0"):
+                                    priority_badge(prio)
+                                    status_badge(stat)
 
+                                    if stat in ("OPEN", "ASSIGNED"):
                                         ui.button(
-                                            "Xem chi tiết",
-                                            icon="arrow_forward",
-                                            on_click=lambda tck_id=tck_id: ui.navigate.to(f"/tickets/{tck_id}"),
-                                        ).props("flat dense size=sm color=slate-700").classes("px-2 text-xs font-semibold")
+                                            "Giao KTV",
+                                            icon="person_add",
+                                            on_click=lambda e, tck=tck: (e.args.get("stop", True), open_assign_modal(tck)),
+                                        ).props("outline dense size=sm color=primary").classes("px-2.5 text-xs font-semibold")
 
-            render_tabs()
-            render_incident_list()
+                                    ui.button(
+                                        icon="chevron_right",
+                                        on_click=lambda tck_id=tck_id: ui.navigate.to(f"/tickets/{tck_id}"),
+                                    ).props("flat round dense size=sm color=slate-400").classes("hover:text-slate-800")
 
-            # Dynamic listener
-            sort_selector.on_value_change(render_incident_list)
+        # =========================================================================
+        # 5. DATA FETCHING CONTROLLER
+        # =========================================================================
+        async def fetch_data(force_refresh: bool = False) -> None:
+            state["is_loading"] = True
+            render_list()
 
-        ui.timer(0.1, reload_tickets, once=True)
+            try:
+                # Load tickets and technicians concurrently
+                tickets = await ticket_service.list_tickets(refresh=force_refresh)
+                techs = await user_service.list_technicians(refresh=force_refresh)
+                state["raw_tickets"] = tickets
+                state["technicians"] = techs
+                state["error"] = None
+
+                # Update technician dropdown options
+                tech_opts = {"ALL": "Tất cả KTV", "UNASSIGNED": "⚡ Chưa phân công"}
+                for t in techs:
+                    tech_opts[str(t["id"])] = f"{t.get('ho_ten')} (@{t.get('username')})"
+                technician_select.options = tech_opts
+                technician_select.update()
+
+            except Exception as exc:
+                state["error"] = str(exc)
+            finally:
+                state["is_loading"] = False
+                render_kpi_strip()
+                render_segmented_tabs()
+                render_list()
+
+        # Connect toolbar listeners
+        keyword.on_value_change(lambda: render_list())
+        status_select.on_value_change(lambda: render_list())
+        priority_select.on_value_change(lambda: render_list())
+        technician_select.on_value_change(lambda: render_list())
+        sort_select.on_value_change(lambda: render_list())
+
+        # Trigger initial data fetch
+        ui.timer(0.05, lambda: fetch_data(force_refresh=True), once=True)
 
     app_shell("Giám sát Sự cố", content)
