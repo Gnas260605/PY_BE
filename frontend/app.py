@@ -64,10 +64,18 @@ def create_ticket_page() -> None:
     render_create_ticket_view()
 
 
+from views.user.settings_view import render_settings_view
+
+
 @ui.page("/tickets/{ticket_id}")
 @ui.page("/tickets/{ticket_id}/history")
 def ticket_detail_page(ticket_id: int) -> None:
     render_ticket_detail_view(ticket_id)
+
+
+@ui.page("/settings")
+def settings_page() -> None:
+    render_settings_view()
 
 
 ui.run(

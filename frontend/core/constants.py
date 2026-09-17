@@ -69,17 +69,28 @@ ROLE_LABELS = {
 }
 
 STATUS_LABELS = {
-    TicketStatus.OPEN.value: "Mới mở",
+    TicketStatus.OPEN.value: "Chờ tiếp nhận",
     TicketStatus.ASSIGNED.value: "Đã phân công",
     TicketStatus.IN_PROGRESS.value: "Đang xử lý",
-    TicketStatus.RESOLVED.value: "Đã xử lý",
-    TicketStatus.CLOSED.value: "Đã đóng",
+    TicketStatus.RESOLVED.value: "Đã giải quyết",
+    TicketStatus.CLOSED.value: "Đã đóng hoàn tất",
     DeviceStatus.ACTIVE.value: "Hoạt động",
     DeviceStatus.MAINTENANCE.value: "Bảo trì",
-    DeviceStatus.BROKEN.value: "Hỏng",
+    DeviceStatus.BROKEN.value: "Bị hỏng",
     DeviceStatus.INACTIVE.value: "Ngừng dùng",
     UserStatus.ACTIVE.value: "Đang hoạt động",
     UserStatus.INACTIVE.value: "Đã khóa",
+}
+
+ACTION_LABELS = {
+    "CREATED": "Tạo mới sự cố",
+    "ASSIGNED": "Phân công xử lý",
+    "STATUS_CHANGED": "Cập nhật trạng thái",
+    "RESOLVED": "Khắc phục sự cố",
+    "CLOSED": "Đóng sự cố",
+    "COMMENTED": "Thêm trao đổi",
+    "UPDATED": "Cập nhật thông tin",
+    "REOPENED": "Mở lại sự cố",
 }
 
 PRIORITY_LABELS = {

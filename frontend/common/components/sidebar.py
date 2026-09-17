@@ -18,10 +18,11 @@ ROLE_SECTIONS = {
             ],
         ),
         (
-            "TIỆN ÍCH NHANH",
+            "TIỆN ÍCH & CÀI ĐẶT",
             [
                 ("Tạo ticket mới", "/user/tickets/new", "add_circle"),
                 ("Tra cứu lịch sử máy", "/technician/devices", "search"),
+                ("Cài đặt cá nhân", "/settings", "settings"),
             ],
         ),
     ],
@@ -34,9 +35,10 @@ ROLE_SECTIONS = {
             ],
         ),
         (
-            "CÔNG CỤ KỸ THUẬT",
+            "CÔNG CỤ & CÀI ĐẶT",
             [
                 ("Tra cứu thiết bị", "/technician/devices", "search"),
+                ("Cài đặt cá nhân", "/settings", "settings"),
             ],
         ),
     ],
@@ -46,6 +48,7 @@ ROLE_SECTIONS = {
             [
                 ("Yêu cầu của tôi", "/user/tickets", "confirmation_number"),
                 ("Tạo yêu cầu hỗ trợ", "/user/tickets/new", "add_circle"),
+                ("Cài đặt cá nhân", "/settings", "settings"),
             ],
         ),
     ],

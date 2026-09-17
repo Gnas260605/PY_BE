@@ -19,10 +19,14 @@ def navbar(
                     ui.button(icon="menu", on_click=on_toggle_sidebar).props("flat round dense color=slate-700").classes("hover:bg-slate-100")
                 ui.label(title).classes("text-base font-bold text-slate-900")
 
-            # Right: User Avatar & Logout
-            with ui.row().classes("items-center gap-3 no-wrap"):
+            # Right: Settings, User Avatar & Logout
+            with ui.row().classes("items-center gap-2 md:gap-3 no-wrap"):
+                # Settings button
+                with ui.button(icon="settings", on_click=lambda: ui.navigate.to("/settings")).props("flat round dense size=sm color=slate-600").classes("hover:bg-slate-100 transition-colors"):
+                    ui.tooltip("Cài đặt & Ngôn ngữ")
+
                 # User Chip
-                with ui.row().classes("items-center gap-2 py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-full"):
+                with ui.row().classes("items-center gap-2 py-1 px-2.5 bg-slate-50 border border-slate-200 rounded-full cursor-pointer hover:bg-slate-100 transition-colors").on("click", lambda: ui.navigate.to("/settings")):
                     with ui.avatar(color="primary", text_color="white").props("size=26px font-size=11px").classes("font-bold"):
                         ui.label(initials)
                     ui.label(display_name).classes("text-xs font-semibold text-slate-700 hidden sm:block")
