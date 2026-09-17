@@ -53,7 +53,7 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                     on_click=lambda: ui.navigate.to("/technician/devices"),
                 ).props("outline color=slate-700 size=md").classes("h-[36px] rounded-lg font-medium px-3.5 text-xs bg-white border-slate-300 shadow-2xs")
 
-                ui.button(icon="refresh", on_click=lambda: load_tickets_data(refresh=True)).props(
+                ui.button(icon="refresh", on_click=lambda: load_tickets_data(refresh=True, show_toast=True)).props(
                     "outline dense color=slate-700 size=sm"
                 ).classes("h-[36px] w-[36px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip("Tải lại danh sách")
 
@@ -168,11 +168,19 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
         # =========================================================================
         # 6. ACTION WORKFLOW METHODS
         # =========================================================================
+        STATUS_NAMES = {
+            "OPEN": "Chờ tiếp nhận",
+            "ASSIGNED": "Đã phân công",
+            "IN_PROGRESS": "Đang xử lý",
+            "RESOLVED": "Đã giải quyết",
+            "CLOSED": "Đã đóng hoàn tất",
+        }
+
         async def handle_claim_ticket(ticket_id: int) -> None:
             try:
                 await ticket_service.assign_ticket(ticket_id, int(user_id))
                 await ticket_service.update_status(ticket_id, "IN_PROGRESS")
-                toast.success(f"Bạn đã tiếp nhận và bắt đầu xử lý Ticket #{ticket_id}!")
+                toast.success(f"Bạn đã tiếp nhận và bắt đầu xử lý sự cố #{ticket_id}!")
                 await load_tickets_data(refresh=True)
             except Exception as exc:
                 toast.error(f"Không thể tiếp nhận ticket: {exc}")
@@ -183,10 +191,11 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                     await ticket_service.close_ticket(ticket_id, note)
                 else:
                     await ticket_service.update_status(ticket_id, next_status)
-                toast.success(f"Đã cập nhật trạng thái sang {next_status}.")
+                status_name = STATUS_NAMES.get(next_status, next_status)
+                toast.success(f"Đã cập nhật sự cố #{ticket_id} sang '{status_name}' thành công!")
                 await load_tickets_data(refresh=True)
             except Exception as exc:
-                toast.error(f"Lỗi: {exc}")
+                toast.error(f"Lỗi cập nhật trạng thái: {exc}")
 
         def open_resolution_dialog(ticket_id: int) -> None:
             dialog = ui.dialog()
@@ -479,7 +488,7 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
             render_left_pane()
             await render_right_pane()
 
-        async def load_tickets_data(refresh: bool = False) -> None:
+        async def load_tickets_data(refresh: bool = False, show_toast: bool = False) -> None:
             state["is_loading"] = True
             state["error"] = None
 
@@ -487,6 +496,8 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                 tickets = await ticket_service.list_tickets(refresh=refresh)
                 state["raw_tickets"] = tickets
                 state["is_loading"] = False
+                if show_toast:
+                    toast.success("Đã làm mới danh sách công việc!")
 
                 filtered = filter_tickets(tickets)
                 if filtered and not state["selected_ticket_id"]:
@@ -494,6 +505,7 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
             except Exception as exc:
                 state["error"] = str(exc)
                 state["is_loading"] = False
+                toast.error(f"Lỗi tải dữ liệu: {exc}")
 
             await render_all()
 

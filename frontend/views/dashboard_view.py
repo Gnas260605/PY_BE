@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 from nicegui import ui
 
+from common.components import toast
 from common.components.empty_state import empty_state
 from common.components.layout import app_shell
 from common.components.stat_card import stat_card
@@ -85,7 +86,7 @@ def render_dashboard_view() -> None:
                     on_click=lambda: ui.navigate.to("/technician/devices"),
                 ).props("outline color=slate-700 size=md").classes("h-[38px] px-3.5 font-medium text-xs rounded-lg bg-white border-slate-300 shadow-2xs")
 
-                ui.button(icon="refresh", on_click=lambda: load_tech_data(refresh=True)).props(
+                ui.button(icon="refresh", on_click=lambda: load_tech_data(refresh=True, show_toast=True)).props(
                     "outline dense color=slate-700 size=sm"
                 ).classes("h-[38px] w-[38px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip("Tải lại dữ liệu")
 
@@ -295,7 +296,7 @@ def render_dashboard_view() -> None:
                                             on_click=lambda tid=r_id: ui.navigate.to(f"/tickets/{tid}"),
                                         ).props("flat dense size=sm color=primary").classes("text-xs font-semibold")
 
-        async def load_tech_data(refresh: bool = False) -> None:
+        async def load_tech_data(refresh: bool = False, show_toast: bool = False) -> None:
             state["is_loading"] = True
             state["error"] = None
 
@@ -304,9 +305,12 @@ def render_dashboard_view() -> None:
                 state["all_tickets"] = tickets
                 state["my_tickets"] = [t for t in tickets if t.get("technician_id") == user_id]
                 state["is_loading"] = False
+                if show_toast:
+                    toast.success("Đã làm mới dữ liệu tổng quan!")
             except Exception as exc:
                 state["error"] = str(exc)
                 state["is_loading"] = False
+                toast.error(f"Lỗi tải dữ liệu: {exc}")
 
             await render_tech_views()
 
