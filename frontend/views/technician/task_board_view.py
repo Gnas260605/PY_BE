@@ -14,7 +14,7 @@ from services.device_service import device_service
 from services.ticket_service import ticket_service
 
 
-def render_task_board_view() -> None:
+def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
     def content(user: dict) -> None:
         user_id = user.get("id")
 
@@ -24,7 +24,7 @@ def render_task_board_view() -> None:
         state: dict[str, Any] = {
             "raw_tickets": [],
             "devices_cache": {},
-            "active_tab": "MY_TASKS",  # 'MY_TASKS' | 'UNASSIGNED' | 'URGENT' | 'IN_PROGRESS' | 'RESOLVED' | 'ALL'
+            "active_tab": initial_tab,  # 'MY_TASKS' | 'UNASSIGNED' | 'URGENT' | 'IN_PROGRESS' | 'RESOLVED' | 'ALL'
             "selected_ticket_id": None,
             "keyword": "",
             "is_loading": True,

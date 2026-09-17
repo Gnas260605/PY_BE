@@ -30,14 +30,14 @@ ROLE_SECTIONS = {
             "BÀN LÀM VIỆC",
             [
                 ("Dashboard", "/dashboard", "grid_view"),
-                ("Bảng Kanban công việc", "/technician/tasks", "view_kanban"),
+                ("Bàn làm việc KTV", "/technician/tasks", "assignment"),
             ],
         ),
         (
             "CÔNG CỤ KỸ THUẬT",
             [
                 ("Tra cứu thiết bị", "/technician/devices", "search"),
-                ("Lịch sử sự cố", "/admin/tickets", "history"),
+                ("Lịch sử sự cố đã xử lý", "/technician/history", "history"),
             ],
         ),
     ],

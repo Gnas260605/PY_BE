@@ -44,6 +44,11 @@ def technician_tasks_page() -> None:
     render_task_board_view()
 
 
+@ui.page("/technician/history")
+def technician_history_page() -> None:
+    render_task_board_view(initial_tab="RESOLVED")
+
+
 @ui.page("/technician/devices")
 def technician_devices_page() -> None:
     render_device_lookup_view()
