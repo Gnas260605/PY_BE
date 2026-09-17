@@ -32,18 +32,18 @@ def render_task_board_view() -> None:
         }
 
         # =========================================================================
-        # 2. PAGE HEADER (Clean, Professional Workspace)
+        # 2. PAGE HEADER (Clean Enterprise Toolbar)
         # =========================================================================
         with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-200 mb-2.5 flex-wrap gap-2"):
             with ui.column().classes("gap-0.5"):
-                with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 font-medium"):
+                with ui.row().classes("items-center gap-1.5 text-xs text-slate-400 font-medium"):
                     ui.label("Trang chủ")
-                    ui.icon("chevron_right", size="12px").classes("text-slate-400")
+                    ui.label("/").classes("text-slate-300")
                     ui.label("Bàn làm việc KTV")
-                    ui.icon("chevron_right", size="12px").classes("text-slate-400")
-                    ui.label("Không gian Tiếp nhận & Xử lý").classes("text-slate-900 font-semibold")
+                    ui.label("/").classes("text-slate-300")
+                    ui.label("Công việc").classes("text-slate-700 font-semibold")
 
-                ui.label("Bàn làm việc Kỹ thuật viên").classes("text-xl font-bold text-slate-900 tracking-tight")
+                ui.label("Bàn làm việc Kỹ thuật viên").classes("text-2xl font-bold text-slate-900 tracking-tight")
                 ui.label("Tiếp nhận, xử lý sự cố và trao đổi trực tiếp với người yêu cầu.").classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
@@ -60,13 +60,15 @@ def render_task_board_view() -> None:
         # Container for Segmented Queue Tabs (Quick Filter Strip)
         tabs_container = ui.row().classes("w-full mb-3")
 
-        # Container for 2-Column Split Workspace
-        workspace_container = ui.row().classes("w-full gap-4 items-start no-wrap")
-        left_pane = ui.column().classes("w-[390px] shrink-0 gap-2.5")
-        right_pane = ui.column().classes("flex-1 min-w-0 gap-3")
+        # =========================================================================
+        # 3. MASTER-DETAIL 2-COLUMN GRID (Side-by-Side on Desktop)
+        # =========================================================================
+        with ui.element("div").classes("w-full grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[430px_1fr] gap-4 items-start"):
+            left_pane = ui.column().classes("w-full gap-2.5")
+            right_pane = ui.column().classes("w-full gap-3 min-w-0")
 
         # =========================================================================
-        # 3. FILTERING LOGIC
+        # 4. FILTERING LOGIC
         # =========================================================================
         def filter_tickets(tickets: list[dict[str, Any]]) -> list[dict[str, Any]]:
             res = tickets
@@ -95,19 +97,18 @@ def render_task_board_view() -> None:
 
             return res
 
-        def set_active_tab(tab_name: str) -> None:
+        async def set_active_tab(tab_name: str) -> None:
             state["active_tab"] = tab_name
             filtered = filter_tickets(state["raw_tickets"])
-            # Auto select first ticket in new list if previous selection is not in list
             if filtered:
                 if not any(t["id"] == state["selected_ticket_id"] for t in filtered):
                     state["selected_ticket_id"] = filtered[0]["id"]
             else:
                 state["selected_ticket_id"] = None
-            render_all()
+            await render_all()
 
         # =========================================================================
-        # 4. RENDER QUEUE TABS (Segmented Control with Real Counts)
+        # 5. RENDER QUEUE TABS (Compact Segmented Navigation)
         # =========================================================================
         def render_tabs() -> None:
             tabs_container.clear()
@@ -134,7 +135,7 @@ def render_task_board_view() -> None:
 
             with tabs_container:
                 with ui.row().classes(
-                    "w-full justify-between items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs flex-wrap gap-1.5"
+                    "w-full justify-between items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs flex-wrap gap-1"
                 ):
                     with ui.row().classes("items-center gap-1 flex-wrap"):
                         for key, label, count in tab_items:
@@ -162,19 +163,19 @@ def render_task_board_view() -> None:
                                     )
 
                     with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 pr-3 hidden md:flex"):
-                        ui.label(f"Tổng số: {len(tickets)} sự cố").classes("text-[11px] font-medium")
+                        ui.label(f"Tổng: {len(tickets)} sự cố").classes("text-[11px] font-medium")
 
         # =========================================================================
-        # 5. ACTION WORKFLOW METHODS
+        # 6. ACTION WORKFLOW METHODS
         # =========================================================================
         async def handle_claim_ticket(ticket_id: int) -> None:
             try:
                 await ticket_service.assign_ticket(ticket_id, int(user_id))
                 await ticket_service.update_status(ticket_id, "IN_PROGRESS")
-                toast.success(f"Bạn đã nhận và bắt đầu xử lý Ticket #{ticket_id}!")
+                toast.success(f"Bạn đã tiếp nhận và bắt đầu xử lý Ticket #{ticket_id}!")
                 await load_tickets_data(refresh=True)
             except Exception as exc:
-                toast.error(f"Không thể nhận ticket: {exc}")
+                toast.error(f"Không thể tiếp nhận ticket: {exc}")
 
         async def handle_update_status(ticket_id: int, next_status: str, note: str | None = None) -> None:
             try:
@@ -182,7 +183,7 @@ def render_task_board_view() -> None:
                     await ticket_service.close_ticket(ticket_id, note)
                 else:
                     await ticket_service.update_status(ticket_id, next_status)
-                toast.success(f"Đã chuyển sự cố sang trạng thái {next_status}.")
+                toast.success(f"Đã cập nhật trạng thái sang {next_status}.")
                 await load_tickets_data(refresh=True)
             except Exception as exc:
                 toast.error(f"Lỗi: {exc}")
@@ -197,7 +198,7 @@ def render_task_board_view() -> None:
                 with ui.column().classes("w-full p-5 gap-3 text-xs"):
                     ui.label("Ghi chú giải pháp xử lý:").classes("font-semibold text-slate-700")
                     res_note = ui.textarea(
-                        placeholder="Mô tả nguyên nhân lỗi và giải pháp kỹ thuật đã thực hiện..."
+                        placeholder="Mô tả tóm tắt nguyên nhân lỗi và giải pháp khắc phục..."
                     ).props("outlined dense rows=3").classes("w-full text-xs")
 
                     async def confirm_resolution() -> None:
@@ -219,9 +220,9 @@ def render_task_board_view() -> None:
                     ui.button(icon="close", on_click=dialog.close).props("flat dense round size=xs color=slate-500")
 
                 with ui.column().classes("w-full p-5 gap-3 text-xs"):
-                    ui.label("Ghi chú bàn giao nghiệm thu:").classes("font-semibold text-slate-700")
+                    ui.label("Ghi chú bàn giao:").classes("font-semibold text-slate-700")
                     close_note = ui.textarea(
-                        placeholder="Ghi chú hoàn tất xử lý và bàn giao cho người dùng..."
+                        placeholder="Ghi chú hoàn tất xử lý và nghiệm thu..."
                     ).props("outlined dense rows=3").classes("w-full text-xs")
 
                     async def confirm_close() -> None:
@@ -236,18 +237,22 @@ def render_task_board_view() -> None:
             dialog.open()
 
         # =========================================================================
-        # 6. RENDER LEFT PANE (Ticket Queue List)
+        # 7. RENDER LEFT QUEUE PANEL (Ticket Work Queue)
         # =========================================================================
         def render_left_pane() -> None:
             left_pane.clear()
             filtered = filter_tickets(state["raw_tickets"])
 
             with left_pane:
-                # Search Bar
-                with ui.card().classes("w-full p-2 rounded-xl bg-white border border-slate-200 shadow-2xs"):
+                # Queue Header + Search Box
+                with ui.card().classes("w-full p-3 rounded-xl bg-white border border-slate-200 shadow-2xs gap-2"):
+                    with ui.row().classes("w-full justify-between items-center"):
+                        ui.label("CÔNG VIỆC").classes("text-xs font-bold text-slate-700 uppercase tracking-wider")
+                        ui.label(f"{len(filtered)} ticket").classes("text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full")
+
                     search_box = (
                         ui.input(
-                            placeholder="Tìm kiếm mã, tiêu đề sự cố...",
+                            placeholder="Tìm mã ticket hoặc tiêu đề...",
                             value=state["keyword"],
                             on_change=lambda e: on_search_changed(e.value),
                         )
@@ -259,50 +264,53 @@ def render_task_board_view() -> None:
 
                 # Ticket Cards List
                 if not filtered:
-                    with ui.card().classes("w-full p-6 bg-white border border-slate-200 rounded-xl text-center items-center gap-1.5 shadow-2xs"):
-                        ui.label("Không tìm thấy sự cố").classes("text-xs font-bold text-slate-700")
-                        ui.label("Thử chọn danh mục khác hoặc xóa từ khóa tìm kiếm.").classes("text-[11px] text-slate-400")
+                    with ui.card().classes("w-full p-6 bg-white border border-slate-200 rounded-xl text-center items-center gap-2 shadow-2xs"):
+                        ui.label("Không có ticket trong danh sách này.").classes("text-xs font-bold text-slate-700")
+                        if state["keyword"]:
+                            ui.label("Không tìm thấy ticket phù hợp.").classes("text-[11px] text-slate-400")
+                            ui.button("Xóa bộ lọc", on_click=lambda: on_search_changed("")).props("outline dense size=xs color=primary").classes("px-3 py-1")
                 else:
-                    with ui.column().classes("w-full gap-2 max-h-[calc(100vh-230px)] overflow-y-auto pr-1"):
+                    with ui.column().classes("w-full gap-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-1"):
                         for tck in filtered:
                             t_id = tck["id"]
                             is_selected = t_id == state["selected_ticket_id"]
                             priority = tck.get("priority", "MEDIUM")
                             status = tck.get("status", "OPEN")
-                            is_my = tck.get("technician_id") == user_id
+                            category_text = CATEGORY_LABELS.get(tck.get("category", ""), "Sự cố kỹ thuật")
 
                             card_border = (
-                                "border-blue-600 bg-blue-50/40 shadow-sm ring-1 ring-blue-600"
+                                "border-l-4 border-l-blue-600 border-t border-r border-b border-blue-300 bg-blue-50/40 shadow-xs"
                                 if is_selected
-                                else "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 shadow-2xs"
+                                else "border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70 shadow-2xs"
                             )
 
-                            def select_this_ticket(target_id: int = t_id) -> None:
+                            async def select_this_ticket(target_id: int = t_id) -> None:
                                 state["selected_ticket_id"] = target_id
-                                render_all()
+                                await render_all()
 
                             with ui.card().classes(
-                                f"w-full p-3 rounded-xl border {card_border} cursor-pointer transition-all duration-150 gap-1.5"
+                                f"w-full p-3 rounded-xl {card_border} cursor-pointer transition-all duration-150 gap-1.5"
                             ).on("click", select_this_ticket):
-                                # Top Row: ID + Priority + My Badge + Status
+                                # Top Row: ID + Priority
                                 with ui.row().classes("w-full justify-between items-center no-wrap"):
-                                    with ui.row().classes("items-center gap-1.5"):
-                                        ui.label(f"#TK-{t_id:04d}").classes("font-mono font-bold text-xs text-slate-900")
-                                        if is_my:
-                                            ui.label("Của tôi").classes("text-[9px] font-bold text-primary px-1 py-0.2 bg-blue-50 border border-blue-200 rounded")
-                                        priority_badge(priority)
+                                    ui.label(f"#TK-{t_id:04d}").classes("font-mono font-bold text-xs text-slate-900")
+                                    priority_badge(priority)
 
+                                # Title
+                                ui.label(tck.get("title", "-")).classes("font-semibold text-slate-900 text-[13px] line-clamp-1 leading-snug")
+
+                                # Subtext: Requester & Category
+                                with ui.row().classes("items-center gap-1.5 text-[11px] text-slate-500 truncate"):
+                                    ui.label(f"Người dùng #{tck.get('user_id')}")
+                                    ui.label("·").classes("text-slate-300")
+                                    ui.label(category_text).classes("truncate")
+
+                                # Bottom Row: Status + Time
+                                with ui.row().classes("w-full justify-between items-center pt-1 border-t border-slate-100/80 text-[10px] text-slate-400"):
                                     status_badge(status)
-
-                                # Middle: Title
-                                ui.label(tck.get("title", "-")).classes("font-semibold text-slate-900 text-xs line-clamp-2 leading-snug")
-
-                                # Bottom: Requester & Time
-                                with ui.row().classes("w-full justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-100"):
-                                    ui.label(f"Người dùng #{tck.get('user_id')}").classes("font-medium text-slate-600")
                                     ui.label(format_relative_time(tck.get("updated_at") or tck.get("created_at")))
 
-        def on_search_changed(val: str | None) -> None:
+        async def on_search_changed(val: str | None) -> None:
             state["keyword"] = val or ""
             filtered = filter_tickets(state["raw_tickets"])
             if filtered:
@@ -310,10 +318,10 @@ def render_task_board_view() -> None:
                     state["selected_ticket_id"] = filtered[0]["id"]
             else:
                 state["selected_ticket_id"] = None
-            render_all()
+            await render_all()
 
         # =========================================================================
-        # 7. RENDER RIGHT PANE (Detail Information & Real-time Chat Thread)
+        # 8. RENDER RIGHT DETAIL PANEL (Working Workspace & Live Chat)
         # =========================================================================
         async def render_right_pane() -> None:
             right_pane.clear()
@@ -321,9 +329,10 @@ def render_task_board_view() -> None:
 
             if not sel_id:
                 with right_pane:
-                    with ui.card().classes("w-full p-12 bg-white border border-slate-200 rounded-xl shadow-2xs text-center items-center justify-center min-h-[420px]"):
-                        ui.label("Chưa chọn sự cố nào").classes("text-sm font-bold text-slate-800")
-                        ui.label("Vui lòng chọn một sự cố từ danh sách bên trái để xem chi tiết và trao đổi với người dùng.").classes("text-xs text-slate-500 max-w-sm mt-1")
+                    with ui.card().classes("w-full p-12 bg-white border border-slate-200 rounded-xl shadow-2xs text-center items-center justify-center min-h-[460px] gap-2"):
+                        ui.icon("assignment_turned_in", size="36px").classes("text-slate-300")
+                        ui.label("Chọn một ticket để bắt đầu xử lý").classes("text-base font-bold text-slate-800")
+                        ui.label("Chọn một yêu cầu bên trái để xem thông tin và thực hiện các thao tác kỹ thuật.").classes("text-xs text-slate-500 max-w-sm")
                 return
 
             try:
@@ -334,94 +343,141 @@ def render_task_board_view() -> None:
                         dev = await device_service.get_device(tck["device_id"])
                     except Exception:
                         dev = None
+                history = await ticket_service.get_history(sel_id)
             except Exception as exc:
                 with right_pane:
-                    ui.label(f"Lỗi tải dữ liệu sự cố #{sel_id}: {exc}").classes("text-red-600 text-xs p-4")
+                    with ui.card().classes("w-full p-6 bg-white border border-slate-200 rounded-xl shadow-2xs text-center items-center gap-2"):
+                        ui.label(f"Không thể tải thông tin ticket: {exc}").classes("text-xs text-red-600 font-semibold")
+                        ui.button("Thử lại", on_click=lambda: render_right_pane()).props("outline dense size=sm color=primary").classes("px-3")
                 return
 
             status = tck.get("status", "OPEN")
             priority = tck.get("priority", "MEDIUM")
-            category = tck.get("category", "INCIDENT")
+            category_text = CATEGORY_LABELS.get(tck.get("category", ""), "Sự cố kỹ thuật")
             is_unassigned = not tck.get("technician_id")
 
             with right_pane:
-                # 1. Main Header Card
-                with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-2xs gap-3"):
-                    # Header Top: Badges & Links
+                # 1. Main Detail Card
+                with ui.card().classes("w-full p-5 rounded-xl bg-white border border-slate-200 shadow-2xs gap-3.5"):
+                    # Top Header: Ticket ID, Badges & Open Full Page Link
                     with ui.row().classes("w-full justify-between items-center flex-wrap gap-2 pb-2.5 border-b border-slate-100"):
                         with ui.row().classes("items-center gap-2 flex-wrap"):
-                            ui.label(f"#TK-{sel_id:04d}").classes("font-mono text-sm font-bold text-slate-900")
+                            ui.label(f"#TK-{sel_id:04d}").classes("font-mono text-base font-bold text-slate-900")
                             priority_badge(priority)
                             status_badge(status)
-                            ui.label(CATEGORY_LABELS.get(category, category)).classes(
-                                "text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200"
-                            )
+                            ui.label(f"· {category_text}").classes("text-xs text-slate-500 font-medium")
 
                         ui.button(
-                            "Mở trang chi tiết đầy đủ ↗",
+                            "Mở trang chi tiết ↗",
                             on_click=lambda id=sel_id: ui.navigate.to(f"/tickets/{id}"),
                         ).props("flat color=slate-700 size=sm").classes("text-xs font-semibold")
 
                     # Title
-                    ui.label(tck.get("title", "-")).classes("text-base font-bold text-slate-900 leading-snug")
+                    ui.label(tck.get("title", "-")).classes("text-xl font-bold text-slate-900 leading-snug")
 
-                    # Large Technical Action Bar (No modal obstruction, direct 1-click)
-                    with ui.row().classes("w-full justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl flex-wrap gap-2"):
+                    # Primary Technician Action Bar
+                    with ui.row().classes("w-full justify-between items-center p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex-wrap gap-2"):
                         with ui.row().classes("items-center gap-2"):
                             ui.label("Thao tác kỹ thuật:").classes("font-bold text-slate-800 text-xs")
 
                         with ui.row().classes("items-center gap-2 flex-wrap"):
                             if is_unassigned or status == "OPEN":
                                 ui.button(
-                                    "Nhận xử lý sự cố",
+                                    "Tiếp nhận sự cố",
+                                    icon="bolt",
                                     on_click=lambda id=sel_id: handle_claim_ticket(id),
                                 ).props("unelevated color=primary size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                             elif status == "ASSIGNED":
                                 ui.button(
                                     "Bắt đầu xử lý",
+                                    icon="play_arrow",
                                     on_click=lambda id=sel_id: handle_update_status(id, "IN_PROGRESS"),
                                 ).props("unelevated color=amber-700 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs text-white shadow-2xs")
                             elif status == "IN_PROGRESS":
                                 ui.button(
-                                    "Khắc phục xong",
+                                    "Đánh dấu đã xử lý",
+                                    icon="check_circle",
                                     on_click=lambda id=sel_id: open_resolution_dialog(id),
                                 ).props("unelevated color=positive size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                             elif status == "RESOLVED":
                                 ui.button(
-                                    "Đóng & Hoàn tất",
+                                    "Hoàn tất & Đóng sự cố",
+                                    icon="lock",
                                     on_click=lambda id=sel_id: open_close_dialog(id),
                                 ).props("unelevated color=slate-800 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
-
-                    # Description Box
-                    with ui.card().classes("w-full p-3.5 rounded-lg bg-slate-50/70 border border-slate-200/80 gap-1"):
-                        ui.label("MÔ TẢ SỰ CỐ TỪ NGƯỜI DÙNG").classes("text-[10px] font-bold text-slate-500 uppercase tracking-wider")
-                        ui.label(tck.get("description") or "Không có mô tả chi tiết.").classes("text-xs text-slate-800 leading-relaxed")
-
-                    # Meta Information Row (Requester & Device)
-                    with ui.row().classes("w-full gap-3"):
-                        with ui.card().classes("flex-1 p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 gap-0.5"):
-                            ui.label("NGƯỜI YÊU CẦU").classes("text-[10px] font-bold text-slate-500 uppercase tracking-wider")
-                            ui.label(f"User #{tck.get('user_id')}").classes("font-bold text-slate-900 text-xs")
-                            ui.label(format_datetime(tck.get("created_at"))).classes("text-[10px] text-slate-400")
-
-                        with ui.card().classes("flex-1 p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 gap-0.5"):
-                            ui.label("THIẾT BỊ LIÊN QUAN").classes("text-[10px] font-bold text-slate-500 uppercase tracking-wider")
-                            if dev:
-                                ui.label(f"{dev.get('ma_thiet_bi')} - {dev.get('ten_thiet_bi')}").classes("font-bold text-blue-700 text-xs truncate")
-                                ui.label(dev.get("vi_tri") or "Chưa có vị trí").classes("text-[10px] text-slate-500 truncate")
                             else:
-                                ui.label("Không liên kết thiết bị").classes("text-xs text-slate-400 italic")
+                                ui.label("Sự cố đã được đóng hoàn tất.").classes("text-xs text-slate-500 italic")
+
+                    # Structured Description Section
+                    with ui.column().classes("w-full gap-1 pt-1"):
+                        ui.label("MÔ TẢ SỰ CỐ").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                        with ui.element("div").classes("w-full p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"):
+                            ui.label(tck.get("description") or "Không có mô tả chi tiết.")
+
+                    # Compact Information Grid
+                    with ui.column().classes("w-full gap-1 pt-1"):
+                        ui.label("THÔNG TIN LIÊN QUAN").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                        with ui.element("div").classes("w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 text-xs"):
+                            # Item 1: Requester
+                            with ui.column().classes("gap-0"):
+                                ui.label("Người yêu cầu").classes("text-[10px] text-slate-400")
+                                ui.label(f"User #{tck.get('user_id')}").classes("font-semibold text-slate-800")
+
+                            # Item 2: Device
+                            with ui.column().classes("gap-0"):
+                                ui.label("Thiết bị").classes("text-[10px] text-slate-400")
+                                if dev:
+                                    ui.label(f"{dev.get('ma_thiet_bi')} - {dev.get('ten_thiet_bi')}").classes("font-semibold text-blue-700 truncate")
+                                else:
+                                    ui.label("Không liên kết").classes("text-slate-500 italic")
+
+                            # Item 3: Location
+                            with ui.column().classes("gap-0"):
+                                ui.label("Vị trí thiết bị").classes("text-[10px] text-slate-400")
+                                ui.label(dev.get("vi_tri") if dev else "Chưa có thông tin").classes("font-semibold text-slate-800 truncate")
+
+                            # Item 4: Created At
+                            with ui.column().classes("gap-0"):
+                                ui.label("Thời gian tạo").classes("text-[10px] text-slate-400")
+                                ui.label(format_datetime(tck.get("created_at"))).classes("font-medium text-slate-700")
+
+                            # Item 5: Updated At
+                            with ui.column().classes("gap-0"):
+                                ui.label("Cập nhật gần nhất").classes("text-[10px] text-slate-400")
+                                ui.label(format_datetime(tck.get("updated_at") or tck.get("created_at"))).classes("font-medium text-slate-700")
+
+                            # Item 6: Category
+                            with ui.column().classes("gap-0"):
+                                ui.label("Phân loại").classes("text-[10px] text-slate-400")
+                                ui.label(category_text).classes("font-medium text-slate-700")
+
+                    # Activity Timeline
+                    if history:
+                        with ui.column().classes("w-full gap-1 pt-1 border-t border-slate-100"):
+                            ui.label("LỊCH SỬ TIẾN TRÌNH").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                            with ui.column().classes("w-full gap-2 pl-2 py-1"):
+                                for ev in history[-4:]:
+                                    ev_time = format_datetime(ev.get("performed_at") or ev.get("created_at"))
+                                    ev_action = ev.get("action") or "Cập nhật"
+                                    ev_old = ev.get("old_status")
+                                    ev_new = ev.get("new_status")
+                                    status_info = f" ({ev_old} → {ev_new})" if ev_old and ev_new else ""
+
+                                    with ui.row().classes("items-center gap-2 text-xs"):
+                                        ui.element("div").classes("w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0")
+                                        ui.label(ev_time).classes("text-[11px] text-slate-400 font-mono")
+                                        ui.label(f"{ev_action}{status_info}").classes("text-slate-700 font-medium")
 
                 # 2. Embedded Real-time Chat Thread
                 comments_thread(sel_id, user, compact=False, max_height="280px")
 
         # =========================================================================
-        # 8. DATA LOADER & RENDER ALL
+        # 9. DATA LOADER & RENDER ALL
         # =========================================================================
-        def render_all() -> None:
+        async def render_all() -> None:
             render_tabs()
             render_left_pane()
-            ui.timer(0.01, render_right_pane, once=True)
+            await render_right_pane()
 
         async def load_tickets_data(refresh: bool = False) -> None:
             state["is_loading"] = True
@@ -439,7 +495,7 @@ def render_task_board_view() -> None:
                 state["error"] = str(exc)
                 state["is_loading"] = False
 
-            render_all()
+            await render_all()
 
         ui.timer(0.05, lambda: load_tickets_data(refresh=True), once=True)
 
