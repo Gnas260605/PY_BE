@@ -84,10 +84,30 @@ class TicketService:
     async def get_dashboard_stats(self) -> dict[str, Any]:
         return await http_client.get("/dashboard/stats")
 
+    async def batch_assign(self, ticket_ids: list[int], technician_id: int) -> dict[str, Any]:
+        response = await http_client.patch(
+            "/tickets/batch-assign",
+            data={"ticket_ids": ticket_ids, "technician_id": technician_id},
+        )
+        service_cache.clear()
+        return response
+
+    async def batch_status(self, ticket_ids: list[int], status: str, note: str | None = None) -> dict[str, Any]:
+        response = await http_client.patch(
+            "/tickets/batch-status",
+            data={"ticket_ids": ticket_ids, "status": status, "note": note},
+        )
+        service_cache.clear()
+        return response
+
+    async def export_tickets_csv(self, params: dict[str, Any] | None = None) -> str:
+        return await http_client.get("/reports/export-tickets", params=params or {})
+
     @staticmethod
     def next_statuses(current_status: str | None) -> list[str]:
         return NEXT_STATUSES.get(current_status or "", [])
 
 
 ticket_service = TicketService()
+
 
