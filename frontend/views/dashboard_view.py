@@ -11,6 +11,7 @@ from common.components.status_badge import priority_badge, status_badge
 from common.formatters import format_datetime, format_relative_time, truncate
 from common.styles.breakpoints import RESPONSIVE_GRID
 from core.constants import CATEGORY_LABELS
+from core.i18n import get_category_label, t
 from services.ticket_service import ticket_service
 
 
@@ -70,25 +71,25 @@ def render_dashboard_view() -> None:
         with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-200 mb-3 flex-wrap gap-2"):
             with ui.column().classes("gap-0.5"):
                 with ui.row().classes("items-center gap-2"):
-                    ui.label(f"Xin chào, {user_name}").classes("text-2xl font-bold text-slate-900 tracking-tight")
-                ui.label("Đây là các công việc cần bạn xử lý hôm nay.").classes("text-xs text-slate-500")
+                    ui.label(t("tech_dash_title", name=user_name)).classes("text-2xl font-bold text-slate-900 tracking-tight")
+                ui.label(t("tech_dash_sub")).classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
                 ui.button(
-                    "Mở bàn làm việc",
+                    t("btn_open_workspace"),
                     icon="assignment",
                     on_click=lambda: ui.navigate.to("/technician/tasks"),
                 ).props("color=primary unelevated size=md").classes("h-[38px] px-4 font-bold text-xs rounded-lg shadow-2xs")
 
                 ui.button(
-                    "Tra cứu thiết bị",
+                    t("btn_device_lookup"),
                     icon="search",
                     on_click=lambda: ui.navigate.to("/technician/devices"),
                 ).props("outline color=slate-700 size=md").classes("h-[38px] px-3.5 font-medium text-xs rounded-lg bg-white border-slate-300 shadow-2xs")
 
                 ui.button(icon="refresh", on_click=lambda: load_tech_data(refresh=True, show_toast=True)).props(
                     "outline dense color=slate-700 size=sm"
-                ).classes("h-[38px] w-[38px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip("Tải lại dữ liệu")
+                ).classes("h-[38px] w-[38px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip(t("btn_refresh"))
 
         # Container for Personal Work Summary Strip
         summary_container = ui.element("div").classes("w-full grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4")
@@ -105,10 +106,10 @@ def render_dashboard_view() -> None:
             my_tickets = state["my_tickets"]
             all_tickets = state["all_tickets"]
 
-            my_active = [t for t in my_tickets if t.get("status") not in ("RESOLVED", "CLOSED")]
-            my_in_progress = [t for t in my_tickets if t.get("status") == "IN_PROGRESS"]
-            my_urgent = [t for t in my_active if t.get("priority") in ("URGENT", "HIGH")]
-            my_resolved = [t for t in my_tickets if t.get("status") in ("RESOLVED", "CLOSED")]
+            my_active = [tck for tck in my_tickets if tck.get("status") not in ("RESOLVED", "CLOSED")]
+            my_in_progress = [tck for tck in my_tickets if tck.get("status") == "IN_PROGRESS"]
+            my_urgent = [tck for tck in my_active if tck.get("priority") in ("URGENT", "HIGH")]
+            my_resolved = [tck for tck in my_tickets if tck.get("status") in ("RESOLVED", "CLOSED")]
 
             # 1. Summary Cards Strip
             summary_container.clear()
@@ -117,33 +118,33 @@ def render_dashboard_view() -> None:
                 with ui.card().classes(
                     "p-4 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-blue-400 hover:shadow-xs transition-all gap-1"
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
-                    ui.label("VIỆC CẦN XỬ LÝ").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                    ui.label(t("kpi_my_active")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
                     ui.label(str(len(my_active))).classes("text-2xl font-bold text-slate-900 tracking-tight")
-                    ui.label("Sự cố đang chờ xử lý").classes("text-[11px] text-slate-500")
+                    ui.label(t("kpi_my_active_sub")).classes("text-[11px] text-slate-500")
 
                 # Metric 2: Đang xử lý
                 with ui.card().classes(
                     "p-4 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all gap-1"
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
-                    ui.label("ĐANG XỬ LÝ").classes("text-[10px] font-bold text-amber-600 uppercase tracking-wider")
+                    ui.label(t("kpi_my_in_progress")).classes("text-[10px] font-bold text-amber-600 uppercase tracking-wider")
                     ui.label(str(len(my_in_progress))).classes("text-2xl font-bold text-amber-700 tracking-tight")
-                    ui.label("Đang trong tiến trình").classes("text-[11px] text-slate-500")
+                    ui.label(t("kpi_my_in_progress_sub")).classes("text-[11px] text-slate-500")
 
                 # Metric 3: Cần ưu tiên
                 with ui.card().classes(
                     "p-4 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-rose-400 hover:shadow-xs transition-all gap-1"
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
-                    ui.label("CẦN ƯU TIÊN").classes("text-[10px] font-bold text-rose-600 uppercase tracking-wider")
+                    ui.label(t("kpi_urgent")).classes("text-[10px] font-bold text-rose-600 uppercase tracking-wider")
                     ui.label(str(len(my_urgent))).classes("text-2xl font-bold text-rose-700 tracking-tight")
-                    ui.label("Mức High & Urgent chưa giải quyết").classes("text-[11px] text-slate-500")
+                    ui.label(t("kpi_urgent_sub")).classes("text-[11px] text-slate-500")
 
                 # Metric 4: Hoàn thành
                 with ui.card().classes(
                     "p-4 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-emerald-400 hover:shadow-xs transition-all gap-1"
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
-                    ui.label("ĐÃ GIẢI QUYẾT").classes("text-[10px] font-bold text-emerald-600 uppercase tracking-wider")
+                    ui.label(t("kpi_resolved")).classes("text-[10px] font-bold text-emerald-600 uppercase tracking-wider")
                     ui.label(str(len(my_resolved))).classes("text-2xl font-bold text-emerald-700 tracking-tight")
-                    ui.label("Sự cố đã khắc phục").classes("text-[11px] text-slate-500")
+                    ui.label(t("kpi_resolved_sub")).classes("text-[11px] text-slate-500")
 
             # 2. Left Column: My Priority Work Queue
             left_col.clear()
@@ -151,9 +152,9 @@ def render_dashboard_view() -> None:
                 with ui.card().classes("w-full p-5 rounded-xl bg-white border border-slate-200 shadow-2xs gap-3"):
                     with ui.row().classes("w-full justify-between items-center pb-2.5 border-b border-slate-100"):
                         with ui.column().classes("gap-0.5"):
-                            ui.label("Công việc cần xử lý").classes("text-base font-bold text-slate-900")
-                            ui.label("Các ticket đang được giao cho bạn, ưu tiên theo mức độ và thời gian cập nhật.").classes("text-xs text-slate-500")
-                        ui.button("Xem tất cả", on_click=lambda: ui.navigate.to("/technician/tasks")).props("flat dense size=sm color=primary").classes("text-xs font-semibold")
+                            ui.label(t("sec_work_queue")).classes("text-base font-bold text-slate-900")
+                            ui.label(t("sec_work_queue_sub")).classes("text-xs text-slate-500")
+                        ui.button(t("btn_all_tickets"), on_click=lambda: ui.navigate.to("/technician/tasks")).props("flat dense size=sm color=primary").classes("text-xs font-semibold")
 
                     # Sort logic: Urgent/High first, then In_Progress, then oldest
                     sorted_work = list(my_active)
@@ -168,16 +169,16 @@ def render_dashboard_view() -> None:
                     if not sorted_work:
                         with ui.column().classes("w-full py-10 items-center justify-center text-center gap-1.5"):
                             ui.icon("task_alt", size="36px").classes("text-emerald-500")
-                            ui.label("Tuyệt vời! Bạn không còn sự cố nào tồn đọng.").classes("text-sm font-bold text-slate-800")
-                            ui.label("Hãy kiểm tra hàng đợi chung để tiếp nhận công việc mới nếu có.").classes("text-xs text-slate-500")
-                            ui.button("Mở hàng đợi sự cố", on_click=lambda: ui.navigate.to("/technician/tasks")).props("unelevated color=primary size=sm").classes("mt-2 rounded-lg font-bold px-4")
+                            ui.label(t("all_work_done")).classes("text-sm font-bold text-slate-800")
+                            ui.label(t("all_work_done_sub")).classes("text-xs text-slate-500")
+                            ui.button(t("btn_open_queue"), on_click=lambda: ui.navigate.to("/technician/tasks")).props("unelevated color=primary size=sm").classes("mt-2 rounded-lg font-bold px-4")
                     else:
                         with ui.column().classes("w-full divide-y divide-slate-100 gap-0"):
                             for tck in sorted_work[:5]:
                                 t_id = tck["id"]
                                 priority = tck.get("priority", "MEDIUM")
                                 status = tck.get("status", "OPEN")
-                                category_text = CATEGORY_LABELS.get(tck.get("category", ""), "Sự cố kỹ thuật")
+                                category_text = get_category_label(tck.get("category"))
 
                                 with ui.row().classes(
                                     "w-full justify-between items-center py-3 hover:bg-slate-50/80 px-2 rounded-lg transition-colors gap-2"
@@ -192,12 +193,12 @@ def render_dashboard_view() -> None:
                                         ui.label(tck.get("title", "-")).classes("text-sm font-semibold text-slate-900 line-clamp-1 leading-snug")
 
                                         with ui.row().classes("items-center gap-2 text-[11px] text-slate-500"):
-                                            ui.label(f"Người dùng #{tck.get('user_id')}")
+                                            ui.label(t("user_label", id=tck.get('user_id')))
                                             ui.label("·").classes("text-slate-300")
-                                            ui.label(f"Cập nhật {format_relative_time(tck.get('updated_at') or tck.get('created_at'))}")
+                                            ui.label(format_relative_time(tck.get('updated_at') or tck.get('created_at')))
 
                                     ui.button(
-                                        "Tiếp tục xử lý →",
+                                        t("btn_continue_work") + " →",
                                         on_click=lambda tid=t_id: ui.navigate.to(f"/tickets/{tid}"),
                                     ).props("outline dense size=sm color=primary").classes("h-8.5 px-3 rounded-lg font-bold text-xs shrink-0 bg-white border-blue-200 hover:bg-blue-50")
 
@@ -207,8 +208,8 @@ def render_dashboard_view() -> None:
                 # Urgent Attention Block
                 with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-2xs gap-2.5"):
                     with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-100"):
-                        ui.label("CẦN CHÚ Ý").classes("text-xs font-bold text-rose-700 uppercase tracking-wider")
-                        ui.label(f"{len(my_urgent)} sự cố").classes("text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200")
+                        ui.label(t("sec_urgent_attention")).classes("text-xs font-bold text-rose-700 uppercase tracking-wider")
+                        ui.label(t("item_count_tickets", count=len(my_urgent))).classes("text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200")
 
                     if my_urgent:
                         top_urgent = my_urgent[0]
@@ -219,46 +220,46 @@ def render_dashboard_view() -> None:
                                 priority_badge(top_urgent.get("priority"))
 
                             ui.label(top_urgent.get("title", "-")).classes("text-xs font-bold text-slate-900 line-clamp-2 leading-snug")
-                            ui.label(f"Cập nhật: {format_relative_time(top_urgent.get('updated_at') or top_urgent.get('created_at'))}").classes("text-[10px] text-slate-500")
+                            ui.label(t("updated_time", time=format_relative_time(top_urgent.get('updated_at') or top_urgent.get('created_at')))).classes("text-[10px] text-slate-500")
 
                             ui.button(
-                                "Xem và xử lý ngay",
+                                t("btn_view_now"),
                                 on_click=lambda id=u_id: ui.navigate.to(f"/tickets/{id}"),
                             ).props("unelevated color=negative size=sm").classes("w-full h-8 rounded-lg font-bold text-xs mt-1")
                     else:
                         with ui.row().classes("items-center gap-2 py-2 text-emerald-700 text-xs font-medium"):
                             ui.icon("check_circle", size="18px").classes("text-emerald-600")
-                            ui.label("Không có sự cố khẩn cấp tồn đọng.")
+                            ui.label(t("no_urgent_tickets"))
 
                 # Today's Progress
                 with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-2xs gap-2.5"):
-                    ui.label("TIẾN ĐỘ CÔNG VIỆC").classes("text-xs font-bold text-slate-700 uppercase tracking-wider pb-1 border-b border-slate-100")
+                    ui.label(t("sec_progress")).classes("text-xs font-bold text-slate-700 uppercase tracking-wider pb-1 border-b border-slate-100")
 
                     total_assigned = len(my_tickets)
                     resolved_total = len(my_resolved)
                     pct = int((resolved_total / max(1, total_assigned)) * 100) if total_assigned > 0 else 100
 
                     with ui.row().classes("w-full justify-between items-baseline text-xs"):
-                        ui.label(f"{resolved_total} / {total_assigned} công việc đã giải quyết").classes("font-semibold text-slate-800")
+                        ui.label(t("progress_done_text", resolved=resolved_total, total=total_assigned)).classes("font-semibold text-slate-800")
                         ui.label(f"{pct}%").classes("font-bold text-blue-600")
 
                     ui.linear_progress(value=pct / 100, color="primary").props("rounded size=8px").classes("w-full rounded-full bg-slate-100")
 
                     with ui.row().classes("w-full justify-between text-[11px] text-slate-500 pt-1"):
-                        ui.label(f"Đang làm: {len(my_in_progress)}")
-                        ui.label(f"Chờ bắt đầu: {len(my_active) - len(my_in_progress)}")
+                        ui.label(t("progress_working", count=len(my_in_progress)))
+                        ui.label(t("progress_waiting", count=len(my_active) - len(my_in_progress)))
 
                 # Quick Actions Shortcuts
                 with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-2xs gap-2"):
-                    ui.label("THAO TÁC NHANH").classes("text-xs font-bold text-slate-700 uppercase tracking-wider pb-1 border-b border-slate-100")
+                    ui.label(t("sec_quick_actions")).classes("text-xs font-bold text-slate-700 uppercase tracking-wider pb-1 border-b border-slate-100")
 
                     ui.button(
-                        "Mở Bàn làm việc KTV →",
+                        t("btn_open_workspace_arrow"),
                         on_click=lambda: ui.navigate.to("/technician/tasks"),
                     ).props("outline color=slate-700 size=sm").classes("w-full justify-start h-9 rounded-lg font-medium text-xs bg-white border-slate-300 hover:bg-slate-50")
 
                     ui.button(
-                        "Tra cứu thiết bị & Vị trí →",
+                        t("btn_device_lookup_arrow"),
                         on_click=lambda: ui.navigate.to("/technician/devices"),
                     ).props("outline color=slate-700 size=sm").classes("w-full justify-start h-9 rounded-lg font-medium text-xs bg-white border-slate-300 hover:bg-slate-50")
 
@@ -268,8 +269,8 @@ def render_dashboard_view() -> None:
                 with ui.card().classes("w-full p-5 rounded-xl bg-white border border-slate-200 shadow-2xs gap-3"):
                     with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-100"):
                         with ui.column().classes("gap-0.5"):
-                            ui.label("Cập nhật gần đây").classes("text-sm font-bold text-slate-900")
-                            ui.label("Lịch sử thay đổi và cập nhật trạng thái mới nhất trên các ticket.").classes("text-xs text-slate-500")
+                            ui.label(t("sec_recent_updates")).classes("text-sm font-bold text-slate-900")
+                            ui.label(t("sec_recent_updates_sub")).classes("text-xs text-slate-500")
 
                     recent_tickets = list(all_tickets)
                     recent_tickets.sort(key=lambda x: str(x.get("updated_at") or x.get("created_at") or ""), reverse=True)
@@ -281,7 +282,6 @@ def render_dashboard_view() -> None:
                             for r_tck in recent_tickets[:5]:
                                 r_id = r_tck["id"]
                                 r_time = format_relative_time(r_tck.get("updated_at") or r_tck.get("created_at"))
-                                exact_time = format_datetime(r_tck.get("updated_at") or r_tck.get("created_at"))
 
                                 with ui.row().classes("w-full justify-between items-center py-2.5 hover:bg-slate-50 px-2 rounded-lg gap-2"):
                                     with ui.row().classes("items-center gap-3 flex-1 min-w-0"):
@@ -292,7 +292,7 @@ def render_dashboard_view() -> None:
                                     with ui.row().classes("items-center gap-2 shrink-0"):
                                         status_badge(r_tck.get("status"))
                                         ui.button(
-                                            "Xem →",
+                                            t("view_link"),
                                             on_click=lambda tid=r_id: ui.navigate.to(f"/tickets/{tid}"),
                                         ).props("flat dense size=sm color=primary").classes("text-xs font-semibold")
 

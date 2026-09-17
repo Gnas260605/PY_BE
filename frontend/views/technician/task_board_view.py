@@ -10,6 +10,7 @@ from common.components.layout import app_shell
 from common.components.status_badge import priority_badge, status_badge
 from common.formatters import format_datetime, format_relative_time, truncate
 from core.constants import CATEGORY_LABELS
+from core.i18n import get_category_label, t
 from services.device_service import device_service
 from services.ticket_service import ticket_service
 
@@ -43,19 +44,19 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                     ui.label("/").classes("text-slate-300")
                     ui.label("Công việc").classes("text-slate-700 font-semibold")
 
-                ui.label("Bàn làm việc Kỹ thuật viên").classes("text-2xl font-bold text-slate-900 tracking-tight")
-                ui.label("Tiếp nhận, xử lý sự cố và trao đổi trực tiếp với người yêu cầu.").classes("text-xs text-slate-500")
+                ui.label(t("tb_title")).classes("text-2xl font-bold text-slate-900 tracking-tight")
+                ui.label(t("tb_sub")).classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
                 ui.button(
-                    "Tra cứu thiết bị",
+                    t("btn_device_lookup"),
                     icon="search",
                     on_click=lambda: ui.navigate.to("/technician/devices"),
                 ).props("outline color=slate-700 size=md").classes("h-[36px] rounded-lg font-medium px-3.5 text-xs bg-white border-slate-300 shadow-2xs")
 
                 ui.button(icon="refresh", on_click=lambda: load_tickets_data(refresh=True, show_toast=True)).props(
                     "outline dense color=slate-700 size=sm"
-                ).classes("h-[36px] w-[36px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip("Tải lại danh sách")
+                ).classes("h-[36px] w-[36px] rounded-lg bg-white border-slate-300 shadow-2xs").tooltip(t("btn_refresh"))
 
         # Container for Segmented Queue Tabs (Quick Filter Strip)
         tabs_container = ui.row().classes("w-full mb-3")
@@ -125,12 +126,12 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
             }
 
             tab_items = [
-                ("MY_TASKS", "Việc của tôi", counts["MY_TASKS"]),
-                ("UNASSIGNED", "Chờ tiếp nhận", counts["UNASSIGNED"]),
-                ("URGENT", "Khẩn cấp", counts["URGENT"]),
-                ("IN_PROGRESS", "Đang xử lý", counts["IN_PROGRESS"]),
-                ("RESOLVED", "Đã giải quyết", counts["RESOLVED"]),
-                ("ALL", "Tất cả sự cố", counts["ALL"]),
+                ("MY_TASKS", t("tab_my_tasks"), counts["MY_TASKS"]),
+                ("UNASSIGNED", t("tab_unassigned"), counts["UNASSIGNED"]),
+                ("URGENT", t("tab_urgent"), counts["URGENT"]),
+                ("IN_PROGRESS", t("tab_in_progress"), counts["IN_PROGRESS"]),
+                ("RESOLVED", t("tab_resolved"), counts["RESOLVED"]),
+                ("ALL", t("tab_all"), counts["ALL"]),
             ]
 
             with tabs_container:
@@ -143,10 +144,10 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                             tab_classes = (
                                 "bg-slate-900 text-white font-bold shadow-xs"
                                 if is_selected
-                                else "text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium"
+                                else "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                             )
                             pill_classes = (
-                                "bg-slate-800 text-slate-100"
+                                "bg-blue-600 text-white font-bold"
                                 if is_selected
                                 else "bg-slate-100 text-slate-600 font-semibold"
                             )
@@ -163,7 +164,7 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                                     )
 
                     with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 pr-3 hidden md:flex"):
-                        ui.label(f"Tổng: {len(tickets)} sự cố").classes("text-[11px] font-medium")
+                        ui.label(t("tb_total_tickets", count=len(tickets))).classes("text-[11px] font-medium")
 
         # =========================================================================
         # 6. ACTION WORKFLOW METHODS
@@ -387,83 +388,83 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                     # Primary Technician Action Bar
                     with ui.row().classes("w-full justify-between items-center p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex-wrap gap-2"):
                         with ui.row().classes("items-center gap-2"):
-                            ui.label("Thao tác kỹ thuật:").classes("font-bold text-slate-800 text-xs")
+                            ui.label(t("tb_tech_actions")).classes("font-bold text-slate-800 text-xs")
 
                         with ui.row().classes("items-center gap-2 flex-wrap"):
                             if is_unassigned or status == "OPEN":
                                 ui.button(
-                                    "Tiếp nhận sự cố",
+                                    t("btn_claim"),
                                     icon="bolt",
                                     on_click=lambda id=sel_id: handle_claim_ticket(id),
                                 ).props("unelevated color=primary size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                             elif status == "ASSIGNED":
                                 ui.button(
-                                    "Bắt đầu xử lý",
+                                    t("btn_start_work"),
                                     icon="play_arrow",
                                     on_click=lambda id=sel_id: handle_update_status(id, "IN_PROGRESS"),
                                 ).props("unelevated color=amber-700 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs text-white shadow-2xs")
                             elif status == "IN_PROGRESS":
                                 ui.button(
-                                    "Đánh dấu đã xử lý",
+                                    t("btn_mark_resolved"),
                                     icon="check_circle",
                                     on_click=lambda id=sel_id: open_resolution_dialog(id),
                                 ).props("unelevated color=positive size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                             elif status == "RESOLVED":
                                 with ui.row().classes("items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold"):
                                     ui.icon("check_circle").classes("text-sm text-emerald-600")
-                                    ui.label("Đã hoàn tất khắc phục kỹ thuật")
+                                    ui.label(t("tb_tech_resolved_badge"))
                             else:
                                 with ui.row().classes("items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs"):
                                     ui.icon("lock").classes("text-sm text-slate-500")
-                                    ui.label("Sự cố đã được đóng hoàn tất.")
+                                    ui.label(t("tb_tech_closed_badge"))
 
                     # Structured Description Section
                     with ui.column().classes("w-full gap-1 pt-1"):
-                        ui.label("MÔ TẢ SỰ CỐ").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                        ui.label(t("tb_description_title")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
                         with ui.element("div").classes("w-full p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"):
-                            ui.label(tck.get("description") or "Không có mô tả chi tiết.")
+                            ui.label(tck.get("description") or "No description provided." if t("tb_requester") == "Requester" else "Không có mô tả chi tiết.")
 
                     # Compact Information Grid
                     with ui.column().classes("w-full gap-1 pt-1"):
-                        ui.label("THÔNG TIN LIÊN QUAN").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                        ui.label(t("tb_info_title")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
                         with ui.element("div").classes("w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 text-xs"):
                             # Item 1: Requester
                             with ui.column().classes("gap-0"):
-                                ui.label("Người yêu cầu").classes("text-[10px] text-slate-400")
-                                ui.label(f"User #{tck.get('user_id')}").classes("font-semibold text-slate-800")
+                                ui.label(t("tb_requester")).classes("text-[10px] text-slate-400")
+                                ui.label(t("user_label", id=tck.get('user_id'))).classes("font-semibold text-slate-800")
 
                             # Item 2: Device
                             with ui.column().classes("gap-0"):
-                                ui.label("Thiết bị").classes("text-[10px] text-slate-400")
+                                ui.label(t("tb_device")).classes("text-[10px] text-slate-400")
                                 if dev:
                                     ui.label(f"{dev.get('ma_thiet_bi')} - {dev.get('ten_thiet_bi')}").classes("font-semibold text-blue-700 truncate")
                                 else:
-                                    ui.label("Không liên kết").classes("text-slate-500 italic")
+                                    ui.label(t("tb_unlinked")).classes("text-slate-500 italic")
 
                             # Item 3: Location
                             with ui.column().classes("gap-0"):
-                                ui.label("Vị trí thiết bị").classes("text-[10px] text-slate-400")
-                                ui.label(dev.get("vi_tri") if dev else "Chưa có thông tin").classes("font-semibold text-slate-800 truncate")
+                                ui.label(t("tb_device_location")).classes("text-[10px] text-slate-400")
+                                ui.label(dev.get("vi_tri") if dev else t("tb_no_location")).classes("font-semibold text-slate-800 truncate")
 
                             # Item 4: Created At
                             with ui.column().classes("gap-0"):
-                                ui.label("Thời gian tạo").classes("text-[10px] text-slate-400")
+                                ui.label(t("tb_created_at")).classes("text-[10px] text-slate-400")
                                 ui.label(format_datetime(tck.get("created_at"))).classes("font-medium text-slate-700")
 
                             # Item 5: Updated At
                             with ui.column().classes("gap-0"):
-                                ui.label("Cập nhật gần nhất").classes("text-[10px] text-slate-400")
+                                ui.label(t("updated_time", time="")).classes("text-[10px] text-slate-400")
                                 ui.label(format_datetime(tck.get("updated_at") or tck.get("created_at"))).classes("font-medium text-slate-700")
 
                             # Item 6: Category
                             with ui.column().classes("gap-0"):
-                                ui.label("Phân loại").classes("text-[10px] text-slate-400")
-                                ui.label(category_text).classes("font-medium text-slate-700")
+                                ui.label(t("tb_category")).classes("text-[10px] text-slate-400")
+                                ui.label(get_category_label(tck.get("category"))).classes("font-medium text-slate-700")
 
                     # Activity Timeline
                     if history:
                         with ui.column().classes("w-full gap-1 pt-1 border-t border-slate-100"):
-                            ui.label("LỊCH SỬ TIẾN TRÌNH").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                            ui.label(t("tb_history_title")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
                             with ui.column().classes("w-full gap-2 pl-2 py-1"):
                                 for ev in history[-4:]:
                                     ev_time = format_datetime(ev.get("performed_at") or ev.get("created_at"))
