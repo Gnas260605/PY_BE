@@ -152,17 +152,17 @@ def render_ticket_detail_view(ticket_id: int) -> None:
                                 # Workflow Actions according to State & Role
                                 if cur_status == "OPEN":
                                     if is_technician:
-                                        ui.button("⚡ Nhận xử lý sự cố này", icon="bolt", on_click=do_claim_ticket).props("unelevated color=primary").classes("w-full justify-start py-2 text-xs font-bold")
+                                        ui.button("Nhận xử lý sự cố này", icon="bolt", on_click=do_claim_ticket).props("unelevated color=primary").classes("w-full justify-start py-2 text-xs font-bold")
                                     if can_assign:
                                         ui.button("Phân công Kỹ thuật viên", icon="person_add", on_click=open_assign_modal).props("unelevated color=primary").classes("w-full justify-start py-2 text-xs font-bold")
                                 elif cur_status == "ASSIGNED":
-                                    ui.button("▶ Bắt đầu xử lý (IN_PROGRESS)", icon="play_arrow", on_click=lambda: do_update_status("IN_PROGRESS")).props("unelevated color=amber-700").classes("w-full justify-start py-2 text-xs font-bold")
+                                    ui.button("Bắt đầu xử lý (IN_PROGRESS)", icon="play_arrow", on_click=lambda: do_update_status("IN_PROGRESS")).props("unelevated color=amber-700").classes("w-full justify-start py-2 text-xs font-bold")
                                     if can_assign:
                                         ui.button("Đổi Kỹ thuật viên", icon="swap_horiz", on_click=open_assign_modal).props("outline color=slate-700").classes("w-full justify-start py-1.5 text-xs font-semibold mt-2")
                                 elif cur_status == "IN_PROGRESS":
-                                    ui.button("✅ Đã khắc phục (RESOLVED)", icon="check_circle", on_click=lambda: do_update_status("RESOLVED")).props("unelevated color=emerald-700").classes("w-full justify-start py-2 text-xs font-bold")
+                                    ui.button("Đã khắc phục (RESOLVED)", icon="check_circle", on_click=lambda: do_update_status("RESOLVED")).props("unelevated color=emerald-700").classes("w-full justify-start py-2 text-xs font-bold")
                                 elif cur_status == "RESOLVED":
-                                    ui.button("🔒 Đóng sự cố (CLOSED)", icon="lock", on_click=open_close_modal).props("unelevated color=slate-800").classes("w-full justify-start py-2 text-xs font-bold")
+                                    ui.button("Đóng sự cố (CLOSED)", icon="lock", on_click=open_close_modal).props("unelevated color=slate-800").classes("w-full justify-start py-2 text-xs font-bold")
                                 else:
                                     with ui.row().classes("items-center gap-1.5 text-slate-500 text-xs py-2"):
                                         ui.icon("lock").classes("text-sm")

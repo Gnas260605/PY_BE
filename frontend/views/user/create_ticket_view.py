@@ -76,7 +76,7 @@ def render_create_ticket_view() -> None:
                     )
                     new_ticket_id = res.get("id")
                     toast.show_popup(
-                        title="Gửi yêu cầu hỗ trợ thành công! 🎉",
+                        title="Gửi yêu cầu hỗ trợ thành công!",
                         message=f"Yêu cầu sự cố của bạn đã được tạo thành công với mã #{new_ticket_id}. Kỹ thuật viên sẽ tiếp nhận và xử lý trong thời gian sớm nhất.",
                         type="success",
                         confirm_text="Xem chi tiết & Chat",
