@@ -105,9 +105,9 @@ def render_dashboard_view() -> None:
             my_tickets = state["my_tickets"]
             all_tickets = state["all_tickets"]
 
-            my_open_list = [t for t in my_tickets if t.get("status") != "CLOSED"]
+            my_active = [t for t in my_tickets if t.get("status") not in ("RESOLVED", "CLOSED")]
             my_in_progress = [t for t in my_tickets if t.get("status") == "IN_PROGRESS"]
-            my_urgent = [t for t in my_tickets if t.get("priority") in ("URGENT", "HIGH") and t.get("status") != "CLOSED"]
+            my_urgent = [t for t in my_active if t.get("priority") in ("URGENT", "HIGH")]
             my_resolved = [t for t in my_tickets if t.get("status") in ("RESOLVED", "CLOSED")]
 
             # 1. Summary Cards Strip
@@ -117,9 +117,9 @@ def render_dashboard_view() -> None:
                 with ui.card().classes(
                     "p-4 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-blue-400 hover:shadow-xs transition-all gap-1"
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
-                    ui.label("VIỆC CỦA TÔI").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
-                    ui.label(str(len(my_open_list))).classes("text-2xl font-bold text-slate-900 tracking-tight")
-                    ui.label("Sự cố đang được giao").classes("text-[11px] text-slate-500")
+                    ui.label("VIỆC CẦN XỬ LÝ").classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
+                    ui.label(str(len(my_active))).classes("text-2xl font-bold text-slate-900 tracking-tight")
+                    ui.label("Sự cố đang chờ xử lý").classes("text-[11px] text-slate-500")
 
                 # Metric 2: Đang xử lý
                 with ui.card().classes(
@@ -135,7 +135,7 @@ def render_dashboard_view() -> None:
                 ).on("click", lambda: ui.navigate.to("/technician/tasks")):
                     ui.label("CẦN ƯU TIÊN").classes("text-[10px] font-bold text-rose-600 uppercase tracking-wider")
                     ui.label(str(len(my_urgent))).classes("text-2xl font-bold text-rose-700 tracking-tight")
-                    ui.label("Mức High & Urgent").classes("text-[11px] text-slate-500")
+                    ui.label("Mức High & Urgent chưa giải quyết").classes("text-[11px] text-slate-500")
 
                 # Metric 4: Hoàn thành
                 with ui.card().classes(
@@ -156,7 +156,7 @@ def render_dashboard_view() -> None:
                         ui.button("Xem tất cả", on_click=lambda: ui.navigate.to("/technician/tasks")).props("flat dense size=sm color=primary").classes("text-xs font-semibold")
 
                     # Sort logic: Urgent/High first, then In_Progress, then oldest
-                    sorted_work = list(my_open_list)
+                    sorted_work = list(my_active)
                     sorted_work.sort(
                         key=lambda x: (
                             -PRIORITY_WEIGHT.get(x.get("priority", "MEDIUM"), 2),
@@ -246,7 +246,7 @@ def render_dashboard_view() -> None:
 
                     with ui.row().classes("w-full justify-between text-[11px] text-slate-500 pt-1"):
                         ui.label(f"Đang làm: {len(my_in_progress)}")
-                        ui.label(f"Chờ bắt đầu: {len(my_open_list) - len(my_in_progress)}")
+                        ui.label(f"Chờ bắt đầu: {len(my_active) - len(my_in_progress)}")
 
                 # Quick Actions Shortcuts
                 with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-2xs gap-2"):

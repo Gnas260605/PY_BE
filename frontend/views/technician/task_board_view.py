@@ -75,11 +75,11 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
             tab = state["active_tab"]
 
             if tab == "MY_TASKS":
-                res = [t for t in res if t.get("technician_id") == user_id and t.get("status") != "CLOSED"]
+                res = [t for t in res if t.get("technician_id") == user_id and t.get("status") not in ("RESOLVED", "CLOSED")]
             elif tab == "UNASSIGNED":
                 res = [t for t in res if not t.get("technician_id") or t.get("status") == "OPEN"]
             elif tab == "URGENT":
-                res = [t for t in res if t.get("priority") in ("URGENT", "HIGH") and t.get("status") != "CLOSED"]
+                res = [t for t in res if t.get("priority") in ("URGENT", "HIGH") and t.get("status") not in ("RESOLVED", "CLOSED")]
             elif tab == "IN_PROGRESS":
                 res = [t for t in res if t.get("status") == "IN_PROGRESS"]
             elif tab == "RESOLVED":
@@ -116,9 +116,9 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
             active_tab = state["active_tab"]
 
             counts = {
-                "MY_TASKS": sum(1 for t in tickets if t.get("technician_id") == user_id and t.get("status") != "CLOSED"),
+                "MY_TASKS": sum(1 for t in tickets if t.get("technician_id") == user_id and t.get("status") not in ("RESOLVED", "CLOSED")),
                 "UNASSIGNED": sum(1 for t in tickets if not t.get("technician_id") or t.get("status") == "OPEN"),
-                "URGENT": sum(1 for t in tickets if t.get("priority") in ("URGENT", "HIGH") and t.get("status") != "CLOSED"),
+                "URGENT": sum(1 for t in tickets if t.get("priority") in ("URGENT", "HIGH") and t.get("status") not in ("RESOLVED", "CLOSED")),
                 "IN_PROGRESS": sum(1 for t in tickets if t.get("status") == "IN_PROGRESS"),
                 "RESOLVED": sum(1 for t in tickets if t.get("status") in ("RESOLVED", "CLOSED")),
                 "ALL": len(tickets),
