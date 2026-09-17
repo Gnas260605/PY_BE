@@ -9,7 +9,14 @@ from common.components.layout import app_shell
 from common.components.status_badge import priority_badge, status_badge
 from common.components.timeline import audit_timeline
 from common.formatters import format_datetime
-from core.i18n import get_category_label, get_priority_label, get_status_label, t
+from core.i18n import (
+    get_category_label,
+    get_priority_label,
+    get_status_label,
+    get_ticket_desc,
+    get_ticket_title,
+    t,
+)
 from services.ticket_service import ticket_service
 from services.user_service import user_service
 
@@ -37,6 +44,8 @@ def render_ticket_detail_view(ticket_id: int) -> None:
             cur_status = ticket.get("status")
             assigned_tech_id = ticket.get("technician_id")
             category_label = get_category_label(ticket.get("category"))
+            ticket_title = get_ticket_title(ticket.get("title"))
+            ticket_desc = get_ticket_desc(ticket.get("description"))
 
             main_container.clear()
             with main_container:
@@ -61,9 +70,9 @@ def render_ticket_detail_view(ticket_id: int) -> None:
                                 ui.label(category_label).classes("text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 uppercase")
                                 ui.label(t("detail_created_at", time=format_datetime(ticket.get('created_at')))).classes("text-xs text-slate-400")
 
-                            ui.label(ticket.get("title", "-")).classes("text-base font-bold text-slate-900 mb-2 leading-snug")
+                            ui.label(ticket_title).classes("text-base font-bold text-slate-900 mb-2 leading-snug")
                             ui.label(t("tb_description_title")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1")
-                            ui.label(ticket.get("description", "-")).classes("text-xs text-slate-700 whitespace-pre-wrap leading-relaxed bg-slate-50/70 p-3 rounded-lg border border-slate-100")
+                            ui.label(ticket_desc).classes("text-xs text-slate-700 whitespace-pre-wrap leading-relaxed bg-slate-50/70 p-3 rounded-lg border border-slate-100")
 
                         # Timeline Stepper Card
                         with ui.card().classes("w-full p-5 rounded-xl bg-white border border-slate-200 shadow-sm"):

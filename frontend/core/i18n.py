@@ -526,3 +526,44 @@ def get_action_label(action: str | None) -> str:
     if not action:
         return "-"
     return t(f"action_{action}", default=action)
+
+
+TICKET_TITLE_TRANSLATIONS: dict[str, str] = {
+    "Máy Tính Phòng 202 bị hư": "Room 202 Computer is broken",
+    "Bảo trì định kỳ máy chủ cơ sở dữ liệu": "Routine Database Server Maintenance",
+    "Mất kết nối mạng toàn bộ phòng Nhân sự": "Network down for entire HR Department",
+    "Máy in không in được từ máy tính kế toán": "Printer cannot print from accounting computer",
+    "Màn hình PC-001 không lên nguồn": "PC-001 monitor does not turn on",
+    "Cài đặt phần mềm kế toán MISA mới": "Install new MISA accounting software",
+    "Thay hộp mực máy in màu phòng Thiết kế": "Replace toner for Design room color printer",
+    "Cấp quyền truy cập thư mục chung phòng Kế toán": "Grant shared folder access for Accounting room",
+    "Bảo trì nâng cấp Firmware Router Tầng 2": "Firmware upgrade for 2nd Floor Router",
+}
+
+TICKET_DESC_TRANSLATIONS: dict[str, str] = {
+    "Thực hiện hút bụi, kiểm tra dung lượng ổ cứng và sao lưu database tháng 8.": "Perform dusting, check disk space, and back up August database.",
+    "Toàn bộ máy tính tầng 3 không thể truy cập internet và mạng nội bộ.": "All computers on 3rd floor cannot access internet and local network.",
+    "Người dùng gửi lệnh in từ PC-001 nhưng máy in Canon không phản hồi, đèn báo nháy đỏ.": "User sent print job from PC-001 but Canon printer does not respond, red light blinking.",
+    "Màn hình bật không lên tín hiệu, quạt máy tính vẫn quay. Đã thử đổi ổ cắm.": "Monitor turns on with no signal, computer fan still spinning. Tried changing power outlet.",
+    "Cần cài đặt bản quyền phần mềm MISA 2026 cho máy tính kế toán viên mới.": "Need to install genuine MISA 2026 license for new accountant's computer.",
+    "Máy in màu Epson L8056 báo cạn mực vàng và xanh, bản in bị sọc.": "Epson L8056 color printer reports low yellow and cyan ink, prints are streaked.",
+    "Nhân viên mới cần quyền truy cập thư mục Z:\\Accounting trên File Server.": "New employee needs access to Z:\\Accounting folder on File Server.",
+    "Cập nhật bản vá bảo mật CVE-2026 cho Router Cisco phòng Server.": "Apply CVE-2026 security patch to Cisco Router in Server Room.",
+}
+
+
+def get_ticket_title(title: str | None) -> str:
+    if not title:
+        return "-"
+    if get_lang() == "en":
+        return TICKET_TITLE_TRANSLATIONS.get(title.strip(), title)
+    return title
+
+
+def get_ticket_desc(desc: str | None) -> str:
+    if not desc:
+        return "-"
+    if get_lang() == "en":
+        return TICKET_DESC_TRANSLATIONS.get(desc.strip(), desc)
+    return desc
+

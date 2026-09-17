@@ -10,8 +10,7 @@ from common.components.stat_card import stat_card
 from common.components.status_badge import priority_badge, status_badge
 from common.formatters import format_datetime, format_relative_time, truncate
 from common.styles.breakpoints import RESPONSIVE_GRID
-from core.constants import CATEGORY_LABELS
-from core.i18n import get_category_label, t
+from core.i18n import get_category_label, get_ticket_title, t
 from services.ticket_service import ticket_service
 
 
@@ -190,7 +189,7 @@ def render_dashboard_view() -> None:
                                             status_badge(status)
                                             ui.label(f"· {category_text}").classes("text-[11px] text-slate-400 font-medium")
 
-                                        ui.label(tck.get("title", "-")).classes("text-sm font-semibold text-slate-900 line-clamp-1 leading-snug")
+                                        ui.label(get_ticket_title(tck.get("title", "-"))).classes("text-sm font-semibold text-slate-900 line-clamp-1 leading-snug")
 
                                         with ui.row().classes("items-center gap-2 text-[11px] text-slate-500"):
                                             ui.label(t("user_label", id=tck.get('user_id')))
@@ -219,7 +218,7 @@ def render_dashboard_view() -> None:
                                 ui.label(f"#TK-{u_id:04d}").classes("font-mono font-bold text-xs text-rose-900")
                                 priority_badge(top_urgent.get("priority"))
 
-                            ui.label(top_urgent.get("title", "-")).classes("text-xs font-bold text-slate-900 line-clamp-2 leading-snug")
+                            ui.label(get_ticket_title(top_urgent.get("title", "-"))).classes("text-xs font-bold text-slate-900 line-clamp-2 leading-snug")
                             ui.label(t("updated_time", time=format_relative_time(top_urgent.get('updated_at') or top_urgent.get('created_at')))).classes("text-[10px] text-slate-500")
 
                             ui.button(
@@ -287,7 +286,7 @@ def render_dashboard_view() -> None:
                                     with ui.row().classes("items-center gap-3 flex-1 min-w-0"):
                                         ui.label(r_time).classes("font-mono text-xs text-slate-500 w-28 shrink-0")
                                         ui.label(f"#TK-{r_id:04d}").classes("font-mono font-bold text-xs text-slate-900 shrink-0")
-                                        ui.label(r_tck.get("title", "-")).classes("text-xs font-semibold text-slate-800 truncate")
+                                        ui.label(get_ticket_title(r_tck.get("title", "-"))).classes("text-xs font-semibold text-slate-800 truncate")
 
                                     with ui.row().classes("items-center gap-2 shrink-0"):
                                         status_badge(r_tck.get("status"))
@@ -426,7 +425,7 @@ def render_dashboard_view() -> None:
                         ui.label("Theo nhóm kỹ thuật").classes("text-xs font-semibold text-slate-400")
                     ui.label("Số lượng yêu cầu theo nhóm kỹ thuật.").classes("text-xs text-slate-400 mb-2")
 
-                    cat_labels = [CATEGORY_LABELS.get(k, k) for k in category_counts.keys()] or ["Sự cố", "Yêu cầu", "Bảo trì"]
+                    cat_labels = [get_category_label(k) for k in category_counts.keys()] or ["Incident", "Request", "Maintenance"]
                     cat_values = list(category_counts.values()) or [0, 0, 0]
 
                     ui.echart(

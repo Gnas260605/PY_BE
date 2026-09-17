@@ -9,8 +9,12 @@ from common.components.empty_state import empty_state
 from common.components.layout import app_shell
 from common.components.status_badge import priority_badge, status_badge
 from common.formatters import format_datetime, format_relative_time, truncate
-from core.constants import CATEGORY_LABELS
-from core.i18n import get_category_label, t
+from core.i18n import (
+    get_category_label,
+    get_ticket_desc,
+    get_ticket_title,
+    t,
+)
 from services.device_service import device_service
 from services.ticket_service import ticket_service
 
@@ -286,7 +290,8 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                             is_selected = t_id == state["selected_ticket_id"]
                             priority = tck.get("priority", "MEDIUM")
                             status = tck.get("status", "OPEN")
-                            category_text = CATEGORY_LABELS.get(tck.get("category", ""), "Sự cố kỹ thuật")
+                            category_text = get_category_label(tck.get("category"))
+                            ticket_title = get_ticket_title(tck.get("title"))
 
                             card_border = (
                                 "border-l-4 border-l-blue-600 border-t border-r border-b border-blue-300 bg-blue-50/40 shadow-xs"
@@ -307,11 +312,11 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                                     priority_badge(priority)
 
                                 # Title
-                                ui.label(tck.get("title", "-")).classes("font-semibold text-slate-900 text-[13px] line-clamp-1 leading-snug")
+                                ui.label(ticket_title).classes("font-semibold text-slate-900 text-[13px] line-clamp-1 leading-snug")
 
                                 # Subtext: Requester & Category
                                 with ui.row().classes("items-center gap-1.5 text-[11px] text-slate-500 truncate"):
-                                    ui.label(f"Người dùng #{tck.get('user_id')}")
+                                    ui.label(t("user_label", id=tck.get('user_id')))
                                     ui.label("·").classes("text-slate-300")
                                     ui.label(category_text).classes("truncate")
 
@@ -363,8 +368,10 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
 
             status = tck.get("status", "OPEN")
             priority = tck.get("priority", "MEDIUM")
-            category_text = CATEGORY_LABELS.get(tck.get("category", ""), "Sự cố kỹ thuật")
+            category_text = get_category_label(tck.get("category"))
             is_unassigned = not tck.get("technician_id")
+            ticket_title = get_ticket_title(tck.get("title"))
+            ticket_desc = get_ticket_desc(tck.get("description"))
 
             with right_pane:
                 # 1. Main Detail Card
@@ -378,12 +385,12 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                             ui.label(f"· {category_text}").classes("text-xs text-slate-500 font-medium")
 
                         ui.button(
-                            "Mở trang chi tiết ↗",
+                            "View Details ↗" if t("tb_requester") == "Requester" else "Mở trang chi tiết ↗",
                             on_click=lambda id=sel_id: ui.navigate.to(f"/tickets/{id}"),
                         ).props("flat color=slate-700 size=sm").classes("text-xs font-semibold")
 
                     # Title
-                    ui.label(tck.get("title", "-")).classes("text-xl font-bold text-slate-900 leading-snug")
+                    ui.label(ticket_title).classes("text-xl font-bold text-slate-900 leading-snug")
 
                     # Primary Technician Action Bar
                     with ui.row().classes("w-full justify-between items-center p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex-wrap gap-2"):
@@ -422,7 +429,7 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                     with ui.column().classes("w-full gap-1 pt-1"):
                         ui.label(t("tb_description_title")).classes("text-[10px] font-bold text-slate-400 uppercase tracking-wider")
                         with ui.element("div").classes("w-full p-3 rounded-lg bg-slate-50/70 border border-slate-200/80 text-xs text-slate-800 leading-relaxed whitespace-pre-wrap"):
-                            ui.label(tck.get("description") or "No description provided." if t("tb_requester") == "Requester" else "Không có mô tả chi tiết.")
+                            ui.label(ticket_desc or "-")
 
                     # Compact Information Grid
                     with ui.column().classes("w-full gap-1 pt-1"):
