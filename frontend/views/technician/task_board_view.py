@@ -400,13 +400,13 @@ def render_task_board_view(initial_tab: str = "MY_TASKS") -> None:
                                     on_click=lambda id=sel_id: open_resolution_dialog(id),
                                 ).props("unelevated color=positive size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
                             elif status == "RESOLVED":
-                                ui.button(
-                                    "Hoàn tất & Đóng sự cố",
-                                    icon="lock",
-                                    on_click=lambda id=sel_id: open_close_dialog(id),
-                                ).props("unelevated color=slate-800 size=sm").classes("h-9 px-4 rounded-lg font-bold text-xs shadow-2xs")
+                                with ui.row().classes("items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold"):
+                                    ui.icon("check_circle").classes("text-sm text-emerald-600")
+                                    ui.label("Đã hoàn tất khắc phục kỹ thuật")
                             else:
-                                ui.label("Sự cố đã được đóng hoàn tất.").classes("text-xs text-slate-500 italic")
+                                with ui.row().classes("items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs"):
+                                    ui.icon("lock").classes("text-sm text-slate-500")
+                                    ui.label("Sự cố đã được đóng hoàn tất.")
 
                     # Structured Description Section
                     with ui.column().classes("w-full gap-1 pt-1"):

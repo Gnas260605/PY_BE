@@ -37,7 +37,6 @@ ROLE_SECTIONS = {
             "CÔNG CỤ KỸ THUẬT",
             [
                 ("Tra cứu thiết bị", "/technician/devices", "search"),
-                ("Lịch sử sự cố đã xử lý", "/technician/history", "history"),
             ],
         ),
     ],
