@@ -9,24 +9,39 @@ from app.reports.schemas import TechnicianWorkloadResponse
 from app.tickets.schemas import TicketListQuery
 
 
-CSV_FIELDS = [
-    "id",
-    "title",
-    "description",
-    "category",
-    "priority",
-    "status",
-    "user_id",
-    "creator_name",
-    "device_id",
-    "device_code",
-    "device_name",
-    "technician_id",
-    "technician_name",
-    "created_at",
-    "updated_at",
-    "resolved_at",
-    "closed_at",
+CATEGORY_LABELS = {
+    "INCIDENT": "Sự cố",
+    "SERVICE_REQUEST": "Yêu cầu dịch vụ",
+    "MAINTENANCE": "Bảo trì",
+    "ACCESS_REQUEST": "Cấp quyền",
+}
+
+PRIORITY_LABELS = {
+    "URGENT": "Khẩn cấp",
+    "HIGH": "Cao",
+    "MEDIUM": "Trung bình",
+    "LOW": "Thấp",
+}
+
+STATUS_LABELS = {
+    "OPEN": "Chờ tiếp nhận",
+    "ASSIGNED": "Đã phân công",
+    "IN_PROGRESS": "Đang xử lý",
+    "RESOLVED": "Đã giải quyết",
+    "CLOSED": "Đã đóng",
+}
+
+CSV_HEADERS = [
+    "Mã sự cố",
+    "Tiêu đề",
+    "Phân loại",
+    "Mức độ ưu tiên",
+    "Trạng thái",
+    "Người yêu cầu",
+    "KTV phụ trách",
+    "Thiết bị liên quan",
+    "Thời gian tạo",
+    "Cập nhật lần cuối",
 ]
 
 
@@ -49,8 +64,39 @@ def export_tickets_csv(query: TicketListQuery) -> str:
         )
 
     output = StringIO()
-    writer = csv.DictWriter(output, fieldnames=CSV_FIELDS, extrasaction="ignore")
-    writer.writeheader()
+    output.write("\ufeff")  # UTF-8 BOM for seamless Excel compatibility
+    writer = csv.writer(output)
+    writer.writerow(CSV_HEADERS)
+
     for row in rows:
-        writer.writerow(row)
+        ticket_id = f"#TK-{row['id']:04d}" if row.get("id") else "-"
+        category = CATEGORY_LABELS.get(row.get("category"), row.get("category") or "-")
+        priority = PRIORITY_LABELS.get(row.get("priority"), row.get("priority") or "-")
+        status_val = STATUS_LABELS.get(row.get("status"), row.get("status") or "-")
+        creator = row.get("creator_name") or (f"User #{row.get('user_id')}" if row.get("user_id") else "-")
+        technician = row.get("technician_name") or "Chưa phân công"
+
+        if row.get("device_code") and row.get("device_name"):
+            device = f"{row['device_code']} ({row['device_name']})"
+        elif row.get("device_name"):
+            device = str(row["device_name"])
+        else:
+            device = "-"
+
+        created = str(row.get("created_at") or "-")
+        updated = str(row.get("updated_at") or "-")
+
+        writer.writerow([
+            ticket_id,
+            row.get("title") or "-",
+            category,
+            priority,
+            status_val,
+            creator,
+            technician,
+            device,
+            created,
+            updated,
+        ])
+
     return output.getvalue()
