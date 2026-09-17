@@ -70,14 +70,18 @@ class HttpClient:
                 if response.status_code == 204:
                     return None
 
-                # Parse JSON
-                try:
-                    res_json = response.json()
-                except Exception:
-                    res_json = {}
+                # Parse JSON or Raw Text
+                is_json = "application/json" in response.headers.get("content-type", "")
+                if is_json:
+                    try:
+                        res_json = response.json()
+                    except Exception:
+                        res_json = {}
+                else:
+                    res_json = response.text
 
                 if not response.is_success:
-                    detail = res_json.get("detail", "")
+                    detail = res_json.get("detail", "") if isinstance(res_json, dict) else str(res_json)
                     friendly_msg = cls._translate_error(detail, response.status_code)
                     if response.status_code == 401:
                         auth_context.clear_session()
