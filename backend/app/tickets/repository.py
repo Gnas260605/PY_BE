@@ -171,7 +171,7 @@ def list_tickets(
         SELECT {TICKET_SELECT}
         FROM TICKETS t
         {where_clause}
-        ORDER BY t.id ASC
+        ORDER BY t.id DESC
     """
     with connection.cursor(dictionary=True) as cursor:
         cursor.execute(query, tuple(params))

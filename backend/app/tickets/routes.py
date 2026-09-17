@@ -118,7 +118,7 @@ def update_ticket_route(
 @router.patch(
     "/tickets/{ticket_id}/assign",
     response_model=TicketSummaryResponse,
-    dependencies=[Depends(require_roles("ADMIN"))],
+    dependencies=[Depends(require_roles("ADMIN", "TECHNICIAN"))],
 )
 def assign_ticket_route(
     ticket_id: int,

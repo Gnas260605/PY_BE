@@ -231,6 +231,9 @@ def assign_ticket(
         if ticket["status"] == "CLOSED":
             raise BadRequestError("INVALID_TICKET_STATE")
 
+        if current_user["vai_tro"] == "TECHNICIAN" and payload.technician_id != int(current_user["id"]):
+            raise ForbiddenError("FORBIDDEN")
+
         technician = repository.get_user_basic_by_id(connection, payload.technician_id)
         if technician is None:
             raise NotFoundError("TECHNICIAN_NOT_FOUND")

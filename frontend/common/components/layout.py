@@ -1,5 +1,4 @@
 from collections.abc import Callable
-
 from nicegui import ui
 
 from common.components.bottom_nav import bottom_nav
@@ -29,7 +28,7 @@ def app_shell(title: str, content: Callable[[dict], None]) -> None:
         return
 
     role = user.get("vai_tro", "USER")
-    drawer = sidebar(role)
+    drawer = sidebar(role, user=user, on_logout=logout_and_go_home)
     navbar(title, user, logout_and_go_home, on_toggle_sidebar=drawer.toggle if drawer else None)
     bottom_nav(role)
 

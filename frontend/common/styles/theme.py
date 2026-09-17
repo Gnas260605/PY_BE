@@ -1,11 +1,9 @@
 from nicegui import ui
 
-
 PRIMARY = "#2563eb"
 SURFACE = "#ffffff"
 BACKGROUND = "#f8fafc"
 TEXT = "#0f172a"
-
 
 
 def apply_theme() -> None:
@@ -15,7 +13,7 @@ def apply_theme() -> None:
         accent="#0ea5e9",
         positive="#10b981",
         negative="#ef4444",
-        info="#3b82f6",
+        info="#6366f1",
         warning="#f59e0b",
     )
     ui.add_head_html(
@@ -40,21 +38,6 @@ def apply_theme() -> None:
             direction: ltr;
             -webkit-font-smoothing: antialiased;
           }
-          .login-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            z-index: 10;
-            padding: 1rem;
-          }
           body {
             background-color: #f8fafc;
             color: #0f172a;
@@ -65,8 +48,8 @@ def apply_theme() -> None:
           }
           /* Custom sleek scrollbar */
           ::-webkit-scrollbar {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
           }
           ::-webkit-scrollbar-track {
             background: #f1f5f9;
@@ -78,40 +61,38 @@ def apply_theme() -> None:
           ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
           }
-          /* Smooth card hover lift */
+          /* Card Hover */
           .card-hover {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .card-hover:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.08);
-          }
-          /* Glassmorphic cards */
-          .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.06);
+            border-color: #cbd5e1 !important;
           }
           /* Quasar component refinements */
           .q-field--outlined .q-field__control {
-            border-radius: 12px !important;
+            border-radius: 10px !important;
             background: #ffffff;
-            transition: border-color 0.2s ease;
+            border-color: #e2e8f0 !important;
+            transition: all 0.15s ease;
           }
           .q-field--outlined.q-field--focused .q-field__control {
             border-color: #2563eb !important;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
           }
           .q-btn {
-            border-radius: 10px !important;
+            border-radius: 8px !important;
             font-weight: 600 !important;
             text-transform: none !important;
             letter-spacing: 0.01em !important;
+            transition: all 0.15s ease;
           }
           .q-table__card {
-            border-radius: 16px !important;
+            border-radius: 12px !important;
             border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
+            background-color: #ffffff !important;
           }
           .q-table th {
             font-weight: 700 !important;
@@ -121,14 +102,22 @@ def apply_theme() -> None:
             letter-spacing: 0.05em !important;
             background-color: #f8fafc !important;
             padding: 12px 16px !important;
+            border-bottom: 1px solid #e2e8f0 !important;
           }
           .q-table td {
             font-size: 0.875rem !important;
             padding: 14px 16px !important;
             color: #1e293b !important;
+            border-bottom: 1px solid #f1f5f9 !important;
           }
           .q-table tbody tr:hover {
             background-color: #f8fafc !important;
+          }
+          .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
           }
           .line-clamp-2 {
             display: -webkit-box;

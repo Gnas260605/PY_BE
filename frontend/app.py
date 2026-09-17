@@ -8,9 +8,9 @@ from views.auth.login_view import render_login_view
 from views.dashboard_view import render_dashboard_view
 from views.technician.device_lookup_view import render_device_lookup_view
 from views.technician.task_board_view import render_task_board_view
+from views.tickets.ticket_detail_view import render_ticket_detail_view
 from views.user.create_ticket_view import render_create_ticket_view
 from views.user.my_tickets_view import render_my_tickets_view
-from views.user.ticket_timeline_view import render_ticket_timeline_view
 
 
 @ui.page("/")
@@ -59,9 +59,10 @@ def create_ticket_page() -> None:
     render_create_ticket_view()
 
 
+@ui.page("/tickets/{ticket_id}")
 @ui.page("/tickets/{ticket_id}/history")
-def ticket_history_page(ticket_id: int) -> None:
-    render_ticket_timeline_view(ticket_id)
+def ticket_detail_page(ticket_id: int) -> None:
+    render_ticket_detail_view(ticket_id)
 
 
 ui.run(

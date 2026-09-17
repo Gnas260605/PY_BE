@@ -88,3 +88,10 @@ PRIORITY_LABELS = {
     TicketPriority.HIGH.value: "Cao",
     TicketPriority.URGENT.value: "Khẩn cấp",
 }
+
+CATEGORY_LABELS = {
+    TicketCategory.INCIDENT.value: "Sự cố kỹ thuật",
+    TicketCategory.SERVICE_REQUEST.value: "Yêu cầu dịch vụ",
+    TicketCategory.MAINTENANCE.value: "Bảo trì định kỳ",
+}
+
