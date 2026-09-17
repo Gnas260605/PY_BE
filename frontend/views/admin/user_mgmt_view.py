@@ -466,7 +466,7 @@ def render_user_mgmt_view() -> None:
             with table_container:
                 with ui.card().classes("w-full p-0 rounded-lg bg-white border border-slate-200/90 shadow-2xs overflow-hidden"):
                     # Table Header
-                    with ui.row().classes("w-full px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 items-center text-[11px] font-semibold text-slate-600 uppercase tracking-wider"):
+                    with ui.row().classes("w-full px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 items-center text-[11px] font-semibold text-slate-600 uppercase tracking-wider no-wrap gap-2"):
                         def toggle_select_all(val: bool) -> None:
                             if val:
                                 for u in paged_users:
@@ -480,11 +480,11 @@ def render_user_mgmt_view() -> None:
                             "dense"
                         ).classes("w-8 shrink-0")
 
-                        ui.label("NGƯỜI DÙNG & TÀI KHOẢN").classes("flex-1 min-w-[200px]")
-                        ui.label("VAI TRÒ").classes("w-32 hidden sm:block")
-                        ui.label("TRẠNG THÁI").classes("w-32 hidden md:block")
-                        ui.label("NGÀY TẠO").classes("w-32 hidden lg:block")
-                        ui.label("THAO TÁC").classes("w-24 text-right")
+                        ui.label("NGƯỜI DÙNG & TÀI KHOẢN").classes("flex-1 min-w-[220px]")
+                        ui.label("VAI TRÒ").classes("w-36 shrink-0")
+                        ui.label("TRẠNG THÁI").classes("w-36 shrink-0")
+                        ui.label("NGÀY TẠO").classes("w-36 shrink-0")
+                        ui.label("THAO TÁC").classes("w-24 shrink-0 text-right")
 
                     # Table Rows
                     with ui.column().classes("w-full divide-y divide-slate-100 gap-0"):
@@ -569,7 +569,7 @@ def render_user_mgmt_view() -> None:
                 ui.checkbox(value=is_selected, on_change=lambda e: toggle_select(e.value)).props("dense").classes("w-8 shrink-0")
 
                 # 1. Identity Cell
-                with ui.row().classes("flex-1 min-w-[200px] items-center gap-3 no-wrap cursor-pointer").on(
+                with ui.row().classes("flex-1 min-w-[220px] items-center gap-3 no-wrap cursor-pointer").on(
                     "click", lambda: show_user_detail_drawer(u)
                 ):
                     with ui.row().classes(
@@ -585,19 +585,19 @@ def render_user_mgmt_view() -> None:
                         ui.label(f"@{username} · {email}").classes("text-[11px] text-slate-500 truncate")
 
                 # 2. Role Cell
-                with ui.row().classes("w-32 hidden sm:flex items-center no-wrap"):
+                with ui.row().classes("w-36 shrink-0 items-center no-wrap"):
                     role_badge(role)
 
                 # 3. Status Cell
-                with ui.row().classes("w-32 hidden md:flex items-center no-wrap"):
+                with ui.row().classes("w-36 shrink-0 items-center no-wrap"):
                     status_badge(status)
 
                 # 4. Created Date Cell
-                with ui.column().classes("w-32 hidden lg:flex gap-0 text-slate-500 text-[11px]"):
+                with ui.column().classes("w-36 shrink-0 gap-0 text-slate-500 text-[11px]"):
                     ui.label(format_datetime(u.get("created_at"))).classes("truncate")
 
                 # 5. Contextual Action Menu
-                with ui.row().classes("w-24 justify-end items-center gap-1 shrink-0"):
+                with ui.row().classes("w-24 shrink-0 justify-end items-center gap-1"):
                     # Quick detail button
                     ui.button(
                         icon="visibility",
