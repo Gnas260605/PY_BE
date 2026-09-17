@@ -74,11 +74,15 @@ def apply_theme() -> None:
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
+          .nicegui-content {
+            padding: 0 !important;
+            gap: 0 !important;
+          }
           .q-page-container {
             padding-top: 48px !important;
           }
           main {
-            padding-top: 0.5rem !important;
+            padding-top: 0.25rem !important;
           }
           main > :first-child {
             margin-top: 0 !important;
