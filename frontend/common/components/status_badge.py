@@ -1,6 +1,6 @@
 from nicegui import ui
 
-from core.constants import PRIORITY_LABELS, ROLE_LABELS, STATUS_LABELS
+from core.i18n import get_priority_label, get_role_label, get_status_label
 
 STATUS_CONFIG = {
     "OPEN": ("bg-blue-50 text-blue-700 border-blue-200/80", "fiber_manual_record"),
@@ -30,7 +30,7 @@ ROLE_CONFIG = {
 
 def status_badge(value: str | None) -> None:
     normalized = value or "-"
-    label = STATUS_LABELS.get(normalized, normalized)
+    label = get_status_label(normalized)
     classes, icon_name = STATUS_CONFIG.get(normalized, ("bg-slate-100 text-slate-700 border-slate-200", "info"))
     with ui.row().classes(f"inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold {classes} no-wrap shrink-0 tracking-tight shadow-2xs"):
         ui.icon(icon_name).classes("text-[10px]")
@@ -39,7 +39,7 @@ def status_badge(value: str | None) -> None:
 
 def priority_badge(value: str | None) -> None:
     normalized = value or "-"
-    label = PRIORITY_LABELS.get(normalized, normalized)
+    label = get_priority_label(normalized)
     classes, icon_name = PRIORITY_CONFIG.get(normalized, ("bg-slate-100 text-slate-700 border-slate-200", "remove"))
     with ui.row().classes(f"inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold {classes} no-wrap shrink-0 tracking-tight shadow-2xs"):
         ui.icon(icon_name).classes("text-[11px]")
@@ -48,7 +48,7 @@ def priority_badge(value: str | None) -> None:
 
 def role_badge(value: str | None) -> None:
     normalized = value or "-"
-    label = ROLE_LABELS.get(normalized, normalized)
+    label = get_role_label(normalized)
     classes, icon_name = ROLE_CONFIG.get(normalized, ("bg-slate-100 text-slate-700 border-slate-200", "person"))
     with ui.row().classes(f"inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold {classes} no-wrap shrink-0 tracking-tight shadow-2xs"):
         ui.icon(icon_name).classes("text-[11px]")

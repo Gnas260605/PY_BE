@@ -1,58 +1,62 @@
 from collections.abc import Callable
 from nicegui import ui
 
-ROLE_SECTIONS = {
-    "ADMIN": [
-        (
-            "TỔNG QUAN",
-            [
-                ("Dashboard", "/dashboard", "grid_view"),
-                ("Giám sát sự cố", "/admin/tickets", "confirmation_number"),
-            ],
-        ),
-        (
-            "QUẢN TRỊ TÀI NGUYÊN",
-            [
-                ("Danh mục thiết bị", "/admin/devices", "devices"),
-                ("Quản lý người dùng", "/admin/users", "manage_accounts"),
-            ],
-        ),
-        (
-            "TIỆN ÍCH & CÀI ĐẶT",
-            [
-                ("Tạo ticket mới", "/user/tickets/new", "add_circle"),
-                ("Tra cứu lịch sử máy", "/technician/devices", "search"),
-                ("Cài đặt cá nhân", "/settings", "settings"),
-            ],
-        ),
-    ],
-    "TECHNICIAN": [
-        (
-            "BÀN LÀM VIỆC",
-            [
-                ("Dashboard", "/dashboard", "grid_view"),
-                ("Bàn làm việc KTV", "/technician/tasks", "assignment"),
-            ],
-        ),
-        (
-            "CÔNG CỤ & CÀI ĐẶT",
-            [
-                ("Tra cứu thiết bị", "/technician/devices", "search"),
-                ("Cài đặt cá nhân", "/settings", "settings"),
-            ],
-        ),
-    ],
-    "USER": [
-        (
-            "HỖ TRỢ DỊCH VỤ",
-            [
-                ("Yêu cầu của tôi", "/user/tickets", "confirmation_number"),
-                ("Tạo yêu cầu hỗ trợ", "/user/tickets/new", "add_circle"),
-                ("Cài đặt cá nhân", "/settings", "settings"),
-            ],
-        ),
-    ],
-}
+from core.i18n import t
+
+def get_role_sections(role: str) -> list[tuple[str, list[tuple[str, str, str]]]]:
+    if role == "ADMIN":
+        return [
+            (
+                t("sec_overview"),
+                [
+                    (t("nav_dashboard"), "/dashboard", "grid_view"),
+                    (t("nav_dispatch"), "/admin/tickets", "confirmation_number"),
+                ],
+            ),
+            (
+                t("sec_admin"),
+                [
+                    (t("nav_devices"), "/admin/devices", "devices"),
+                    (t("nav_users"), "/admin/users", "manage_accounts"),
+                ],
+            ),
+            (
+                t("sec_quick_tools"),
+                [
+                    (t("nav_create_ticket"), "/user/tickets/new", "add_circle"),
+                    (t("nav_device_lookup"), "/technician/devices", "search"),
+                    (t("nav_settings"), "/settings", "settings"),
+                ],
+            ),
+        ]
+    elif role == "TECHNICIAN":
+        return [
+            (
+                t("sec_tech"),
+                [
+                    (t("nav_dashboard"), "/dashboard", "grid_view"),
+                    (t("nav_tech_workspace"), "/technician/tasks", "assignment"),
+                ],
+            ),
+            (
+                t("sec_tools"),
+                [
+                    (t("nav_device_lookup"), "/technician/devices", "search"),
+                    (t("nav_settings"), "/settings", "settings"),
+                ],
+            ),
+        ]
+    else:
+        return [
+            (
+                t("sec_user_service"),
+                [
+                    (t("nav_my_tickets"), "/user/tickets", "confirmation_number"),
+                    (t("nav_create_ticket"), "/user/tickets/new", "add_circle"),
+                    (t("nav_settings"), "/settings", "settings"),
+                ],
+            ),
+        ]
 
 ROLE_TAGS = {
     "ADMIN": ("bg-purple-500/20 text-purple-300 border-purple-500/40", "ADMIN PORTAL"),
@@ -60,16 +64,10 @@ ROLE_TAGS = {
     "USER": ("bg-blue-500/20 text-blue-300 border-blue-500/40", "USER DESK"),
 }
 
-NAV_ITEMS = {
-    role: [item for _, items in section_list for item in items]
-    for role, section_list in ROLE_SECTIONS.items()
-}
-
-
 
 def sidebar(role: str, user: dict | None = None, on_logout: Callable[[], None] | None = None):
     tag_class, tag_text = ROLE_TAGS.get(role, ("bg-slate-700 text-slate-300 border-slate-600", "PORTAL"))
-    sections = ROLE_SECTIONS.get(role, ROLE_SECTIONS["USER"])
+    sections = get_role_sections(role)
 
     initials = ((user.get("ho_ten") or user.get("username") or "U") if user else "U")[:2].upper()
     display_name = (user.get("ho_ten") or user.get("username") or "Người dùng") if user else "Người dùng"

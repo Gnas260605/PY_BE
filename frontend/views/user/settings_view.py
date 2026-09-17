@@ -6,6 +6,7 @@ from nicegui import ui
 from common.components import toast
 from common.components.layout import app_shell
 from common.components.status_badge import role_badge
+from core.i18n import get_lang, set_lang, t
 from services.auth_service import auth_service
 from services.user_service import user_service
 
@@ -53,7 +54,7 @@ def render_settings_view() -> None:
                                 "vi": "🇻🇳 Tiếng Việt (Vietnamese - Mặc định)",
                                 "en": "🇺🇸 English (US)",
                             },
-                            value="vi",
+                            value=get_lang(),
                         ).props("outlined dense").classes("w-full text-xs")
 
                         ui.label("Chế độ giao diện (Appearance)").classes("text-xs font-semibold text-slate-700 mt-2")
@@ -75,8 +76,11 @@ def render_settings_view() -> None:
                         ).props("outlined dense").classes("w-full text-xs")
 
                         def save_preferences() -> None:
-                            selected_lang = lang_select.value
-                            toast.success("Đã lưu cài đặt ngôn ngữ và giao diện thành công!")
+                            selected_lang = lang_select.value or "vi"
+                            set_lang(selected_lang)
+                            msg = "Language updated to English!" if selected_lang == "en" else "Đã cập nhật ngôn ngữ sang Tiếng Việt!"
+                            toast.success(msg)
+                            ui.navigate.to("/settings")
 
                         with ui.row().classes("w-full justify-end pt-3 border-t border-slate-100 mt-2"):
                             ui.button("Lưu tùy chọn", icon="check", on_click=save_preferences).props("unelevated color=primary size=sm").classes("px-4 py-2 font-bold rounded-lg text-xs shadow-2xs")
