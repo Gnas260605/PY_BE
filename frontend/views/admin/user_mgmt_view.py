@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+from io import StringIO
 from typing import Any
 from nicegui import ui
 
@@ -26,6 +28,8 @@ def render_user_mgmt_view() -> None:
         # =========================================================================
         state: dict[str, Any] = {
             "raw_users": [],
+            "selected_ids": set(),
+            "active_tab": "ALL",
             "is_loading": True,
             "error": None,
             "page": 1,
@@ -51,6 +55,36 @@ def render_user_mgmt_view() -> None:
                 ui.label("Quản lý danh sách tài khoản, vai trò và trạng thái hoạt động hệ thống.").classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
+                async def handle_export_users_csv() -> None:
+                    try:
+                        ui.notify("Đang xuất danh sách người dùng...", type="info")
+                        users = filter_users(state["raw_users"])
+                        output = StringIO()
+                        output.write("\ufeff")  # UTF-8 BOM
+                        writer = csv.writer(output)
+                        writer.writerow(["ID", "Tên đăng nhập", "Họ và tên", "Email", "Vai trò", "Trạng thái", "Ngày tạo", "Cập nhật cuối"])
+                        for u in users:
+                            role_text = ROLE_LABELS.get(u.get("vai_tro"), u.get("vai_tro") or "-")
+                            status_text = STATUS_LABELS.get(u.get("trang_thai") or u.get("status"), u.get("trang_thai") or "-")
+                            writer.writerow([
+                                u.get("id"),
+                                u.get("username"),
+                                u.get("ho_ten"),
+                                u.get("email") or "-",
+                                role_text,
+                                status_text,
+                                str(u.get("created_at") or "-"),
+                                str(u.get("updated_at") or "-"),
+                            ])
+                        ui.download(output.getvalue().encode("utf-8-sig"), filename="danh_sach_nguoi_dung.csv")
+                        toast.success("Đã xuất file CSV thành công.")
+                    except Exception as exc:
+                        toast.error(f"Lỗi xuất file: {exc}")
+
+                ui.button("Xuất CSV", icon="file_download", on_click=handle_export_users_csv).props(
+                    "outline color=slate-700 size=md"
+                ).classes("h-[36px] rounded-lg font-medium px-3 text-xs bg-white")
+
                 ui.button(
                     "Thêm người dùng",
                     icon="person_add",
@@ -59,6 +93,9 @@ def render_user_mgmt_view() -> None:
 
         # Container for Real Data Summary Strip
         summary_container = ui.row().classes("w-full gap-2.5 mb-2.5 flex-wrap")
+
+        # Container for Segmented Quick Tabs
+        tabs_container = ui.row().classes("w-full mb-2.5")
 
         # =========================================================================
         # 3. UNIFIED FILTER TOOLBAR
@@ -116,7 +153,10 @@ def render_user_mgmt_view() -> None:
 
                 ui.button(icon="refresh", on_click=lambda: load_users_data(refresh=True)).props(
                     "outline dense color=slate-700 size=sm"
-                ).classes("h-[38px] w-[38px] rounded-lg").tooltip("Tải lại danh sách")
+                ).classes("h-[38px] w-[38px] rounded-lg bg-white").tooltip("Tải lại danh sách")
+
+        # Container for Batch Action Bar (Shown when users are selected)
+        batch_bar_container = ui.row().classes("w-full mb-2.5")
 
         # Container for User List Table & Pagination
         table_container = ui.column().classes("w-full gap-0")
@@ -126,6 +166,18 @@ def render_user_mgmt_view() -> None:
         # =========================================================================
         def filter_users(users: list[dict[str, Any]]) -> list[dict[str, Any]]:
             res = users
+
+            # Tab filter
+            tab = state["active_tab"]
+            if tab == "ADMIN":
+                res = [u for u in res if u.get("vai_tro") == "ADMIN"]
+            elif tab == "TECHNICIAN":
+                res = [u for u in res if u.get("vai_tro") == "TECHNICIAN"]
+            elif tab == "USER":
+                res = [u for u in res if u.get("vai_tro") == "USER"]
+            elif tab == "LOCKED":
+                res = [u for u in res if (u.get("trang_thai") or u.get("status")) == "INACTIVE"]
+
             kw = (state["keyword"] or "").strip().lower()
             if kw:
                 res = [
@@ -162,6 +214,12 @@ def render_user_mgmt_view() -> None:
             update_clear_button_visibility()
             render_all()
 
+        def set_tab(tab_name: str) -> None:
+            state["active_tab"] = tab_name
+            state["page"] = 1
+            update_clear_button_visibility()
+            render_all()
+
         def clear_filters() -> None:
             search_input.value = ""
             role_select.value = "ALL"
@@ -169,13 +227,17 @@ def render_user_mgmt_view() -> None:
             state["keyword"] = ""
             state["role_filter"] = "ALL"
             state["status_filter"] = "ALL"
+            state["active_tab"] = "ALL"
             state["page"] = 1
             update_clear_button_visibility()
             render_all()
 
         def update_clear_button_visibility() -> None:
             is_active = bool(
-                state["keyword"] or state["role_filter"] != "ALL" or state["status_filter"] != "ALL"
+                state["keyword"]
+                or state["role_filter"] != "ALL"
+                or state["status_filter"] != "ALL"
+                or state["active_tab"] != "ALL"
             )
             clear_filter_btn.set_visibility(is_active)
 
@@ -222,7 +284,116 @@ def render_user_mgmt_view() -> None:
                             ui.label(hint).classes("text-[10px] text-slate-400 truncate")
 
         # =========================================================================
-        # 6. RENDER USER TABLE
+        # 6. RENDER SEGMENTED QUICK TABS
+        # =========================================================================
+        def render_tabs() -> None:
+            tabs_container.clear()
+            users = state["raw_users"]
+            active_tab = state["active_tab"]
+
+            counts = {
+                "ALL": len(users),
+                "ADMIN": sum(1 for u in users if u.get("vai_tro") == "ADMIN"),
+                "TECHNICIAN": sum(1 for u in users if u.get("vai_tro") == "TECHNICIAN"),
+                "USER": sum(1 for u in users if u.get("vai_tro") == "USER"),
+                "LOCKED": sum(1 for u in users if (u.get("trang_thai") or u.get("status")) == "INACTIVE"),
+            }
+
+            tab_items = [
+                ("ALL", "Tất cả", counts["ALL"]),
+                ("ADMIN", "Quản trị viên", counts["ADMIN"]),
+                ("TECHNICIAN", "Kỹ thuật viên", counts["TECHNICIAN"]),
+                ("USER", "Người dùng", counts["USER"]),
+                ("LOCKED", "Đã khóa", counts["LOCKED"]),
+            ]
+
+            with tabs_container:
+                with ui.row().classes(
+                    "w-full justify-between items-center bg-white p-1 rounded-lg border border-slate-200/90 shadow-2xs flex-wrap gap-2"
+                ):
+                    with ui.row().classes("items-center gap-1 flex-wrap"):
+                        for key, label, count in tab_items:
+                            is_selected = active_tab == key
+                            tab_classes = (
+                                "bg-slate-900 text-white font-medium shadow-xs"
+                                if is_selected
+                                else "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                            )
+                            pill_classes = (
+                                "bg-slate-800 text-slate-100"
+                                if is_selected
+                                else "bg-slate-100 text-slate-600 font-semibold"
+                            )
+
+                            with (
+                                ui.button(on_click=lambda k=key: set_tab(k))
+                                .props("flat dense")
+                                .classes(f"px-3 py-1 rounded-md text-xs transition-all {tab_classes}")
+                            ):
+                                with ui.row().classes("items-center gap-1.5 no-wrap"):
+                                    ui.label(label)
+                                    ui.label(str(count)).classes(
+                                        f"text-[10px] px-1.5 py-0.2 rounded-full {pill_classes}"
+                                    )
+
+                    with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 pr-2 hidden sm:flex"):
+                        ui.icon("check_circle", size="14px").classes("text-emerald-600")
+                        ui.label(f"Đã tải {len(users)} người dùng").classes("text-[11px] font-medium")
+
+        # =========================================================================
+        # 7. RENDER BATCH ACTIONS BAR
+        # =========================================================================
+        def render_batch_actions() -> None:
+            batch_bar_container.clear()
+            selected = state["selected_ids"]
+            if not selected:
+                return
+
+            with batch_bar_container:
+                with ui.row().classes(
+                    "w-full items-center justify-between bg-slate-900 text-white px-4 py-2 rounded-lg shadow-md transition-all animate-fade-in"
+                ):
+                    with ui.row().classes("items-center gap-2"):
+                        ui.icon("check_circle", size="18px").classes("text-emerald-400")
+                        ui.label(f"{len(selected)} người dùng đã chọn").classes("text-xs font-semibold text-white")
+
+                    with ui.row().classes("items-center gap-2"):
+                        async def batch_toggle_lock(lock: bool) -> None:
+                            new_status = "INACTIVE" if lock else "ACTIVE"
+                            success_count = 0
+                            for uid in list(selected):
+                                if uid == current_user.get("id"):
+                                    continue  # Protect self
+                                try:
+                                    await user_service.update_user_status(uid, new_status)
+                                    success_count += 1
+                                except Exception:
+                                    pass
+                            action_name = "Khóa" if lock else "Kích hoạt"
+                            toast.success(f"Đã {action_name.lower()} {success_count} tài khoản.")
+                            state["selected_ids"].clear()
+                            await load_users_data(refresh=True)
+
+                        ui.button(
+                            "Khóa đã chọn",
+                            icon="lock",
+                            on_click=lambda: batch_toggle_lock(True),
+                        ).props("flat dense color=white size=sm").classes("text-xs rounded bg-slate-800 hover:bg-slate-700 px-2.5 py-1")
+
+                        ui.button(
+                            "Mở khóa đã chọn",
+                            icon="lock_open",
+                            on_click=lambda: batch_toggle_lock(False),
+                        ).props("flat dense color=white size=sm").classes("text-xs rounded bg-slate-800 hover:bg-slate-700 px-2.5 py-1")
+
+                        def clear_selection() -> None:
+                            state["selected_ids"].clear()
+                            render_all()
+
+                        ui.button("Bỏ chọn", icon="close", on_click=clear_selection).props("flat dense color=slate-300 size=sm").classes("text-xs")
+
+        # =========================================================================
+        # 8. RENDER USER TABLE
         # =========================================================================
         def render_table() -> None:
             table_container.clear()
@@ -234,6 +405,7 @@ def render_user_mgmt_view() -> None:
                             for _ in range(7):
                                 with ui.row().classes("w-full p-3 items-center justify-between"):
                                     with ui.row().classes("items-center gap-3"):
+                                        ui.skeleton().classes("w-4 h-4 rounded")
                                         ui.skeleton().classes("w-8 h-8 rounded-full")
                                         with ui.column().classes("gap-1"):
                                             ui.skeleton().classes("w-32 h-3.5 rounded")
@@ -260,7 +432,7 @@ def render_user_mgmt_view() -> None:
             if not filtered:
                 with table_container:
                     with ui.card().classes("w-full p-8 bg-white border border-slate-200/90 rounded-lg shadow-2xs"):
-                        if state["keyword"] or state["role_filter"] != "ALL" or state["status_filter"] != "ALL":
+                        if state["keyword"] or state["role_filter"] != "ALL" or state["status_filter"] != "ALL" or state["active_tab"] != "ALL":
                             empty_state(
                                 title="Không tìm thấy người dùng phù hợp",
                                 subtitle="Không có tài khoản nào khớp với bộ lọc hiện tại. Thử thay đổi từ khóa hoặc bộ lọc.",
@@ -289,15 +461,30 @@ def render_user_mgmt_view() -> None:
             end_idx = min(start_idx + page_size, total_items)
             paged_users = filtered[start_idx:end_idx]
 
+            all_paged_selected = bool(paged_users) and all(u["id"] in state["selected_ids"] for u in paged_users)
+
             with table_container:
                 with ui.card().classes("w-full p-0 rounded-lg bg-white border border-slate-200/90 shadow-2xs overflow-hidden"):
                     # Table Header
-                    with ui.row().classes("w-full px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 items-center text-[11px] font-semibold text-slate-600 uppercase tracking-wider"):
-                        ui.label("NGƯỜI DÙNG").classes("flex-1 min-w-[200px]")
+                    with ui.row().classes("w-full px-4 py-2 bg-slate-50/90 border-b border-slate-200/80 items-center text-[11px] font-semibold text-slate-600 uppercase tracking-wider"):
+                        def toggle_select_all(val: bool) -> None:
+                            if val:
+                                for u in paged_users:
+                                    state["selected_ids"].add(u["id"])
+                            else:
+                                for u in paged_users:
+                                    state["selected_ids"].discard(u["id"])
+                            render_all()
+
+                        ui.checkbox(value=all_paged_selected, on_change=lambda e: toggle_select_all(e.value)).props(
+                            "dense"
+                        ).classes("w-8 shrink-0")
+
+                        ui.label("NGƯỜI DÙNG & TÀI KHOẢN").classes("flex-1 min-w-[200px]")
                         ui.label("VAI TRÒ").classes("w-32 hidden sm:block")
                         ui.label("TRẠNG THÁI").classes("w-32 hidden md:block")
                         ui.label("NGÀY TẠO").classes("w-32 hidden lg:block")
-                        ui.label("THAO TÁC").classes("w-28 text-right")
+                        ui.label("THAO TÁC").classes("w-24 text-right")
 
                     # Table Rows
                     with ui.column().classes("w-full divide-y divide-slate-100 gap-0"):
@@ -305,9 +492,9 @@ def render_user_mgmt_view() -> None:
                             render_user_row(u, current_user)
 
                     # Pagination Footer
-                    with ui.row().classes("w-full justify-between items-center px-4 py-2.5 bg-slate-50/50 border-t border-slate-200/80 text-xs text-slate-600 flex-wrap gap-2"):
+                    with ui.row().classes("w-full justify-between items-center px-4 py-2 bg-slate-50/50 border-t border-slate-200/80 text-xs text-slate-600 flex-wrap gap-2"):
                         with ui.row().classes("items-center gap-2"):
-                            ui.label(f"{start_idx + 1}–{end_idx} / {total_items} người dùng").classes("font-medium text-slate-700")
+                            ui.label(f"Hiển thị {start_idx + 1}–{end_idx} trong số {total_items} người dùng").classes("font-medium text-slate-700")
 
                             def on_page_size_change(val: int) -> None:
                                 state["page_size"] = val
@@ -342,7 +529,7 @@ def render_user_mgmt_view() -> None:
                                 next_btn.props("disable")
 
         # =========================================================================
-        # 7. RENDER USER ROW
+        # 9. RENDER USER ROW
         # =========================================================================
         def render_user_row(u: dict[str, Any], logged_in_admin: dict[str, Any]) -> None:
             user_id = u.get("id")
@@ -353,6 +540,7 @@ def render_user_mgmt_view() -> None:
             status = u.get("trang_thai") or u.get("status") or "ACTIVE"
             is_active = status == "ACTIVE"
             is_self = logged_in_admin.get("id") == user_id or logged_in_admin.get("username") == username
+            is_selected = user_id in state["selected_ids"]
 
             # Deterministic avatar initials & subtle background
             initials = "".join([part[0] for part in full_name.split() if part][:2]).upper() if full_name else "U"
@@ -365,9 +553,21 @@ def render_user_mgmt_view() -> None:
                 "USER": "bg-blue-50 text-blue-700 border border-blue-200",
             }.get(role, "bg-slate-100 text-slate-700 border border-slate-200")
 
+            row_bg = "bg-blue-50/20" if is_selected else ("bg-slate-50/40" if not is_active else "")
+
             with ui.row().classes(
-                "w-full px-4 py-2.5 items-center justify-between hover:bg-slate-50/80 transition-colors duration-150 text-xs no-wrap gap-2"
+                f"w-full px-4 py-2.5 items-center justify-between hover:bg-slate-50/80 transition-colors duration-150 text-xs no-wrap gap-2 {row_bg}"
             ):
+                # 0. Checkbox
+                def toggle_select(val: bool) -> None:
+                    if val:
+                        state["selected_ids"].add(user_id)
+                    else:
+                        state["selected_ids"].discard(user_id)
+                    render_batch_actions()
+
+                ui.checkbox(value=is_selected, on_change=lambda e: toggle_select(e.value)).props("dense").classes("w-8 shrink-0")
+
                 # 1. Identity Cell
                 with ui.row().classes("flex-1 min-w-[200px] items-center gap-3 no-wrap cursor-pointer").on(
                     "click", lambda: show_user_detail_drawer(u)
@@ -397,7 +597,7 @@ def render_user_mgmt_view() -> None:
                     ui.label(format_datetime(u.get("created_at"))).classes("truncate")
 
                 # 5. Contextual Action Menu
-                with ui.row().classes("w-28 justify-end items-center gap-1 shrink-0"):
+                with ui.row().classes("w-24 justify-end items-center gap-1 shrink-0"):
                     # Quick detail button
                     ui.button(
                         icon="visibility",
@@ -423,7 +623,6 @@ def render_user_mgmt_view() -> None:
                                 ui.menu_item("Không thể khóa chính mình").props("disable").classes("text-slate-400 text-xs")
                             else:
                                 lock_label = "Khóa tài khoản" if is_active else "Kích hoạt tài khoản"
-                                lock_icon = "lock" if is_active else "lock_open"
                                 text_color = "text-rose-600" if is_active else "text-emerald-600"
 
                                 ui.menu_item(
@@ -432,7 +631,7 @@ def render_user_mgmt_view() -> None:
                                 ).classes(f"rounded text-xs font-semibold {text_color}")
 
         # =========================================================================
-        # 8. USER DETAIL DRAWER / DIALOG
+        # 10. USER DETAIL DRAWER / DIALOG
         # =========================================================================
         def show_user_detail_drawer(u: dict[str, Any]) -> None:
             dialog = ui.dialog()
@@ -509,7 +708,7 @@ def render_user_mgmt_view() -> None:
             dialog.open()
 
         # =========================================================================
-        # 9. CREATE / EDIT USER MODAL
+        # 11. CREATE / EDIT USER MODAL
         # =========================================================================
         def show_user_modal(mode: str = "create", user_data: dict[str, Any] | None = None) -> None:
             is_edit = mode == "edit" and user_data is not None
@@ -625,7 +824,7 @@ def render_user_mgmt_view() -> None:
             dialog.open()
 
         # =========================================================================
-        # 10. LOCK / UNLOCK USER DIALOG
+        # 12. LOCK / UNLOCK USER DIALOG
         # =========================================================================
         def show_toggle_status_dialog(u: dict[str, Any]) -> None:
             user_id = u["id"]
@@ -670,10 +869,12 @@ def render_user_mgmt_view() -> None:
             dialog.open()
 
         # =========================================================================
-        # 11. DATA LOADER
+        # 13. DATA LOADER
         # =========================================================================
         def render_all() -> None:
             render_summary_strip()
+            render_tabs()
+            render_batch_actions()
             render_table()
 
         async def load_users_data(refresh: bool = False) -> None:
