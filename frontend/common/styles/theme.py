@@ -1,9 +1,37 @@
 from nicegui import ui
 
+# =========================================================================
+# 1. CORE COLOR PALETTE & TOKENS
+# =========================================================================
 PRIMARY = "#2563eb"
 SURFACE = "#ffffff"
 BACKGROUND = "#f8fafc"
 TEXT = "#0f172a"
+
+# =========================================================================
+# 2. STANDARDIZED REUSABLE UI STYLE CONSTANTS
+# =========================================================================
+# Card & Surface Containers
+STYLE_CARD = "p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all"
+STYLE_CARD_COMPACT = "p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs"
+STYLE_CARD_MUTED = "p-4 rounded-xl bg-slate-50/70 border border-slate-200/70"
+
+# Header & Page Navigation Containers
+STYLE_PAGE_HEADER = "w-full justify-between items-center py-2 border-b border-slate-200/80 mb-4"
+STYLE_SECTION_HEADER = "w-full justify-between items-center mb-3 pb-2 border-b border-slate-100"
+
+# Typography Tokens
+STYLE_TITLE_LG = "text-xl font-bold text-slate-900 tracking-tight leading-snug"
+STYLE_TITLE_MD = "text-base font-bold text-slate-900 leading-snug"
+STYLE_TITLE_SM = "text-sm font-bold text-slate-900"
+STYLE_SUBTITLE = "text-xs text-slate-500 leading-normal"
+STYLE_CAPTION = "text-[11px] text-slate-400 font-medium"
+STYLE_TAG_LABEL = "text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+
+# Form Controls & Input Defaults
+PROPS_INPUT_OUTLINED = "outlined dense"
+PROPS_BUTTON_PRIMARY = "color=primary unelevated"
+PROPS_BUTTON_OUTLINE = "outline size=sm color=slate-700"
 
 
 def apply_theme() -> None:
