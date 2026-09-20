@@ -2,8 +2,8 @@ from pydantic import ValidationError
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.core.auth import require_admin_user
-from app.core.errors import BadRequestError
+from app.core.auth import require_admin_user, get_current_user
+from app.core.errors import BadRequestError, ForbiddenError
 from app.users.schemas import (
     CreateUserRequest,
     UpdateUserRequest,
@@ -51,8 +51,10 @@ def get_user_route(user_id: int) -> dict:
     return get_user_detail(user_id)
 
 
-@router.patch("/users/{user_id}", response_model=UserResponse, dependencies=[Depends(require_admin_user)])
-def update_user_route(user_id: int, payload: UpdateUserRequest) -> dict:
+@router.patch("/users/{user_id}", response_model=UserResponse)
+def update_user_route(user_id: int, payload: UpdateUserRequest, current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user["vai_tro"] != "ADMIN" and current_user["id"] != user_id:
+        raise ForbiddenError("FORBIDDEN")
     return update_user(user_id, payload)
 
 

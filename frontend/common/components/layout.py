@@ -7,6 +7,7 @@ from common.components.sidebar import sidebar
 from common.styles.breakpoints import RESPONSIVE_PAGE
 from common.styles.theme import apply_theme
 from services.auth_service import auth_service
+from common.components.websocket_listener import setup_websocket
 
 
 def logout_and_go_home() -> None:
@@ -34,3 +35,6 @@ def app_shell(title: str, content: Callable[[dict], None]) -> None:
 
     with ui.element("main").classes(RESPONSIVE_PAGE):
         content(user)
+    
+    # Initialize real-time notifications
+    setup_websocket()

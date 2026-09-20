@@ -102,6 +102,20 @@ class TicketService:
 
     async def export_tickets_csv(self, params: dict[str, Any] | None = None) -> str:
         return await http_client.get("/reports/export-tickets", params=params or {})
+        
+    async def export_tickets_excel(self, params: dict[str, Any] | None = None) -> bytes:
+        return await http_client.download_file("/reports/export-tickets-excel", params=params or {})
+
+    async def export_dashboard_pdf(self) -> bytes:
+        return await http_client.download_file("/reports/export-dashboard-pdf")
+
+    async def list_attachments(self, ticket_id: int) -> list[dict[str, Any]]:
+        return await http_client.get(f"/tickets/{ticket_id}/attachments")
+
+    async def upload_attachment(self, ticket_id: int, file_name: str, file_data: bytes, content_type: str) -> dict[str, Any]:
+        response = await http_client.upload(f"/tickets/{ticket_id}/attachments", file_name, file_data, content_type)
+        service_cache.clear()
+        return response
 
     @staticmethod
     def next_statuses(current_status: str | None) -> list[str]:
@@ -109,5 +123,3 @@ class TicketService:
 
 
 ticket_service = TicketService()
-
-

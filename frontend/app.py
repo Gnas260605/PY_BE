@@ -1,3 +1,14 @@
+import pkgutil
+if not hasattr(pkgutil, 'find_loader'):
+    import importlib.util
+    def find_loader(fullname):
+        try:
+            spec = importlib.util.find_spec(fullname)
+            return spec.loader if spec else None
+        except Exception:
+            return None
+    pkgutil.find_loader = find_loader
+
 from nicegui import ui
 
 from core.config import config

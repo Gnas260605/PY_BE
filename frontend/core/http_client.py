@@ -130,4 +130,81 @@ class HttpClient:
     async def delete(cls, endpoint: str, auth_required: bool = True):
         return await cls.request("DELETE", endpoint, auth_required=auth_required)
 
+    @classmethod
+    async def download_file(cls, endpoint: str, params: Optional[Dict[str, Any]] = None, auth_required: bool = True) -> bytes:
+        url = f"{config.API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+        headers = {}
+        token = auth_context.get_token()
+        if auth_required and token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        try:
+            async with httpx.AsyncClient(timeout=config.REQUEST_TIMEOUT) as client:
+                response = await client.get(url, params=params, headers=headers)
+                if not response.is_success:
+                    if response.status_code == 401:
+                        auth_context.clear_session()
+                    raise ApiException(f"Lỗi tải file (HTTP {response.status_code})", response.status_code)
+                return response.content
+        except httpx.ConnectError:
+            raise ApiException(ERROR_MESSAGES["CONNECTION_ERROR"], 503)
+        except Exception as e:
+            if isinstance(e, ApiException):
+                raise
+            raise ApiException(f"Lỗi tải file: {str(e)}", 500)
+
+    @classmethod
+    async def upload(cls, endpoint: str, file_name: str, file_data: bytes, content_type: str, auth_required: bool = True):
+        url = f"{config.API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+        headers = {}
+        token = auth_context.get_token()
+        if auth_required and token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        files = {"file": (file_name, file_data, content_type)}
+        try:
+            async with httpx.AsyncClient(timeout=config.REQUEST_TIMEOUT) as client:
+                response = await client.post(url, headers=headers, files=files)
+                
+                is_json = "application/json" in response.headers.get("content-type", "")
+                if is_json:
+                    try:
+                        res_json = response.json()
+                    except Exception:
+                        res_json = {}
+                else:
+                    res_json = response.text
+
+                if not response.is_success:
+                    detail = res_json.get("detail", "") if isinstance(res_json, dict) else str(res_json)
+                    friendly_msg = cls._translate_error(detail, response.status_code)
+                    if response.status_code == 401:
+                        auth_context.clear_session()
+                    raise ApiException(
+                        message=friendly_msg,
+                        status_code=response.status_code,
+                        detail_code=str(detail)
+                    )
+                return res_json
+        except httpx.ConnectError:
+            raise ApiException(
+                message=ERROR_MESSAGES["CONNECTION_ERROR"],
+                status_code=503,
+                detail_code="CONNECTION_REFUSED"
+            )
+        except httpx.TimeoutException:
+            raise ApiException(
+                message="Hết thời gian chờ phản hồi từ máy chủ (Timeout). Vui lòng thử lại!",
+                status_code=504,
+                detail_code="TIMEOUT"
+            )
+        except ApiException:
+            raise
+        except Exception as e:
+            raise ApiException(
+                message=f"Lỗi không xác định: {str(e)}",
+                status_code=500,
+                detail_code="UNKNOWN"
+            )
+
 http_client = HttpClient()

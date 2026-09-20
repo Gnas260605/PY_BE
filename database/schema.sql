@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS USERS (
     email VARCHAR(120) NULL,
     vai_tro ENUM('USER', 'TECHNICIAN', 'ADMIN') NOT NULL DEFAULT 'USER',
     trang_thai ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+    receive_email_on_resolve BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -207,4 +208,33 @@ CREATE TABLE IF NOT EXISTS TICKET_COMMENTS (
         ON DELETE CASCADE,
 
     KEY idx_comments_ticket (ticket_id, created_at)
+) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
+-- 6. BẢNG TICKET_ATTACHMENTS (Quản lý file đính kèm của ticket)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS TICKET_ATTACHMENTS (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ticket_id BIGINT UNSIGNED NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100) NULL,
+    uploaded_by BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    CONSTRAINT fk_attachments_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES TICKETS(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_attachments_user
+        FOREIGN KEY (uploaded_by)
+        REFERENCES USERS(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    KEY idx_attachments_ticket (ticket_id)
 ) ENGINE=InnoDB;

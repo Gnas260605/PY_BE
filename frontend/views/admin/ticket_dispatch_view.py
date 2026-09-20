@@ -78,6 +78,19 @@ def render_ticket_dispatch_view() -> None:
                     "outline color=slate-700 dense size=sm"
                 ).classes("h-9 px-3.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 shadow-2xs hover:bg-slate-50")
 
+                async def handle_export_excel_true() -> None:
+                    try:
+                        ui.notify("Đang xuất file Excel...", type="info")
+                        excel_data = await ticket_service.export_tickets_excel()
+                        ui.download(excel_data, "Danh_sach_su_co_UniDesk.xlsx")
+                        toast.success("Đã xuất file Excel thành công!")
+                    except Exception as e:
+                        toast.show_popup("Lỗi xuất file", "Không thể xuất file Excel từ máy chủ.", type="error", detail=str(e))
+
+                ui.button("Xuất Excel", icon="table_view", on_click=handle_export_excel_true).props(
+                    "outline color=green-700 dense size=sm"
+                ).classes("h-9 px-3.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 shadow-2xs hover:bg-slate-50")
+
                 ui.button("Tạo ticket mới", icon="add", on_click=lambda: ui.navigate.to("/user/tickets/new")).props(
                     "color=primary unelevated dense size=sm"
                 ).classes("h-9 px-4 text-xs font-bold rounded-lg shadow-2xs")

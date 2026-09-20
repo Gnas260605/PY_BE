@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+# pyrefly: ignore [missing-import]
 from pydantic import ValidationError
 
-from fastapi import APIRouter, Depends, Query, status
+# pyrefly: ignore [missing-import]
+from fastapi import APIRouter, Depends, Query, status, BackgroundTasks, UploadFile, File
 
 from app.core.auth import get_current_user, require_roles
 from app.core.errors import BadRequestError
@@ -19,6 +21,7 @@ from app.tickets.schemas import (
     TicketHistoryResponse,
     TicketListQuery,
     TicketSummaryResponse,
+    TicketAttachmentResponse,
     UpdateTicketRequest,
     UpdateTicketStatusRequest,
 )
@@ -36,6 +39,8 @@ from app.tickets.service import (
     list_tickets,
     update_ticket,
     update_ticket_status,
+    list_ticket_attachments,
+    upload_ticket_attachment,
 )
 
 
@@ -89,9 +94,10 @@ def list_tickets_route(
 )
 def create_ticket_route(
     payload: CreateTicketRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
 ) -> TicketSummaryResponse:
-    return create_ticket(payload, current_user=current_user)
+    return create_ticket(payload, background_tasks, current_user=current_user)
 
 
 @router.patch(
@@ -138,9 +144,10 @@ def get_ticket_route(
 def update_ticket_route(
     ticket_id: int,
     payload: UpdateTicketRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
 ) -> TicketSummaryResponse:
-    return update_ticket(ticket_id, payload, current_user=current_user)
+    return update_ticket(ticket_id, payload, background_tasks, current_user=current_user)
 
 
 @router.patch(
@@ -151,9 +158,10 @@ def update_ticket_route(
 def assign_ticket_route(
     ticket_id: int,
     payload: AssignTicketRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
 ) -> TicketSummaryResponse:
-    return assign_ticket(ticket_id, payload, current_user=current_user)
+    return assign_ticket(ticket_id, payload, background_tasks, current_user=current_user)
 
 
 @router.patch(
@@ -164,9 +172,10 @@ def assign_ticket_route(
 def update_ticket_status_route(
     ticket_id: int,
     payload: UpdateTicketStatusRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
 ) -> TicketSummaryResponse:
-    return update_ticket_status(ticket_id, payload, current_user=current_user)
+    return update_ticket_status(ticket_id, payload, background_tasks, current_user=current_user)
 
 
 @router.patch(
@@ -215,7 +224,31 @@ def list_ticket_comments_route(
 def create_ticket_comment_route(
     ticket_id: int,
     payload: CreateTicketCommentRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
 ) -> TicketCommentResponse:
-    return create_ticket_comment(ticket_id, payload, current_user=current_user)
+    return create_ticket_comment(ticket_id, payload, background_tasks, current_user=current_user)
 
+@router.get(
+    "/tickets/{ticket_id}/attachments",
+    response_model=list[TicketAttachmentResponse],
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def list_ticket_attachments_route(
+    ticket_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> list[TicketAttachmentResponse]:
+    return list_ticket_attachments(ticket_id, current_user=current_user)
+
+@router.post(
+    "/tickets/{ticket_id}/attachments",
+    response_model=TicketAttachmentResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def upload_ticket_attachment_route(
+    ticket_id: int,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+) -> TicketAttachmentResponse:
+    return upload_ticket_attachment(ticket_id, file, current_user=current_user)

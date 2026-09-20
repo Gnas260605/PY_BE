@@ -2,8 +2,16 @@ from __future__ import annotations
 
 import logging
 
+import os
+import shutil
+
+from fastapi import UploadFile, BackgroundTasks
+
 from app.core.errors import BadRequestError, ForbiddenError, NotFoundError
+from app.core.websocket import manager
 from app.db.connection import connection_scope
+from app.core.notifications import send_telegram_message, send_email_notification
+from app.users.repository import get_user_by_id
 from app.tickets import repository
 from app.tickets.schemas import (
     AssignTicketRequest,
@@ -13,6 +21,7 @@ from app.tickets.schemas import (
     CreateTicketCommentRequest,
     CreateTicketRequest,
     DashboardStatsResponse,
+    TicketAttachmentResponse,
     TicketCommentResponse,
     TicketDetailResponse,
     TicketHistoryResponse,
@@ -70,7 +79,7 @@ def _ensure_transition_allowed(current_status: str, target_status: str) -> None:
         raise BadRequestError("INVALID_TRANSITION")
 
 
-def create_ticket(payload: CreateTicketRequest, *, current_user: dict) -> TicketSummaryResponse:
+def create_ticket(payload: CreateTicketRequest, background_tasks: BackgroundTasks, *, current_user: dict) -> TicketSummaryResponse:
     with connection_scope() as connection:
         if payload.device_id is not None and not repository.device_exists(connection, payload.device_id):
             raise NotFoundError("DEVICE_NOT_FOUND")
@@ -102,6 +111,15 @@ def create_ticket(payload: CreateTicketRequest, *, current_user: dict) -> Ticket
         created_ticket = repository.get_ticket_by_id(connection, ticket_id)
 
     logger.info("TICKET_CREATED ticket_id=%s user_id=%s", ticket_id, current_user["id"])
+    
+    background_tasks.add_task(
+        manager.broadcast,
+        {"type": "TICKET_CREATED", "ticket_id": ticket_id, "user_id": int(current_user["id"]), "message": f"Ticket #{ticket_id} được tạo mới"}
+    )
+
+    if payload.priority == "URGENT":
+        msg = f"🚨 <b>URGENT TICKET</b> 🚨\n\nTicket #{ticket_id}: {payload.title}\nCategory: {payload.category}\n\nPlease check the dashboard immediately."
+        background_tasks.add_task(send_telegram_message, msg)
 
     if created_ticket is None:
         raise NotFoundError("TICKET_NOT_FOUND")
@@ -146,6 +164,7 @@ def get_ticket_detail(ticket_id: int, *, current_user: dict) -> TicketDetailResp
 def update_ticket(
     ticket_id: int,
     payload: UpdateTicketRequest,
+    background_tasks: BackgroundTasks,
     *,
     current_user: dict,
 ) -> TicketSummaryResponse:
@@ -214,6 +233,18 @@ def update_ticket(
         ticket_id,
         ",".join(sorted(changed_fields)),
     )
+    
+    background_tasks.add_task(
+        manager.send_personal_message,
+        {"type": event_name, "ticket_id": ticket_id, "message": f"Ticket #{ticket_id} được cập nhật"},
+        int(current_ticket["user_id"])
+    )
+    if current_ticket.get("technician_id"):
+        background_tasks.add_task(
+            manager.send_personal_message,
+            {"type": event_name, "ticket_id": ticket_id, "message": f"Ticket #{ticket_id} được cập nhật"},
+            int(current_ticket["technician_id"])
+        )
 
     if updated_ticket is None:
         raise NotFoundError("TICKET_NOT_FOUND")
@@ -223,6 +254,7 @@ def update_ticket(
 def assign_ticket(
     ticket_id: int,
     payload: AssignTicketRequest,
+    background_tasks: BackgroundTasks,
     *,
     current_user: dict,
 ) -> TicketSummaryResponse:
@@ -278,6 +310,17 @@ def assign_ticket(
         ticket_id,
         payload.technician_id,
         current_user["id"],
+    )
+    
+    background_tasks.add_task(
+        manager.send_personal_message,
+        {"type": "TICKET_ASSIGNED", "ticket_id": ticket_id, "message": f"Bạn được phân công Ticket #{ticket_id}"},
+        payload.technician_id
+    )
+    background_tasks.add_task(
+        manager.send_personal_message,
+        {"type": "TICKET_ASSIGNED", "ticket_id": ticket_id, "message": f"Ticket #{ticket_id} đã được phân công"},
+        int(ticket["user_id"])
     )
 
     if updated_ticket is None:
@@ -350,6 +393,7 @@ def batch_assign_tickets(
 def update_ticket_status(
     ticket_id: int,
     payload: UpdateTicketStatusRequest,
+    background_tasks: BackgroundTasks,
     *,
     current_user: dict,
 ) -> TicketSummaryResponse:
@@ -392,6 +436,19 @@ def update_ticket_status(
         payload.status,
         current_user["id"],
     )
+    
+    background_tasks.add_task(
+        manager.send_personal_message,
+        {"type": "TICKET_STATUS_CHANGED", "ticket_id": ticket_id, "status": payload.status, "message": f"Ticket #{ticket_id} chuyển sang trạng thái {payload.status}"},
+        int(ticket["user_id"])
+    )
+
+    if payload.status == "RESOLVED":
+        with connection_scope() as conn:
+            ticket_creator = get_user_by_id(conn, int(ticket["user_id"]))
+        if ticket_creator and ticket_creator.get("receive_email_on_resolve") and ticket_creator.get("email"):
+            msg = f"Sự cố/yêu cầu #{ticket_id} của bạn đã được giải quyết.\nTrạng thái hiện tại: {payload.status}\n\nVui lòng kiểm tra lại hệ thống để biết thêm chi tiết."
+            background_tasks.add_task(send_email_notification, ticket_creator["email"], f"[CS466] Ticket #{ticket_id} đã được giải quyết", msg)
 
     if updated_ticket is None:
         raise NotFoundError("TICKET_NOT_FOUND")
@@ -545,6 +602,7 @@ def list_ticket_comments(ticket_id: int, *, current_user: dict) -> list[TicketCo
 def create_ticket_comment(
     ticket_id: int,
     payload: CreateTicketCommentRequest,
+    background_tasks: BackgroundTasks,
     *,
     current_user: dict,
 ) -> TicketCommentResponse:
@@ -569,6 +627,14 @@ def create_ticket_comment(
         new_comment = repository.get_comment_by_id(connection, comment_id)
 
     logger.info("TICKET_COMMENT_CREATED ticket_id=%s user_id=%s", ticket_id, current_user["id"])
+    
+    notify_user_id = int(ticket["technician_id"]) if ticket.get("technician_id") and int(current_user["id"]) == int(ticket["user_id"]) else int(ticket["user_id"])
+    if notify_user_id and notify_user_id != int(current_user["id"]):
+        background_tasks.add_task(
+            manager.send_personal_message,
+            {"type": "NEW_COMMENT", "ticket_id": ticket_id, "message": f"Có bình luận mới trong Ticket #{ticket_id}"},
+            notify_user_id
+        )
 
     if new_comment is None:
         raise NotFoundError("COMMENT_NOT_FOUND")
@@ -594,3 +660,56 @@ def get_dashboard_stats(*, current_user: dict) -> DashboardStatsResponse:
     )
 
 
+def upload_ticket_attachment(
+    ticket_id: int,
+    file: UploadFile,
+    *,
+    current_user: dict,
+) -> TicketAttachmentResponse:
+    with connection_scope() as connection:
+        ticket = repository.get_ticket_by_id(connection, ticket_id)
+        if ticket is None:
+            raise NotFoundError("TICKET_NOT_FOUND")
+        _ensure_visible(ticket, current_user)
+
+        os.makedirs("uploads", exist_ok=True)
+        file_path = os.path.join("uploads", f"{ticket_id}_{file.filename}")
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        try:
+            attachment_id = repository.create_attachment(
+                connection,
+                ticket_id=ticket_id,
+                file_path=file_path,
+                file_name=file.filename,
+                file_type=file.content_type,
+                uploaded_by=int(current_user["id"]),
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+        attachments = repository.get_attachments_by_ticket_id(connection, ticket_id)
+        for att in attachments:
+            if att["id"] == attachment_id:
+                return TicketAttachmentResponse(**att)
+
+        raise NotFoundError("ATTACHMENT_NOT_FOUND")
+
+
+def list_ticket_attachments(
+    ticket_id: int,
+    *,
+    current_user: dict,
+) -> list[TicketAttachmentResponse]:
+    with connection_scope() as connection:
+        ticket = repository.get_ticket_by_id(connection, ticket_id)
+        if ticket is None:
+            raise NotFoundError("TICKET_NOT_FOUND")
+        _ensure_visible(ticket, current_user)
+        attachments = repository.get_attachments_by_ticket_id(connection, ticket_id)
+
+    return [TicketAttachmentResponse(**att) for att in attachments]

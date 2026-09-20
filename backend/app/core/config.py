@@ -43,6 +43,21 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("JWT_EXPIRE_MINUTES"),
     )
 
+    telegram_bot_token: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TELEGRAM_BOT_TOKEN"),
+    )
+    telegram_chat_id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TELEGRAM_CHAT_ID"),
+    )
+
+    smtp_host: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_HOST"))
+    smtp_port: int | None = Field(default=587, validation_alias=AliasChoices("SMTP_PORT"))
+    smtp_user: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_USER"))
+    smtp_password: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_PASSWORD"))
+    smtp_from: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_FROM"))
+
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
         env_file_encoding="utf-8",

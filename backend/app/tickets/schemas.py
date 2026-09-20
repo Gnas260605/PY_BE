@@ -298,3 +298,11 @@ class DashboardStatsResponse(BaseModel):
     urgent_tickets: list[TicketSummaryResponse]
 
 
+class TicketAttachmentResponse(BaseModel):
+    id: int
+    ticket_id: int
+    file_path: str
+    file_name: str
+    file_type: str | None
+    uploaded_by: int
+    created_at: datetime

@@ -1,5 +1,10 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from app.core.security import decode_access_token
+from app.core.websocket import manager
 
 from app.auth.routes import router as auth_router
 from app.core.config import get_settings
@@ -36,3 +41,23 @@ app.include_router(users_router, prefix="/api", tags=["users"])
 app.include_router(tickets_router, prefix="/api", tags=["tickets"])
 app.include_router(devices_router, prefix="/api", tags=["devices"])
 app.include_router(reports_router, prefix="/api", tags=["reports"])
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+@app.websocket("/api/ws/notifications")
+async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
+    try:
+        payload = decode_access_token(token)
+        user_id = int(payload["sub"])
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
+    await manager.connect(websocket, user_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user_id)
+

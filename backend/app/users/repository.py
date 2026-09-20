@@ -12,6 +12,7 @@ USER_COLUMNS = """
     email,
     vai_tro,
     trang_thai,
+    receive_email_on_resolve,
     created_at,
     updated_at
 """

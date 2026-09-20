@@ -18,6 +18,7 @@ class UserResponse(BaseModel):
     email: str | None
     vai_tro: str
     trang_thai: str
+    receive_email_on_resolve: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -113,6 +114,7 @@ class UpdateUserRequest(BaseModel):
     ho_ten: str | None = Field(default=None, min_length=1, max_length=100)
     email: str | None = Field(default=None, max_length=120)
     vai_tro: str | None = None
+    receive_email_on_resolve: bool | None = None
 
     model_config = ConfigDict(extra="forbid")
 

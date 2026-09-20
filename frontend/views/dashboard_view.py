@@ -325,6 +325,21 @@ def render_dashboard_view() -> None:
                 ui.label("Trung tâm giám sát và phân tích hoạt động hỗ trợ kỹ thuật CS466 Helpdesk.").classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
+                async def handle_export_pdf() -> None:
+                    try:
+                        ui.notify("Đang xuất báo cáo PDF...", type="info")
+                        pdf_data = await ticket_service.export_dashboard_pdf()
+                        ui.download(pdf_data, "Dashboard_Statistics.pdf")
+                        toast.success("Đã xuất báo cáo PDF thành công!")
+                    except Exception as e:
+                        toast.error(f"Lỗi xuất báo cáo PDF: {str(e)}")
+
+                ui.button(
+                    "Xuất báo cáo PDF",
+                    icon="picture_as_pdf",
+                    on_click=handle_export_pdf,
+                ).props("outline color=red-700 size=sm").classes("h-[36px] px-3.5 font-semibold rounded-lg bg-white border-slate-300 shadow-2xs text-xs")
+
                 ui.button(
                     "Giám sát sự cố",
                     icon="assignment",

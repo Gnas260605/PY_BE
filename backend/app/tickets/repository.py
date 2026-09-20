@@ -484,3 +484,50 @@ def get_dashboard_stats(connection: MySQLConnection, role: str, user_id: int) ->
         }
 
 
+def create_attachment(
+    connection: MySQLConnection,
+    *,
+    ticket_id: int,
+    file_path: str,
+    file_name: str,
+    file_type: str | None,
+    uploaded_by: int,
+) -> int:
+    query = """
+        INSERT INTO TICKET_ATTACHMENTS (
+            ticket_id,
+            file_path,
+            file_name,
+            file_type,
+            uploaded_by
+        )
+        VALUES (%s, %s, %s, %s, %s)
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            query,
+            (ticket_id, file_path, file_name, file_type, uploaded_by),
+        )
+        return int(cursor.lastrowid)
+
+
+def get_attachments_by_ticket_id(
+    connection: MySQLConnection,
+    ticket_id: int,
+) -> list[dict[str, Any]]:
+    query = """
+        SELECT
+            id,
+            ticket_id,
+            file_path,
+            file_name,
+            file_type,
+            uploaded_by,
+            created_at
+        FROM TICKET_ATTACHMENTS
+        WHERE ticket_id = %s
+        ORDER BY created_at ASC
+    """
+    with connection.cursor(dictionary=True) as cursor:
+        cursor.execute(query, (ticket_id,))
+        return list(cursor.fetchall())

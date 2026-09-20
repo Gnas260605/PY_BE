@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+# pyrefly: ignore [missing-import]
 from nicegui import ui
 
 from common.components import toast
@@ -17,6 +18,7 @@ from core.i18n import (
     get_ticket_title,
     t,
 )
+from core.config import config
 from services.ticket_service import ticket_service
 from services.user_service import user_service
 
@@ -35,6 +37,7 @@ def render_ticket_detail_view(ticket_id: int) -> None:
             try:
                 ticket = await ticket_service.get_ticket(ticket_id)
                 history = await ticket_service.get_history(ticket_id)
+                attachments = await ticket_service.list_attachments(ticket_id)
             except Exception as exc:
                 main_container.clear()
                 with main_container:
@@ -81,8 +84,35 @@ def render_ticket_detail_view(ticket_id: int) -> None:
                                 ui.label(t("detail_events_count", count=len(history))).classes("text-xs text-slate-400")
                             audit_timeline(history)
 
-                        # Comments Thread
-                        comments_thread(ticket_id, user)
+                        # Attachments Card
+                        with ui.card().classes("w-full p-5 rounded-xl bg-white border border-slate-200 shadow-sm"):
+                            with ui.row().classes("w-full justify-between items-center mb-3 pb-2 border-b border-slate-100"):
+                                ui.label("Tệp đính kèm").classes("text-sm font-bold text-slate-900")
+                                ui.label(f"{len(attachments)} tệp").classes("text-xs text-slate-400")
+                            
+                            async def handle_upload(e: Any) -> None:
+                                try:
+                                    content = e.content.read()
+                                    await ticket_service.upload_attachment(ticket_id, e.name, content, e.type)
+                                    toast.success("Tải tệp lên thành công")
+                                    await load_detail()
+                                except Exception as exc:
+                                    toast.error(f"Lỗi tải lên: {exc}")
+                            
+                            ui.upload(on_upload=handle_upload, auto_upload=True).classes("w-full mb-4").props("flat bordered size=sm max-files=1")
+                            
+                            if attachments:
+                                with ui.row().classes("w-full gap-3 flex-wrap"):
+                                    for att in attachments:
+                                        base_url = config.API_BASE_URL.replace("/api", "")
+                                        file_url = f"{base_url.rstrip('/')}/{att['file_path'].lstrip('/')}"
+                                        with ui.card().classes("p-2 border border-slate-200 shadow-none hover:bg-slate-50 transition-colors w-32 items-center text-center") as file_card:
+                                            if att.get('file_type', '').startswith('image/'):
+                                                ui.image(file_url).classes("w-full h-16 object-cover rounded mb-1 cursor-pointer").on('click', lambda url=file_url: ui.navigate.to(url, new_tab=True))
+                                            else:
+                                                ui.icon("insert_drive_file", size="md", color="slate").classes("mb-1 cursor-pointer").on('click', lambda url=file_url: ui.navigate.to(url, new_tab=True))
+                                            
+                                            ui.label(att["file_name"]).classes("text-xs w-full truncate").tooltip(att["file_name"])
 
                     # Right Column (30%) - Metadata & Quick Actions
                     with ui.column().classes("flex-1 min-w-[280px] gap-4"):
@@ -176,13 +206,9 @@ def render_ticket_detail_view(ticket_id: int) -> None:
                                     with ui.row().classes("items-center gap-1.5 text-slate-500 text-xs py-2"):
                                         ui.icon("lock").classes("text-sm")
                                         ui.label(t("detail_closed_text"))
-                        else:
-                            # Informative card for USER
-                            with ui.card().classes("w-full p-4 rounded-xl bg-blue-50/60 border border-blue-100 shadow-sm gap-2"):
-                                with ui.row().classes("items-center gap-2"):
-                                    ui.icon("forum").classes("text-blue-600 text-lg")
-                                    ui.label(t("detail_feedback_card_title")).classes("text-xs font-bold text-blue-900 uppercase tracking-wider")
-                                ui.label(t("detail_feedback_card_sub")).classes("text-xs text-blue-700 leading-relaxed")
+
+                        # Comments Thread for EVERYONE (right below Quick Actions if any)
+                        comments_thread(ticket_id, user)
 
                         # Meta Details Card
                         with ui.card().classes("w-full p-4 rounded-xl bg-white border border-slate-200 shadow-sm"):

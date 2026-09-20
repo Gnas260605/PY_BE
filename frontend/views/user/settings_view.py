@@ -97,10 +97,18 @@ def render_settings_view() -> None:
                     with ui.column().classes("w-full gap-2.5 pt-1"):
                         notify_popup = ui.checkbox(t("settings_notify_toast"), value=True).classes("text-xs font-medium text-slate-700")
                         notify_urgent = ui.checkbox(t("settings_notify_urgent"), value=True).classes("text-xs font-medium text-slate-700")
-                        notify_email = ui.checkbox(t("settings_notify_email"), value=False).classes("text-xs font-medium text-slate-700")
+                        notify_email = ui.checkbox(t("settings_notify_email"), value=user.get("receive_email_on_resolve", False)).classes("text-xs font-medium text-slate-700")
 
-                        def save_notifications() -> None:
-                            toast.success("Đã cập nhật tùy chọn thông báo.")
+                        async def save_notifications() -> None:
+                            try:
+                                if user_id:
+                                    await user_service.update_user(
+                                        user_id,
+                                        {"receive_email_on_resolve": notify_email.value}
+                                    )
+                                toast.success("Đã cập nhật tùy chọn thông báo.")
+                            except Exception as exc:
+                                toast.error(f"Lỗi cập nhật: {exc}")
 
                         with ui.row().classes("w-full justify-end pt-3 border-t border-slate-100 mt-2"):
                             ui.button(t("settings_btn_update_notify"), on_click=save_notifications).props("outline color=slate-700 size=sm").classes("px-3.5 py-1.5 font-medium rounded-lg text-xs bg-white border-slate-300 shadow-2xs")
