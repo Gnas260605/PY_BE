@@ -8,4 +8,4 @@ httpx==0.28.1
 
 openpyxl
 reportlab
-python-multipart==0.0.12
+python-multipart>=0.0.12
