@@ -9,7 +9,9 @@ if not hasattr(pkgutil, 'find_loader'):
             return None
     pkgutil.find_loader = find_loader
 
-from nicegui import ui
+from nicegui import app, ui
+
+app.add_static_files('/sounds', 'static/sounds')
 
 from core.config import config
 from views.admin.device_mgmt_view import render_device_mgmt_view

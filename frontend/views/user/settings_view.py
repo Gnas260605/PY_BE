@@ -7,6 +7,7 @@ from nicegui import ui
 from common.components import toast
 from common.components.layout import app_shell
 from common.components.status_badge import role_badge
+from common.sound import play_notification_sound
 from core.i18n import get_lang, set_lang, t
 from services.auth_service import auth_service
 from services.user_service import user_service
@@ -443,26 +444,11 @@ def render_settings_view() -> None:
                                         ui.label("Phát âm thanh ngắn (Beep alert) khi xuất hiện thông báo mới hoặc sự cố khẩn cấp.").classes("text-sm text-slate-600")
 
                                     with ui.row().classes("items-center gap-3"):
-                                        def play_test_beep() -> None:
-                                            ui.run_javascript("""
-                                                try {
-                                                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                                                    const osc = ctx.createOscillator();
-                                                    const gain = ctx.createGain();
-                                                    osc.type = 'sine';
-                                                    osc.frequency.setValueAtTime(880, ctx.currentTime);
-                                                    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2);
-                                                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                                                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-                                                    osc.connect(gain);
-                                                    gain.connect(ctx.destination);
-                                                    osc.start();
-                                                    osc.stop(ctx.currentTime + 0.25);
-                                                } catch(e) { console.warn('AudioContext not allowed without user interaction:', e); }
-                                            """)
-                                            toast.info("Đã phát âm thanh thử nghiệm!")
+                                        def handle_play_sound() -> None:
+                                            play_notification_sound()
+                                            toast.info("Đã phát âm thanh cảnh báo!")
 
-                                        ui.button("Phát thử âm thanh", icon="volume_up", on_click=play_test_beep).props("outline size=sm color=slate-700").classes("text-xs font-semibold px-3.5 py-1.5 rounded-lg")
+                                        ui.button("Phát thử âm thanh", icon="volume_up", on_click=handle_play_sound).props("outline size=sm color=slate-700").classes("text-xs font-semibold px-3.5 py-1.5 rounded-lg")
                                         ui.switch(value=state["notify_sound"], on_change=lambda e: state.update({"notify_sound": e.value})).props("size=md color=primary")
 
                         # Group C: Email Notifications (Real Backend Binding)
