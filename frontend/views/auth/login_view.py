@@ -6,12 +6,14 @@ from nicegui import ui
 
 from common.components import toast
 from common.styles.theme import apply_theme
+from core.constants import ERROR_MESSAGES
 from services.auth_service import auth_service
 
 
 def render_login_view() -> None:
     apply_theme()
 
+    # If already logged in, redirect immediately to the right workspace
     if auth_service.is_authenticated():
         cur_u = auth_service.current_user()
         if cur_u and cur_u.get("vai_tro") == "USER":
@@ -20,250 +22,517 @@ def render_login_view() -> None:
             ui.navigate.to("/dashboard")
         return
 
-    # View Mode: 'LOGIN' | 'REGISTER'
-    auth_state: dict[str, Any] = {
+    # View State: 'LOGIN' | 'REGISTER'
+    state = {
         "mode": "LOGIN",
+        "error_msg": "",
     }
 
-    with ui.column().classes("w-screen min-h-screen items-center justify-center bg-slate-100/70 p-4 sm:p-6"):
-        with ui.card().classes(
-            "w-full max-w-4xl p-0 rounded-3xl bg-white border border-slate-200 shadow-xl overflow-hidden flex flex-col md:flex-row"
+    # Outer Layout Wrapper
+    with ui.element("div").classes(
+        "min-h-screen w-full bg-[#f8f9ff] text-[#0b1c30] flex flex-col justify-between selection:bg-blue-100 selection:text-blue-900"
+    ):
+        # =========================================================================
+        # TOP HEADER
+        # =========================================================================
+        with ui.element("header").classes(
+            "w-full py-4 px-4 sm:px-8 flex items-center justify-between z-10"
         ):
-            # Left Hero Panel (Enterprise SaaS Branding & Trust Elements)
-            with ui.column().classes(
-                "w-full md:w-[42%] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-8 sm:p-10 justify-between gap-8 flex-shrink-0"
+            with ui.row().classes("items-center gap-2.5"):
+                with ui.element("div").classes(
+                    "w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm"
+                ):
+                    ui.icon("dns", size="18px")
+                with ui.element("span").classes("text-sm font-bold tracking-tight text-slate-900"):
+                    ui.html('CS466<span class="text-blue-600">IT</span> Helpdesk')
+
+            with ui.row().classes("items-center gap-3"):
+                with ui.element("div").classes(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50/80 text-blue-700 text-[11px] font-medium border border-blue-100"
+                ):
+                    ui.element("span").classes("w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse")
+                    ui.label("Enterprise Gateway Active")
+
+                with ui.row().classes("items-center gap-1 text-slate-500 text-xs font-medium"):
+                    ui.icon("verified_user", size="15px").classes("text-emerald-600")
+                    ui.label("Hệ thống trực tuyến")
+
+        # =========================================================================
+        # MAIN AUTH CARD CONTAINER
+        # =========================================================================
+        with ui.element("main").classes(
+            "flex-1 flex items-center justify-center p-3 sm:p-6 w-full max-w-5xl mx-auto"
+        ):
+            with ui.element("div").classes(
+                "w-full max-w-[1020px] mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden grid grid-cols-1 lg:grid-cols-[42%_58%]"
             ):
-                with ui.column().classes("gap-4"):
-                    with ui.row().classes("items-center gap-3"):
+                # -----------------------------------------------------------------
+                # LEFT PANEL: Enterprise Brand & Infrastructure Trust
+                # -----------------------------------------------------------------
+                with ui.element("div").classes(
+                    "relative bg-[#0f172a] text-white p-7 sm:p-9 flex flex-col justify-between overflow-hidden border-r border-slate-800"
+                ):
+                    # Ambient Depth Illumination (Subtle glows)
+                    ui.html(
+                        '<div class="absolute -top-24 -left-24 w-72 h-72 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>'
+                        '<div class="absolute -bottom-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>'
+                    )
+
+                    with ui.column().classes("relative z-10 gap-6 w-full"):
+                        # Brand Header & Portal Title
+                        with ui.row().classes("items-center gap-3"):
+                            with ui.element("div").classes(
+                                "w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md border border-blue-400/30"
+                            ):
+                                ui.icon("terminal", size="22px")
+                            with ui.column().classes("gap-0"):
+                                with ui.row().classes("items-center gap-2"):
+                                    ui.label("CS466 Helpdesk").classes("text-base font-black tracking-tight text-white")
+                                    with ui.element("span").classes(
+                                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 uppercase tracking-wider"
+                                    ):
+                                        ui.label("ITIL v4")
+                                ui.label("IT SERVICE MANAGEMENT").classes(
+                                    "text-[10px] font-bold tracking-widest uppercase text-blue-400"
+                                )
+
+                        # Headline & Description
+                        with ui.column().classes("gap-1.5 pt-1"):
+                            ui.label("Hệ thống Quản trị Sự cố & Dịch vụ CNTT").classes(
+                                "text-xl sm:text-2xl font-black text-white leading-tight tracking-tight"
+                            )
+                            ui.label(
+                                "Tiếp nhận, phân công và theo dõi yêu cầu hỗ trợ CNTT tập trung trong toàn doanh nghiệp."
+                            ).classes("text-xs text-slate-300 leading-relaxed font-normal max-w-sm")
+
+                        # SLA Capability Ring Badge
                         with ui.element("div").classes(
-                            "w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md border border-blue-500"
+                            "p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center justify-between gap-3"
                         ):
-                            ui.icon("support_agent", size="24px")
-                        with ui.column().classes("gap-0"):
-                            ui.label("CS466 Helpdesk").classes("text-lg font-black tracking-tight text-white")
-                            ui.label("IT Service Portal").classes("text-xs text-blue-300 font-semibold tracking-wider uppercase")
+                            with ui.column().classes("gap-0.5"):
+                                ui.label("CAM KẾT CHẤT LƯỢNG SLA").classes(
+                                    "text-[10px] font-bold uppercase tracking-wider text-blue-300"
+                                )
+                                ui.label("99.85% Đạt mục tiêu").classes("text-sm font-bold text-white")
+                                ui.label("MTTR trung bình: 18 phút (P1/P2)").classes("text-[11px] text-slate-400")
 
-                    ui.label("Hệ thống Quản lý Sự cố & Dịch vụ CNTT").classes("text-2xl font-black tracking-tight leading-tight text-white mt-2")
-                    ui.label(
-                        "Giải pháp toàn diện tiếp nhận yêu cầu, phân công kỹ thuật viên, giám sát SLA và quản lý tài sản thiết bị doanh nghiệp."
-                    ).classes("text-sm text-slate-300 leading-relaxed font-normal")
+                            # SVG Ring Progress
+                            ui.html(
+                                '<div class="w-12 h-12 relative flex items-center justify-center shrink-0">'
+                                '<svg class="w-12 h-12 -rotate-90" viewBox="0 0 48 48">'
+                                '<circle cx="24" cy="24" r="18" fill="transparent" stroke="rgba(255,255,255,0.15)" stroke-width="3.5"></circle>'
+                                '<circle cx="24" cy="24" r="18" fill="transparent" stroke="#38bdf8" stroke-dasharray="113" stroke-dashoffset="10" stroke-linecap="round" stroke-width="3.5"></circle>'
+                                '</svg>'
+                                '<span class="absolute text-[10px] text-white font-bold">98.5%</span>'
+                                '</div>'
+                            )
 
-                # Highlights List
-                with ui.column().classes("gap-3 pt-4 border-t border-slate-800/80 text-xs text-slate-200 font-medium"):
-                    with ui.row().classes("items-center gap-2.5"):
-                        ui.icon("check_circle", size="18px").classes("text-blue-400")
-                        ui.label("Tiếp nhận & điều phối sự cố thời gian thực")
+                        # Deliverables Checklist
+                        with ui.column().classes("gap-3 pt-1 text-xs text-slate-300"):
+                            deliverables = [
+                                ("verified", "Tiếp nhận & điều phối sự cố", "Phân loại luồng ticket theo mức độ khẩn cấp (P1 - P4)."),
+                                ("timer", "Theo dõi SLA & tiến độ xử lý", "Cập nhật trạng thái thời gian thực và thông báo đa kênh."),
+                                ("security", "Quản lý thiết bị & phân quyền an toàn", "Bảo mật tài khoản RBAC, xác thực chuẩn Bcrypt."),
+                            ]
+                            for icon_name, title, desc in deliverables:
+                                with ui.row().classes("items-start gap-2.5"):
+                                    with ui.element("div").classes(
+                                        "w-5 h-5 rounded-full bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0 mt-0.5"
+                                    ):
+                                        ui.icon(icon_name, size="13px")
+                                    with ui.column().classes("gap-0"):
+                                        ui.label(title).classes("font-bold text-white text-xs")
+                                        ui.label(desc).classes("text-[11px] text-slate-400")
 
-                    with ui.row().classes("items-center gap-2.5"):
-                        ui.icon("check_circle", size="18px").classes("text-blue-400")
-                        ui.label("Giám sát chỉ số SLA và cảnh báo khẩn cấp")
+                    # Footer Security Stamp
+                    with ui.row().classes(
+                        "relative z-10 pt-5 mt-4 flex items-center justify-between gap-2 text-slate-400 text-[11px] border-t border-slate-800/80"
+                    ):
+                        with ui.row().classes("items-center gap-1.5 text-slate-300"):
+                            ui.icon("lock", size="14px").classes("text-blue-400")
+                            ui.label("Bảo mật SSL/TLS 256-bit")
+                        with ui.element("span").classes(
+                            "px-2 py-0.5 rounded bg-white/10 text-white text-[10px] font-bold tracking-wide"
+                        ):
+                            ui.label("v2.4.0-enterprise")
 
-                    with ui.row().classes("items-center gap-2.5"):
-                        ui.icon("check_circle", size="18px").classes("text-blue-400")
-                        ui.label("Bảo mật tài khoản đa tầng chuẩn Bcrypt")
+                # -----------------------------------------------------------------
+                # RIGHT PANEL: Authentication Form & Interactive Controls
+                # -----------------------------------------------------------------
+                with ui.element("div").classes(
+                    "p-6 sm:p-8 lg:p-9 flex flex-col justify-between bg-white"
+                ):
+                    with ui.column().classes("w-full gap-4"):
+                        # Segmented Tab Bar (Login / Register)
+                        with ui.element("div").classes(
+                            "w-full flex p-1 rounded-xl bg-slate-100/90 border border-slate-200/80"
+                        ):
+                            def switch_to_login() -> None:
+                                state["mode"] = "LOGIN"
+                                state["error_msg"] = ""
+                                render_form()
 
-                # Footer Note
-                with ui.row().classes("items-center gap-2 text-xs text-slate-400 pt-4"):
-                    ui.icon("lock", size="14px")
-                    ui.label("Kết nối an toàn chuẩn Enterprise")
+                            def switch_to_register() -> None:
+                                state["mode"] = "REGISTER"
+                                state["error_msg"] = ""
+                                render_form()
 
-            # Right Interactive Form Panel
-            with ui.column().classes("w-full md:w-[58%] p-8 sm:p-10 gap-6 justify-center"):
-                # Top Segmented Mode Switcher
-                with ui.row().classes("w-full p-1 bg-slate-100 rounded-xl border border-slate-200"):
-                    def switch_to_login():
-                        auth_state["mode"] = "LOGIN"
-                        render_form()
+                            btn_tab_login = (
+                                ui.button("Đăng nhập", icon="login", on_click=switch_to_login)
+                                .props("flat dense")
+                                .classes("flex-1 py-1.5 rounded-lg text-xs font-bold transition-all")
+                            )
+                            btn_tab_register = (
+                                ui.button("Đăng ký tài khoản", icon="person_add", on_click=switch_to_register)
+                                .props("flat dense")
+                                .classes("flex-1 py-1.5 rounded-lg text-xs font-bold transition-all")
+                            )
 
-                    def switch_to_register():
-                        auth_state["mode"] = "REGISTER"
-                        render_form()
+                        # Dynamic Form Container
+                        form_box = ui.column().classes("w-full gap-3.5")
 
-                    btn_tab_login = ui.button("Đăng nhập tài khoản", on_click=switch_to_login).props("flat dense").classes(
-                        "flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                    )
-                    btn_tab_register = ui.button("Đăng ký người dùng", on_click=switch_to_register).props("flat dense").classes(
-                        "flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                    )
+                        def render_form() -> None:
+                            form_box.clear()
+                            is_login = state["mode"] == "LOGIN"
 
-                form_container = ui.column().classes("w-full gap-4")
+                            if is_login:
+                                btn_tab_login.classes(
+                                    "bg-white text-blue-700 shadow-xs border border-slate-200",
+                                    remove="text-slate-600 hover:text-slate-900",
+                                )
+                                btn_tab_register.classes(
+                                    "text-slate-600 hover:text-slate-900",
+                                    remove="bg-white text-blue-700 shadow-xs border border-slate-200",
+                                )
+                            else:
+                                btn_tab_register.classes(
+                                    "bg-white text-blue-700 shadow-xs border border-slate-200",
+                                    remove="text-slate-600 hover:text-slate-900",
+                                )
+                                btn_tab_login.classes(
+                                    "text-slate-600 hover:text-slate-900",
+                                    remove="bg-white text-blue-700 shadow-xs border border-slate-200",
+                                )
 
-                def render_form() -> None:
-                    form_container.clear()
-                    mode = auth_state["mode"]
+                            with form_box:
+                                # Header Titles
+                                with ui.column().classes("gap-0.5"):
+                                    ui.label("Đăng nhập hệ thống" if is_login else "Đăng ký tài khoản người dùng").classes(
+                                        "text-xl sm:text-2xl font-black text-slate-900 tracking-tight"
+                                    )
+                                    ui.label(
+                                        "Chào mừng trở lại. Vui lòng nhập thông tin xác thực để truy cập CS466 Helpdesk."
+                                        if is_login
+                                        else "Tạo tài khoản để gửi yêu cầu hỗ trợ và theo dõi tiến độ xử lý sự cố."
+                                    ).classes("text-xs text-slate-500 font-medium")
 
-                    if mode == "LOGIN":
-                        btn_tab_login.classes("bg-white text-blue-700 shadow-xs border border-slate-200", remove="text-slate-600")
-                        btn_tab_register.classes("text-slate-600 hover:text-slate-900", remove="bg-white text-blue-700 shadow-xs border")
+                                # Inline Alert Banner (Vietnamese Human-Readable Error)
+                                inline_alert = ui.element("div").classes(
+                                    "w-full p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-2.5 text-xs font-semibold"
+                                    if state["error_msg"]
+                                    else "hidden"
+                                )
+                                with inline_alert:
+                                    ui.icon("error", size="18px").classes("text-red-500 shrink-0 mt-0.5")
+                                    ui.label(state["error_msg"]).classes("flex-1 leading-snug")
 
-                        with form_container:
-                            with ui.column().classes("gap-1 mb-1"):
-                                ui.label("Chào mừng trở lại").classes("text-2xl font-black text-slate-900 tracking-tight")
-                                ui.label("Nhập tên đăng nhập và mật khẩu để truy cập hệ thống.").classes("text-sm text-slate-500 font-medium")
+                                def show_error(msg: str) -> None:
+                                    state["error_msg"] = msg
+                                    inline_alert.clear()
+                                    with inline_alert:
+                                        ui.icon("error", size="18px").classes("text-red-500 shrink-0 mt-0.5")
+                                        ui.label(msg).classes("flex-1 leading-snug")
+                                    inline_alert.classes(
+                                        "w-full p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-2.5 text-xs font-semibold",
+                                        remove="hidden",
+                                    )
 
-                            # Login Fields
-                            with ui.column().classes("w-full gap-1"):
-                                ui.label("Tên đăng nhập *").classes("text-sm font-bold text-slate-700")
-                                username_input = ui.input(placeholder="admin / tech01 / user01").props("outlined").classes("w-full text-sm bg-white")
-
-                            with ui.column().classes("w-full gap-1"):
-                                ui.label("Mật khẩu *").classes("text-sm font-bold text-slate-700")
-                                password_input = ui.input(placeholder="••••••••").props("outlined type=password password-toggle").classes("w-full text-sm bg-white")
-
-                            async def handle_login() -> None:
-                                u_val = (username_input.value or "").strip()
-                                p_val = (password_input.value or "").strip()
-
-                                if not u_val or not p_val:
-                                    toast.warning("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.")
-                                    return
-
-                                submit_btn.props("loading")
-                                try:
-                                    await auth_service.login(u_val, p_val)
-                                    cur_u = auth_service.current_user() or {}
-                                    u_name = cur_u.get("ho_ten") or u_val
-                                    toast.success(f"Đăng nhập thành công! Chào mừng {u_name}.")
-                                    await asyncio.sleep(0.4)
-                                    if cur_u.get("vai_tro") == "USER":
-                                        ui.navigate.to("/user/tickets")
-                                    else:
-                                        ui.navigate.to("/dashboard")
-                                except Exception as exc:
-                                    toast.error(f"Đăng nhập thất bại: {exc}")
-                                finally:
-                                    submit_btn.props(remove="loading")
-
-                            submit_btn = ui.button(
-                                "Đăng nhập hệ thống",
-                                icon="login",
-                                on_click=handle_login,
-                            ).props("color=primary unelevated size=md").classes("w-full h-12 text-sm font-bold rounded-xl shadow-sm mt-2")
-
-                            # Demo Accounts Quick Fill
-                            with ui.column().classes("w-full mt-4 pt-4 border-t border-slate-100 gap-2"):
-                                ui.label("TÀI KHOẢN TRẢI NGHIỆM DEMO (1-CLICK FILL):").classes("text-[11px] font-bold text-slate-400 tracking-wider")
-                                with ui.row().classes("w-full gap-2 flex-wrap"):
-                                    DEMO_ACCOUNTS = [
-                                        ("Quản trị (Admin)", "admin", "bg-purple-50 text-purple-700 border-purple-200"),
-                                        ("Kỹ thuật viên (Tech)", "tech01", "bg-blue-50 text-blue-700 border-blue-200"),
-                                        ("Người dùng (User)", "user01", "bg-emerald-50 text-emerald-700 border-emerald-200"),
-                                    ]
-                                    for lbl, acc, badge_c in DEMO_ACCOUNTS:
-                                        def make_fill(a=acc):
-                                            return lambda: (
-                                                username_input.set_value(a),
-                                                password_input.set_value("Admin@123" if a == "admin" else "CS466@123"),
-                                                toast.info(f"Đã điền tài khoản mẫu: {a}")
+                                if is_login:
+                                    # =========================================
+                                    # LOGIN INPUTS
+                                    # =========================================
+                                    with ui.column().classes("w-full gap-3"):
+                                        # Username Field
+                                        with ui.column().classes("w-full gap-1"):
+                                            with ui.row().classes("w-full justify-between items-center"):
+                                                ui.label("Tên đăng nhập *").classes("text-xs font-bold text-slate-700")
+                                                ui.label("admin / tech01 / user01").classes("text-[11px] text-slate-400 font-mono")
+                                            u_input = (
+                                                ui.input(placeholder="Nhập tên đăng nhập")
+                                                .props('outlined dense autocomplete="username"')
+                                                .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
                                             )
 
-                                        ui.button(lbl, on_click=make_fill()).props("outline dense size=sm color=slate-700").classes(
-                                            f"text-xs font-semibold px-3 py-1.5 rounded-lg border {badge_c} hover:bg-slate-100 transition-colors"
+                                        # Password Field
+                                        with ui.column().classes("w-full gap-1"):
+                                            with ui.row().classes("w-full justify-between items-center"):
+                                                ui.label("Mật khẩu *").classes("text-xs font-bold text-slate-700")
+                                            p_input = (
+                                                ui.input(placeholder="••••••••")
+                                                .props('outlined dense type=password password-toggle autocomplete="current-password"')
+                                                .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                            )
+
+                                        # Utility Row (Remember checkbox + 2FA info)
+                                        with ui.row().classes("w-full items-center justify-between pt-0.5 text-xs text-slate-500"):
+                                            with ui.row().classes("items-center gap-1.5"):
+                                                ui.checkbox("Duy trì phiên đăng nhập", value=True).props("dense size=xs").classes("text-xs")
+                                            with ui.row().classes("items-center gap-1 text-[11px] text-blue-600 font-medium"):
+                                                ui.icon("lock", size="13px")
+                                                ui.label("Bảo mật tài khoản")
+
+                                        # Enter key handler
+                                        async def on_enter_key(e: Any) -> None:
+                                            if getattr(e, "key", "") == "Enter" or getattr(e, "args", {}).get("key") == "Enter":
+                                                await handle_login_submit()
+
+                                        u_input.on("keydown.enter", on_enter_key)
+                                        p_input.on("keydown.enter", on_enter_key)
+
+                                        # Login Action
+                                        async def handle_login_submit() -> None:
+                                            u = (u_input.value or "").strip()
+                                            p = (p_input.value or "").strip()
+
+                                            if not u or not p:
+                                                show_error("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.")
+                                                return
+
+                                            btn_submit.props("loading")
+                                            btn_submit.disable()
+                                            state["error_msg"] = ""
+                                            inline_alert.classes("hidden", remove="flex")
+
+                                            try:
+                                                await auth_service.login(u, p)
+                                                cur_u = auth_service.current_user() or {}
+                                                u_name = cur_u.get("ho_ten") or u
+                                                toast.success(f"Đăng nhập thành công! Chào mừng {u_name}.")
+                                                await asyncio.sleep(0.3)
+                                                if cur_u.get("vai_tro") == "USER":
+                                                    ui.navigate.to("/user/tickets")
+                                                else:
+                                                    ui.navigate.to("/dashboard")
+                                            except Exception as exc:
+                                                err = str(exc)
+                                                if "Lỗi không xác định: " in err:
+                                                    err = err.replace("Lỗi không xác định: ", "")
+                                                show_error(err)
+                                            finally:
+                                                btn_submit.props(remove="loading")
+                                                btn_submit.enable()
+
+                                        # Submit Button
+                                        btn_submit = (
+                                            ui.button(
+                                                "Đăng nhập",
+                                                icon="arrow_forward",
+                                                on_click=handle_login_submit,
+                                            )
+                                            .props("color=primary unelevated")
+                                            .classes(
+                                                "w-full h-11 text-xs sm:text-sm font-bold rounded-lg shadow-sm mt-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                            )
                                         )
 
-                    else:
-                        # REGISTER MODE
-                        btn_tab_register.classes("bg-white text-blue-700 shadow-xs border border-slate-200", remove="text-slate-600")
-                        btn_tab_login.classes("text-slate-600 hover:text-slate-900", remove="bg-white text-blue-700 shadow-xs border")
+                                    # 1-Click Demo Quick Switcher Cards
+                                    with ui.element("div").classes(
+                                        "p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2 mt-2"
+                                    ):
+                                        with ui.row().classes("w-full justify-between items-center"):
+                                            ui.label("TÀI KHOẢN TRẢI NGHIỆM DEMO (1-CLICK):").classes(
+                                                "text-[10px] font-bold text-slate-400 tracking-wider"
+                                            )
+                                            with ui.element("span").classes(
+                                                "text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-600"
+                                            ):
+                                                ui.label("Sandbox")
 
-                        with form_container:
-                            with ui.column().classes("gap-1 mb-1"):
-                                ui.label("Tạo tài khoản người dùng").classes("text-2xl font-black text-slate-900 tracking-tight")
-                                ui.label("Đăng ký tài khoản để gửi yêu cầu và theo dõi tiến độ xử lý sự cố.").classes("text-sm text-slate-500 font-medium")
+                                        with ui.element("div").classes("grid grid-cols-3 gap-2 w-full"):
+                                            demo_configs = [
+                                                ("Admin", "admin", "Admin@123", "Quản trị", "shield_person", "text-purple-600"),
+                                                ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600"),
+                                                ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600"),
+                                            ]
+                                            for role_name, username, pwd, role_desc, icon_n, icon_c in demo_configs:
+                                                def make_demo_handler(u=username, p=pwd, r=role_name):
+                                                    return lambda: (
+                                                        u_input.set_value(u),
+                                                        p_input.set_value(p),
+                                                        state.update({"error_msg": ""}),
+                                                        inline_alert.classes("hidden", remove="flex"),
+                                                        toast.info(f"Đã chọn hồ sơ {r}: {u}")
+                                                    )
 
-                            with ui.element("div").classes("w-full grid grid-cols-1 sm:grid-cols-2 gap-3"):
-                                # Họ và tên
-                                with ui.column().classes("w-full gap-1"):
-                                    ui.label("Họ và tên đầy đủ *").classes("text-xs font-bold text-slate-700")
-                                    reg_name = ui.input(placeholder="Nguyễn Văn A").props("outlined dense").classes("w-full text-sm bg-white")
+                                                with ui.element("button").classes(
+                                                    "p-2 rounded-lg bg-white border border-slate-200/90 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-center flex flex-col items-center justify-center gap-0.5 shadow-2xs group cursor-pointer"
+                                                ).on("click", make_demo_handler()):
+                                                    with ui.row().classes("items-center gap-1 font-bold text-xs text-slate-800"):
+                                                        ui.icon(icon_n, size="14px").classes(icon_c)
+                                                        ui.label(role_name)
+                                                    ui.label(role_desc).classes("text-[10px] text-slate-400 font-medium")
 
-                                # Tên đăng nhập
-                                with ui.column().classes("w-full gap-1"):
-                                    ui.label("Tên đăng nhập *").classes("text-xs font-bold text-slate-700")
-                                    reg_user = ui.input(placeholder="nguyenvana").props("outlined dense").classes("w-full text-sm bg-white")
-
-                            # Email
-                            with ui.column().classes("w-full gap-1"):
-                                ui.label("Địa chỉ Email liên hệ").classes("text-xs font-bold text-slate-700")
-                                reg_email = ui.input(placeholder="nguyenvana@company.com").props("outlined dense").classes("w-full text-sm bg-white")
-
-                            # Mật khẩu
-                            with ui.column().classes("w-full gap-1"):
-                                ui.label("Mật khẩu * (Tối thiểu 8 ký tự)").classes("text-xs font-bold text-slate-700")
-                                reg_pwd = ui.input(placeholder="••••••••").props("outlined dense type=password password-toggle").classes("w-full text-sm bg-white")
-
-                            # Strength Indicator
-                            strength_bar = ui.linear_progress(value=0, color="red").props("size=4px rounded").classes("w-full rounded-full bg-slate-100")
-                            strength_lbl = ui.label("Độ mạnh: Chưa nhập").classes("text-[11px] text-slate-400 font-medium")
-
-                            def on_pwd_change(e):
-                                val = e.value or ""
-                                l = len(val)
-                                if l == 0:
-                                    strength_bar.value = 0
-                                    strength_bar.props("color=red")
-                                    strength_lbl.text = "Độ mạnh: Chưa nhập"
-                                    strength_lbl.classes("text-[11px] text-slate-400", remove="text-red-600 text-amber-600 text-emerald-600 font-bold")
-                                elif l < 8:
-                                    strength_bar.value = 0.33
-                                    strength_bar.props("color=red")
-                                    strength_lbl.text = "Độ mạnh: Yếu (Cần tối thiểu 8 ký tự)"
-                                    strength_lbl.classes("text-[11px] text-red-600 font-bold", remove="text-slate-400 text-amber-600 text-emerald-600")
-                                elif l < 12 or val.isdigit() or val.isalpha():
-                                    strength_bar.value = 0.66
-                                    strength_bar.props("color=amber")
-                                    strength_lbl.text = "Độ mạnh: Trung bình"
-                                    strength_lbl.classes("text-[11px] text-amber-600 font-bold", remove="text-slate-400 text-red-600 text-emerald-600")
                                 else:
-                                    strength_bar.value = 1.0
-                                    strength_bar.props("color=emerald")
-                                    strength_lbl.text = "Độ mạnh: Rất mạnh"
-                                    strength_lbl.classes("text-[11px] text-emerald-600 font-bold", remove="text-slate-400 text-red-600 text-amber-600")
+                                    # =========================================
+                                    # REGISTER INPUTS
+                                    # =========================================
+                                    with ui.column().classes("w-full gap-2.5"):
+                                        with ui.element("div").classes("grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full"):
+                                            # Full Name
+                                            with ui.column().classes("w-full gap-1"):
+                                                ui.label("Họ và tên đầy đủ *").classes("text-xs font-bold text-slate-700")
+                                                reg_name = (
+                                                    ui.input(placeholder="Nguyễn Văn A")
+                                                    .props("outlined dense")
+                                                    .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                                )
 
-                            reg_pwd.on_value_change(on_pwd_change)
+                                            # Username
+                                            with ui.column().classes("w-full gap-1"):
+                                                ui.label("Tên đăng nhập *").classes("text-xs font-bold text-slate-700")
+                                                reg_user = (
+                                                    ui.input(placeholder="nguyenvana")
+                                                    .props("outlined dense")
+                                                    .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                                )
 
-                            # Xác nhận mật khẩu
-                            with ui.column().classes("w-full gap-1"):
-                                ui.label("Xác nhận mật khẩu *").classes("text-xs font-bold text-slate-700")
-                                reg_pwd_confirm = ui.input(placeholder="••••••••").props("outlined dense type=password password-toggle").classes("w-full text-sm bg-white")
+                                        # Email (Optional)
+                                        with ui.column().classes("w-full gap-1"):
+                                            ui.label("Địa chỉ Email liên hệ").classes("text-xs font-bold text-slate-700")
+                                            reg_email = (
+                                                ui.input(placeholder="nguyenvana@company.com")
+                                                .props("outlined dense")
+                                                .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                            )
 
-                            async def handle_register() -> None:
-                                name_val = (reg_name.value or "").strip()
-                                user_val = (reg_user.value or "").strip()
-                                email_val = (reg_email.value or "").strip()
-                                pwd_val = (reg_pwd.value or "").strip()
-                                cf_val = (reg_pwd_confirm.value or "").strip()
+                                        # Password & Strength Meter
+                                        with ui.column().classes("w-full gap-1"):
+                                            ui.label("Mật khẩu * (Tối thiểu 8 ký tự)").classes("text-xs font-bold text-slate-700")
+                                            reg_pwd = (
+                                                ui.input(placeholder="••••••••")
+                                                .props("outlined dense type=password password-toggle")
+                                                .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                            )
 
-                                if not name_val or not user_val or not pwd_val:
-                                    toast.warning("Vui lòng nhập đầy đủ Họ tên, Tên đăng nhập và Mật khẩu.")
-                                    return
-                                if len(pwd_val) < 8:
-                                    toast.warning("Mật khẩu phải có tối thiểu 8 ký tự.")
-                                    return
-                                if pwd_val != cf_val:
-                                    toast.warning("Mật khẩu xác nhận không khớp.")
-                                    return
+                                        # Password Strength Meter
+                                        pwd_meter = ui.linear_progress(value=0, color="red").props("size=3px rounded").classes("w-full")
+                                        pwd_label = ui.label("Độ mạnh: Chưa nhập").classes("text-[10px] text-slate-400 font-medium")
 
-                                reg_btn.props("loading")
-                                try:
-                                    await auth_service.register(
-                                        username=user_val,
-                                        password=pwd_val,
-                                        ho_ten=name_val,
-                                        email=email_val or None,
-                                    )
-                                    toast.success(f"Đăng ký tài khoản thành công! Chào mừng {name_val}.")
-                                    await asyncio.sleep(0.5)
-                                    ui.navigate.to("/user/tickets")
-                                except Exception as exc:
-                                    toast.error(f"Đăng ký thất bại: {exc}")
-                                finally:
-                                    reg_btn.props(remove="loading")
+                                        def update_meter(e: Any) -> None:
+                                            v = getattr(e, "value", "") or ""
+                                            val_len = len(v)
+                                            if val_len == 0:
+                                                pwd_meter.value = 0
+                                                pwd_meter.props("color=red")
+                                                pwd_label.text = "Độ mạnh: Chưa nhập"
+                                                pwd_label.classes("text-[10px] text-slate-400", remove="text-red-600 text-amber-600 text-emerald-600 font-bold")
+                                            elif val_len < 8:
+                                                pwd_meter.value = 0.33
+                                                pwd_meter.props("color=red")
+                                                pwd_label.text = "Độ mạnh: Yếu (Cần tối thiểu 8 ký tự)"
+                                                pwd_label.classes("text-[10px] text-red-600 font-bold", remove="text-slate-400 text-amber-600 text-emerald-600")
+                                            elif val_len < 12 or v.isdigit() or v.isalpha():
+                                                pwd_meter.value = 0.66
+                                                pwd_meter.props("color=amber")
+                                                pwd_label.text = "Độ mạnh: Trung bình"
+                                                pwd_label.classes("text-[10px] text-amber-600 font-bold", remove="text-slate-400 text-red-600 text-emerald-600")
+                                            else:
+                                                pwd_meter.value = 1.0
+                                                pwd_meter.props("color=emerald")
+                                                pwd_label.text = "Độ mạnh: Rất tốt"
+                                                pwd_label.classes("text-[10px] text-emerald-600 font-bold", remove="text-slate-400 text-red-600 text-amber-600")
 
-                            reg_btn = ui.button(
-                                "Tạo tài khoản & Đăng nhập ngay",
-                                icon="person_add",
-                                on_click=handle_register,
-                            ).props("color=primary unelevated size=md").classes("w-full h-11 text-sm font-bold rounded-xl shadow-sm mt-1")
+                                        reg_pwd.on_value_change(update_meter)
 
-                render_form()
+                                        # Confirm Password
+                                        with ui.column().classes("w-full gap-1"):
+                                            ui.label("Xác nhận mật khẩu *").classes("text-xs font-bold text-slate-700")
+                                            reg_cf_pwd = (
+                                                ui.input(placeholder="••••••••")
+                                                .props("outlined dense type=password password-toggle")
+                                                .classes("w-full text-xs sm:text-sm bg-slate-50/50 rounded-lg")
+                                            )
+
+                                        # Register Submit Handler
+                                        async def handle_register_submit() -> None:
+                                            n = (reg_name.value or "").strip()
+                                            u = (reg_user.value or "").strip()
+                                            em = (reg_email.value or "").strip()
+                                            p = (reg_pwd.value or "").strip()
+                                            cf = (reg_cf_pwd.value or "").strip()
+
+                                            if not n or not u or not p:
+                                                show_error("Vui lòng nhập đầy đủ Họ tên, Tên đăng nhập và Mật khẩu.")
+                                                return
+                                            if len(p) < 8:
+                                                show_error("Mật khẩu phải có tối thiểu 8 ký tự.")
+                                                return
+                                            if p != cf:
+                                                show_error("Mật khẩu xác nhận không khớp.")
+                                                return
+
+                                            btn_reg.props("loading")
+                                            btn_reg.disable()
+                                            state["error_msg"] = ""
+                                            inline_alert.classes("hidden", remove="flex")
+
+                                            try:
+                                                await auth_service.register(
+                                                    username=u,
+                                                    password=p,
+                                                    ho_ten=n,
+                                                    email=em or None,
+                                                )
+                                                toast.success(f"Đăng ký thành công! Chào mừng {n}.")
+                                                await asyncio.sleep(0.3)
+                                                ui.navigate.to("/user/tickets")
+                                            except Exception as exc:
+                                                err = str(exc)
+                                                if "Lỗi không xác định: " in err:
+                                                    err = err.replace("Lỗi không xác định: ", "")
+                                                show_error(err)
+                                            finally:
+                                                btn_reg.props(remove="loading")
+                                                btn_reg.enable()
+
+                                        # Register Submit Button
+                                        btn_reg = (
+                                            ui.button(
+                                                "Tạo tài khoản & Đăng nhập ngay",
+                                                icon="how_to_reg",
+                                                on_click=handle_register_submit,
+                                            )
+                                            .props("color=primary unelevated")
+                                            .classes(
+                                                "w-full h-11 text-xs sm:text-sm font-bold rounded-lg shadow-sm mt-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                            )
+                                        )
+
+                                # Footer Mode Switch Prompt
+                                with ui.row().classes("w-full justify-center items-center gap-1.5 pt-1 text-xs text-slate-500"):
+                                    if is_login:
+                                        ui.label("Chưa có tài khoản CS466 Helpdesk?")
+                                        ui.button("Đăng ký tài khoản ngay", on_click=switch_to_register).props("flat dense").classes(
+                                            "text-xs font-bold text-blue-600 hover:underline p-0 min-h-0"
+                                        )
+                                    else:
+                                        ui.label("Đã có tài khoản hệ thống?")
+                                        ui.button("Đăng nhập tại đây", on_click=switch_to_login).props("flat dense").classes(
+                                            "text-xs font-bold text-blue-600 hover:underline p-0 min-h-0"
+                                        )
+
+                        render_form()
+
+        # =========================================================================
+        # PAGE FOOTER
+        # =========================================================================
+        with ui.element("footer").classes(
+            "w-full py-4 px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400 text-xs z-10 border-t border-slate-200/60"
+        ):
+            ui.label("© 2025 CS466 Enterprise IT Infrastructure Services. All rights reserved.")
+            with ui.row().classes("items-center gap-4 text-slate-500"):
+                ui.label("Bảo mật & Tuân thủ")
+                ui.label("Hỗ trợ khẩn cấp")
+                with ui.row().classes("items-center gap-1 text-slate-400"):
+                    ui.icon("lock", size="13px")
+                    ui.label("SOC2 Type II")

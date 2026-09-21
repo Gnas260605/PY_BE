@@ -18,27 +18,46 @@ class HttpClient:
             nested_detail = detail.get("detail")
             if nested_detail:
                 return HttpClient._translate_error(nested_detail, status_code)
+            errors = detail.get("errors")
+            if isinstance(errors, list) and len(errors) > 0:
+                first_err = errors[0]
+                if isinstance(first_err, dict) and "msg" in first_err:
+                    field = first_err.get("loc", [""])[-1]
+                    return f"Dữ liệu không hợp lệ tại trường '{field}': {first_err.get('msg')}"
             return str(detail)
-        if isinstance(detail, str):
-            if detail in ERROR_MESSAGES:
-                return ERROR_MESSAGES[detail]
-            return detail
-        elif isinstance(detail, list) and len(detail) > 0:
+        
+        if isinstance(detail, list) and len(detail) > 0:
             first_err = detail[0]
             if isinstance(first_err, dict) and "msg" in first_err:
-                return f"Lỗi dữ liệu: {first_err.get('loc', [''])[ -1 ]} - {first_err.get('msg')}"
-            return str(first_err)
+                field = first_err.get("loc", [""])[-1]
+                return f"Dữ liệu không hợp lệ tại trường '{field}': {first_err.get('msg')}"
+            return HttpClient._translate_error(str(first_err), status_code)
+
+        if isinstance(detail, str):
+            clean = detail.strip().upper()
+            if clean in ERROR_MESSAGES:
+                return ERROR_MESSAGES[clean]
+            # Match if key is part of string
+            for key, val in ERROR_MESSAGES.items():
+                if key in clean:
+                    return val
+            if detail.strip():
+                return detail.strip()
         
         if status_code == 401:
-            return ERROR_MESSAGES["TOKEN_EXPIRED"]
+            return ERROR_MESSAGES.get("TOKEN_EXPIRED", "Phiên đăng nhập đã hết hạn hoặc thông tin không chính xác.")
         elif status_code == 403:
-            return ERROR_MESSAGES["FORBIDDEN"]
+            return ERROR_MESSAGES.get("FORBIDDEN", "Bạn không có quyền thực hiện thao tác này.")
         elif status_code == 404:
-            return "Không tìm thấy dữ liệu yêu cầu."
+            return "Không tìm thấy dữ liệu yêu cầu trên hệ thống."
+        elif status_code == 409:
+            return "Dữ liệu bị trùng lặp hoặc xung đột với bản ghi hiện có."
+        elif status_code == 429:
+            return ERROR_MESSAGES.get("RATE_LIMIT_EXCEEDED", "Bạn đã gửi yêu cầu quá nhanh. Vui lòng đợi 1 phút!")
         elif status_code >= 500:
-            return ERROR_MESSAGES["SERVER_ERROR"]
+            return ERROR_MESSAGES.get("SERVER_ERROR", "Lỗi máy chủ nội bộ. Vui lòng thử lại sau!")
         
-        return "Có lỗi xảy ra trong quá trình xử lý."
+        return "Có lỗi xảy ra trong quá trình xử lý yêu cầu."
 
     @classmethod
     async def request(

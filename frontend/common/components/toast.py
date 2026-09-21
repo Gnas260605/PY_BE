@@ -1,10 +1,25 @@
 from collections.abc import Callable
 from nicegui import ui
+from core.constants import ERROR_MESSAGES
+
+
+def _get_friendly_msg(msg: str) -> str:
+    if not isinstance(msg, str):
+        msg = str(msg)
+    clean = msg.strip()
+    # If the message is a raw error code
+    if clean.upper() in ERROR_MESSAGES:
+        return ERROR_MESSAGES[clean.upper()]
+    # Check if prefixed with "Lỗi: AUTH_FAILED" or similar
+    for code, text in ERROR_MESSAGES.items():
+        if code in clean:
+            return clean.replace(code, text)
+    return msg
 
 
 def success(message: str, caption: str | None = None) -> None:
     ui.notify(
-        message,
+        _get_friendly_msg(message),
         type="positive",
         position="top",
         caption=caption,
@@ -16,7 +31,7 @@ def success(message: str, caption: str | None = None) -> None:
 
 def error(message: str, caption: str | None = None) -> None:
     ui.notify(
-        message,
+        _get_friendly_msg(message),
         type="negative",
         position="top",
         caption=caption,
@@ -28,7 +43,7 @@ def error(message: str, caption: str | None = None) -> None:
 
 def warning(message: str, caption: str | None = None) -> None:
     ui.notify(
-        message,
+        _get_friendly_msg(message),
         type="warning",
         position="top",
         caption=caption,
@@ -40,7 +55,7 @@ def warning(message: str, caption: str | None = None) -> None:
 
 def info(message: str, caption: str | None = None) -> None:
     ui.notify(
-        message,
+        _get_friendly_msg(message),
         type="info",
         position="top",
         caption=caption,
@@ -61,6 +76,7 @@ def show_popup(
 ) -> None:
     """Shows a modern modal dialog popup with explicit status indicator."""
     dialog = ui.dialog()
+    message = _get_friendly_msg(message)
     
     icon_map = {
         "success": ("check_circle", "text-emerald-500", "bg-emerald-50", "border-emerald-200"),
