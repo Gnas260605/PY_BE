@@ -328,9 +328,9 @@ def render_login_view() -> None:
 
                                         with ui.element("div").classes("grid grid-cols-3 gap-2.5 w-full"):
                                             demo_configs = [
-                                                ("Admin", "admin", "Admin@123", "Quản trị", "shield_person", "text-purple-600", "hover:border-purple-300 hover:bg-purple-50/40"),
-                                                ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600", "hover:border-blue-300 hover:bg-blue-50/40"),
-                                                ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600", "hover:border-emerald-300 hover:bg-emerald-50/40"),
+                                                ("Admin", "admin", "Admin@123", "Quản trị", "admin_panel_settings", "text-purple-600", "hover:border-purple-300 hover:bg-purple-50/50"),
+                                                ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600", "hover:border-blue-300 hover:bg-blue-50/50"),
+                                                ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600", "hover:border-emerald-300 hover:bg-emerald-50/50"),
                                             ]
                                             for role_name, username, pwd, role_desc, icon_n, icon_c, hover_s in demo_configs:
                                                 def make_demo_handler(u=username, p=pwd, r=role_name):
@@ -345,8 +345,8 @@ def render_login_view() -> None:
                                                 with ui.element("button").classes(
                                                     f"w-full py-2.5 px-1 rounded-xl bg-white border border-slate-200 {hover_s} transition-all flex flex-col items-center justify-center gap-1 shadow-2xs cursor-pointer select-none"
                                                 ).on("click", make_demo_handler()):
-                                                    with ui.row().classes("items-center justify-center gap-1.5 no-wrap"):
-                                                        ui.icon(icon_n, size="15px").classes(f"{icon_c} shrink-0")
+                                                    with ui.row().classes("items-center justify-center gap-1.5 no-wrap leading-none"):
+                                                        ui.icon(icon_n, size="16px").classes(f"{icon_c} shrink-0")
                                                         ui.label(role_name).classes("font-bold text-xs text-slate-800 leading-none")
                                                     ui.label(role_desc).classes("text-[10px] text-slate-400 font-medium leading-none")
 
