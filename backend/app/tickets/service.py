@@ -4,9 +4,11 @@ import logging
 
 import os
 import shutil
+import uuid
 
 from fastapi import UploadFile, BackgroundTasks
 
+from app.core.config import get_settings
 from app.core.errors import BadRequestError, ForbiddenError, NotFoundError
 from app.core.websocket import manager
 from app.db.connection import connection_scope
@@ -666,6 +668,14 @@ def upload_ticket_attachment(
     *,
     current_user: dict,
 ) -> TicketAttachmentResponse:
+    settings = get_settings()
+
+    original_filename = os.path.basename(file.filename or "attachment")
+    ext = os.path.splitext(original_filename)[1].lstrip(".").lower()
+
+    if ext not in settings.allowed_upload_extensions:
+        raise BadRequestError("INVALID_FILE_TYPE")
+
     with connection_scope() as connection:
         ticket = repository.get_ticket_by_id(connection, ticket_id)
         if ticket is None:
@@ -673,22 +683,38 @@ def upload_ticket_attachment(
         _ensure_visible(ticket, current_user)
 
         os.makedirs("uploads", exist_ok=True)
-        file_path = os.path.join("uploads", f"{ticket_id}_{file.filename}")
+        unique_token = uuid.uuid4().hex[:12]
+        safe_filename = f"{ticket_id}_{unique_token}.{ext}" if ext else f"{ticket_id}_{unique_token}"
+        file_path = os.path.join("uploads", safe_filename)
 
+        total_bytes = 0
+        chunk_size = 64 * 1024  # 64 KB
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            while True:
+                chunk = file.file.read(chunk_size)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > settings.max_upload_size_bytes:
+                    buffer.close()
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    raise BadRequestError("FILE_TOO_LARGE")
+                buffer.write(chunk)
 
         try:
             attachment_id = repository.create_attachment(
                 connection,
                 ticket_id=ticket_id,
                 file_path=file_path,
-                file_name=file.filename,
-                file_type=file.content_type,
+                file_name=original_filename,
+                file_type=file.content_type or "application/octet-stream",
                 uploaded_by=int(current_user["id"]),
             )
             connection.commit()
         except Exception:
+            if os.path.exists(file_path):
+                os.remove(file_path)
             connection.rollback()
             raise
 
@@ -698,6 +724,30 @@ def upload_ticket_attachment(
                 return TicketAttachmentResponse(**att)
 
         raise NotFoundError("ATTACHMENT_NOT_FOUND")
+
+
+def get_ticket_attachment_file(
+    ticket_id: int,
+    attachment_id: int,
+    *,
+    current_user: dict,
+) -> tuple[str, str, str | None]:
+    with connection_scope() as connection:
+        ticket = repository.get_ticket_by_id(connection, ticket_id)
+        if ticket is None:
+            raise NotFoundError("TICKET_NOT_FOUND")
+        _ensure_visible(ticket, current_user)
+
+        attachments = repository.get_attachments_by_ticket_id(connection, ticket_id)
+        target_att = next((att for att in attachments if att["id"] == attachment_id), None)
+        if target_att is None:
+            raise NotFoundError("ATTACHMENT_NOT_FOUND")
+
+        file_path = target_att["file_path"]
+        if not os.path.exists(file_path):
+            raise NotFoundError("FILE_NOT_FOUND")
+
+        return file_path, target_att["file_name"], target_att.get("file_type")
 
 
 def list_ticket_attachments(
@@ -713,3 +763,4 @@ def list_ticket_attachments(
         attachments = repository.get_attachments_by_ticket_id(connection, ticket_id)
 
     return [TicketAttachmentResponse(**att) for att in attachments]
+

@@ -11,12 +11,17 @@ from app.auth.schemas import (
 )
 from app.auth.service import change_password, get_me, login
 from app.core.auth import get_current_user
+from app.core.rate_limiter import rate_limit
 
 
 router = APIRouter()
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))],
+)
 def login_route(payload: LoginRequest) -> dict:
     return login(payload)
 

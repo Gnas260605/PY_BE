@@ -41,6 +41,11 @@ class ConflictError(ApiError):
         super().__init__(409, detail)
 
 
+class RateLimitExceededError(ApiError):
+    def __init__(self, detail: str = "RATE_LIMIT_EXCEEDED") -> None:
+        super().__init__(429, detail)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     def _sanitize_validation_errors(errors: list[dict]) -> list[dict]:
         sanitized: list[dict] = []

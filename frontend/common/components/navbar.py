@@ -1,6 +1,8 @@
 from collections.abc import Callable
 from nicegui import ui
 
+from common.components import toast
+
 
 def navbar(
     title: str,
@@ -56,9 +58,14 @@ def navbar(
 
                             notif_container.clear()
                             with notif_container:
+                                def mark_all_read() -> None:
+                                    badge.set_visibility(False)
+                                    badge.set_text("")
+                                    toast.success("Đã đánh dấu tất cả thông báo là đã đọc!")
+
                                 with ui.row().classes("w-full items-center justify-between p-3 border-b border-slate-100"):
                                     ui.label("Thông báo").classes("text-sm font-bold text-slate-800")
-                                    ui.label("Đánh dấu đã đọc").classes("text-xs text-primary cursor-pointer hover:underline")
+                                    ui.label("Đánh dấu đã đọc").classes("text-xs text-primary cursor-pointer hover:underline").on("click", mark_all_read)
 
                                 if count == 0:
                                     ui.label("Bạn không có thông báo mới.").classes("p-4 text-sm text-slate-500 text-center w-full")
@@ -67,7 +74,7 @@ def navbar(
                                     tickets = sorted(tickets, key=lambda x: x.get("updated_at", ""), reverse=True)[:5]
                                     for t in tickets:
                                         t_id = t["id"]
-                                        with ui.menu_item(on_click=lambda t_id=t_id: ui.navigate.to(f"/tickets/{t_id}/history")).classes("p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer w-full"):
+                                        with ui.menu_item(on_click=lambda t_id=t_id: ui.navigate.to(f"/tickets/{t_id}")).classes("p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer w-full"):
                                             with ui.row().classes("items-start gap-3 no-wrap w-full"):
                                                 with ui.avatar(color="blue-100", text_color="blue-600").props("size=32px"):
                                                     ui.icon(icon_name).classes("text-sm")
@@ -76,7 +83,7 @@ def navbar(
                                                     ui.label(msg_text).classes("text-xs text-slate-500")
                                                     ui.label(format_datetime(t.get("updated_at"))).classes("text-[10px] text-slate-400 mt-1")
                         except Exception as e:
-                            print(f"Error loading notifications: {e}")
+                            toast.error(f"Lỗi tải thông báo: {e}")
 
                     ui.timer(0.5, load_notifications, once=True)
 

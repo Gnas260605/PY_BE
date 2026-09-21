@@ -28,11 +28,11 @@ ROLE_CONFIG = {
 }
 
 QUICK_REPLIES = [
-    "Đang tiếp nhận và kiểm tra thiết bị.",
-    "Đã liên hệ người yêu cầu để xác minh.",
-    "Đang tiến hành cài đặt / thay thế linh kiện.",
-    "Đã xử lý xong sự cố, vui lòng kiểm tra lại.",
-    "Đang chờ người dùng phản hồi kết quả.",
+    ("Tiếp nhận", "Đang tiếp nhận và kiểm tra thiết bị."),
+    ("Xác minh", "Đã liên hệ người yêu cầu để xác minh thông tin sự cố."),
+    ("Đang xử lý", "Đang tiến hành cài đặt / thay thế linh kiện."),
+    ("Đã xử lý", "Đã xử lý xong sự cố, vui lòng kiểm tra lại thiết bị."),
+    ("Chờ phản hồi", "Đang chờ người dùng phản hồi kết quả sau khi xử lý."),
 ]
 
 
@@ -40,96 +40,110 @@ def comments_thread(
     ticket_id: int,
     current_user: dict[str, Any],
     *,
-    compact: bool = False,
-    max_height: str = "320px",
+    max_height: str = "450px",
 ) -> None:
     current_user_id = current_user.get("id")
     current_role = current_user.get("vai_tro", "USER")
 
-    card_padding = "p-3.5" if compact else "p-5"
-
-    with ui.card().classes(f"w-full {card_padding} rounded-xl border border-slate-200 shadow-2xs bg-white mt-1 gap-2.5"):
-        # Header with Live Counter & Refresh (Clean, No Icon Abuse)
-        with ui.row().classes("w-full justify-between items-center pb-2.5 border-b border-slate-100"):
-            with ui.row().classes("items-center gap-2"):
-                ui.label(t("chat_title")).classes("text-sm font-bold text-slate-900")
-                count_badge = ui.label(t("item_count_tickets", count=0)).classes(
-                    "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200"
+    with ui.card().classes("w-full p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm bg-white gap-3 flex flex-col"):
+        # Header with Live Counter & Refresh
+        with ui.row().classes("w-full justify-between items-center pb-3 border-b border-slate-100"):
+            with ui.row().classes("items-center gap-2.5"):
+                ui.icon("chat_bubble_outline", size="20px").classes("text-blue-600")
+                ui.label("Trao đổi & Phản hồi").classes("text-base font-bold text-slate-900")
+                count_badge = ui.label("0").classes(
+                    "text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
                 )
 
             async def handle_refresh() -> None:
                 await reload_comments()
-                toast.info(t("btn_refresh"))
+                toast.info("Đã làm mới danh sách trao đổi")
 
-            ui.button(t("btn_refresh"), icon="refresh", on_click=handle_refresh).props("flat dense size=sm color=slate-600").classes("text-xs font-medium")
+            ui.button("Làm mới", icon="refresh", on_click=handle_refresh).props("flat dense size=sm color=slate-600").classes("text-xs font-semibold hover:bg-slate-50")
 
         # Scroll area for conversation feed
-        scroll_container = ui.scroll_area().classes(f"w-full h-[{max_height}] p-3 bg-slate-50/70 rounded-xl border border-slate-100/90")
+        scroll_container = ui.scroll_area().classes(f"w-full h-[{max_height}] p-3 sm:p-4 bg-slate-50/70 rounded-xl border border-slate-100")
         with scroll_container:
-            messages_container = ui.column().classes("w-full gap-3")
+            messages_container = ui.column().classes("w-full gap-4")
 
-        # Quick Canned Replies for Technicians & Admins
-        if current_role in ("ADMIN", "TECHNICIAN"):
-            with ui.column().classes("w-full gap-1 pt-1"):
-                ui.label(t("chat_canned_title")).classes("text-[10px] font-semibold text-slate-400 uppercase tracking-wider")
-                with ui.row().classes("w-full gap-1.5 flex-wrap"):
-                    for reply in QUICK_REPLIES:
-                        def insert_text(t_val: str = reply) -> None:
-                            text_input.set_value(t_val)
-                            text_input.run_method("focus")
+        # Sticky Message Composer at bottom
+        with ui.column().classes("w-full gap-2 pt-2 border-t border-slate-100"):
+            # Quick Canned Replies Menu (For Admin & Technician)
+            if current_role in ("ADMIN", "TECHNICIAN"):
+                with ui.row().classes("w-full justify-between items-center"):
+                    with ui.row().classes("items-center gap-1.5"):
+                        ui.icon("bolt", size="16px").classes("text-amber-500")
+                        ui.label("Câu trả lời mẫu:").classes("text-xs font-bold text-slate-600")
 
-                        ui.button(reply, on_click=insert_text).props("flat dense size=xs color=slate-700").classes(
-                            "text-[11px] px-2.5 py-1 rounded-md bg-slate-100/90 hover:bg-blue-50 hover:text-blue-700 border border-slate-200/80 transition-colors font-medium"
-                        )
+                    # Menu of Quick replies
+                    with ui.button("Chọn mẫu phản hồi ▾").props("flat dense size=sm color=primary").classes("text-xs font-bold px-2 py-0.5 bg-blue-50 rounded-lg"):
+                        with ui.menu().classes("p-1.5 rounded-xl border border-slate-200 shadow-lg min-w-[260px]"):
+                            for label_short, full_text in QUICK_REPLIES:
+                                def make_insert(txt=full_text):
+                                    return lambda: insert_reply(txt)
 
-        # Message Input Composer
-        with ui.row().classes("w-full gap-2 items-end no-wrap pt-1"):
-            text_input = (
-                ui.textarea(
-                    placeholder=t("chat_placeholder"),
-                )
-                .props("outlined autogrow dense rows=2")
-                .classes("flex-1 text-xs bg-white rounded-lg")
-            )
+                                with ui.menu_item(on_click=make_insert()).classes("rounded-lg hover:bg-blue-50 p-2 cursor-pointer"):
+                                    with ui.column().classes("gap-0.5"):
+                                        ui.label(label_short).classes("text-xs font-bold text-blue-800")
+                                        ui.label(full_text).classes("text-[11px] text-slate-500 leading-tight")
 
-            async def send_comment() -> None:
-                content = (text_input.value or "").strip()
-                if not content:
-                    toast.warning("...")
-                    return
-                try:
-                    send_btn.props("loading")
-                    await ticket_service.create_comment(ticket_id, content)
-                    text_input.set_value("")
-                    toast.success("Success")
-                    await reload_comments()
-                except Exception as exc:
-                    toast.show_popup(
-                        title="Error",
-                        message="Cannot send comment",
-                        type="error",
-                        detail=str(exc),
+            def insert_reply(text_to_insert: str) -> None:
+                current_val = text_input.value or ""
+                if current_val.strip():
+                    text_input.set_value(f"{current_val.strip()}\n{text_to_insert}")
+                else:
+                    text_input.set_value(text_to_insert)
+                text_input.run_method("focus")
+
+            # Multiline Composer
+            with ui.row().classes("w-full gap-2.5 items-end no-wrap"):
+                text_input = (
+                    ui.textarea(
+                        placeholder="Nhập nội dung trao đổi với người dùng hoặc ghi chú kỹ thuật... (Enter để gửi, Shift+Enter xuống dòng)",
                     )
-                finally:
-                    send_btn.props(remove="loading")
+                    .props("outlined autogrow rows=2")
+                    .classes("flex-1 text-sm bg-white rounded-xl")
+                )
 
-            send_btn = (
-                ui.button(t("chat_send_btn"), icon="send", on_click=send_comment)
-                .props("color=primary unelevated size=sm")
-                .classes("px-4 py-2.5 h-11 shrink-0 font-bold rounded-lg shadow-2xs text-xs")
-            )
+                async def send_comment() -> None:
+                    content = (text_input.value or "").strip()
+                    if not content:
+                        toast.warning("Vui lòng nhập nội dung trao đổi trước khi gửi.")
+                        return
+                    try:
+                        send_btn.props("loading")
+                        await ticket_service.create_comment(ticket_id, content)
+                        text_input.set_value("")
+                        toast.success("Đã gửi phản hồi thành công!")
+                        await reload_comments()
+                    except Exception as exc:
+                        toast.show_popup(
+                            title="Lỗi gửi phản hồi",
+                            message="Không thể gửi tin nhắn trao đổi lên hệ thống.",
+                            type="error",
+                            detail=str(exc),
+                        )
+                    finally:
+                        send_btn.props(remove="loading")
+
+                send_btn = (
+                    ui.button("Gửi", icon="send", on_click=send_comment)
+                    .props("color=primary unelevated size=md")
+                    .classes("px-5 py-3 h-12 shrink-0 font-bold rounded-xl shadow-sm text-sm")
+                )
 
         async def reload_comments() -> None:
             try:
                 comments = await ticket_service.list_comments(ticket_id)
-                count_badge.text = t("item_count_tickets", count=len(comments))
+                count_badge.text = str(len(comments))
 
                 messages_container.clear()
                 with messages_container:
                     if not comments:
-                        with ui.column().classes("w-full py-8 items-center justify-center text-center gap-1"):
-                            ui.label(t("chat_empty_title")).classes("text-xs font-bold text-slate-700")
-                            ui.label(t("chat_empty_sub")).classes("text-[11px] text-slate-400 max-w-xs")
+                        with ui.column().classes("w-full py-12 items-center justify-center text-center gap-2"):
+                            ui.icon("chat", size="36px").classes("text-slate-300")
+                            ui.label("Chưa có tin nhắn trao đổi").classes("text-sm font-bold text-slate-800")
+                            ui.label("Nhập phản hồi bên dưới để bắt đầu trao đổi với người yêu cầu hoặc kỹ thuật viên.").classes("text-xs text-slate-500 max-w-sm leading-relaxed")
                     else:
                         for item in comments:
                             author_id = item.get("user_id")
@@ -146,51 +160,51 @@ def comments_thread(
 
                             if is_me:
                                 # Outgoing Message (Me) - Right aligned
-                                with ui.row().classes("w-full justify-end items-start gap-2 no-wrap"):
+                                with ui.row().classes("w-full justify-end items-start gap-2.5 no-wrap"):
                                     with ui.column().classes("items-end max-w-[85%] gap-1"):
-                                        with ui.row().classes("items-center gap-1.5 px-1"):
-                                            ui.label(relative_time).classes("text-[10px] text-slate-400")
-                                            ui.label(f"• {created_time}").classes("text-[9px] text-slate-400 hidden sm:inline")
-                                            ui.label(t("chat_author_me")).classes("text-[11px] font-bold text-blue-900")
+                                        with ui.row().classes("items-center gap-2 px-1"):
+                                            ui.label(relative_time).classes("text-xs text-slate-400 font-medium")
+                                            ui.label(f"• {created_time}").classes("text-xs text-slate-400 font-mono hidden sm:inline")
+                                            ui.label("Bạn").classes("text-xs font-bold text-blue-900")
                                             ui.label(role_label).classes(
-                                                f"text-[9px] font-bold px-1.5 py-0.2 rounded border {cfg['badge']}"
+                                                f"text-[10px] font-bold px-2 py-0.5 rounded border {cfg['badge']}"
                                             )
 
                                         with ui.element("div").classes(
-                                            "p-3 text-xs leading-relaxed bg-blue-600 text-white rounded-2xl rounded-tr-xs shadow-xs whitespace-pre-wrap break-words font-normal"
+                                            "p-3.5 text-sm leading-relaxed bg-blue-600 text-white rounded-2xl rounded-tr-xs shadow-sm whitespace-pre-wrap break-words font-normal"
                                         ):
                                             ui.label(content_txt)
 
                                     with ui.element("div").classes(
-                                        f"w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs {cfg['avatar_bg']}"
+                                        f"w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs border border-blue-700 {cfg['avatar_bg']}"
                                     ):
                                         ui.label(initial)
 
                             else:
                                 # Incoming Message (Other) - Left aligned
-                                with ui.row().classes("w-full justify-start items-start gap-2 no-wrap"):
+                                with ui.row().classes("w-full justify-start items-start gap-2.5 no-wrap"):
                                     with ui.element("div").classes(
-                                        f"w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs {cfg['avatar_bg']}"
+                                        f"w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs border border-slate-300 {cfg['avatar_bg']}"
                                     ):
                                         ui.label(initial)
 
                                     with ui.column().classes("items-start max-w-[85%] gap-1"):
-                                        with ui.row().classes("items-center gap-1.5 px-1"):
-                                            ui.label(author_name).classes("text-[11px] font-bold text-slate-900")
+                                        with ui.row().classes("items-center gap-2 px-1"):
+                                            ui.label(author_name).classes("text-xs font-bold text-slate-900")
                                             ui.label(role_label).classes(
-                                                f"text-[9px] font-bold px-1.5 py-0.2 rounded border {cfg['badge']}"
+                                                f"text-[10px] font-bold px-2 py-0.5 rounded border {cfg['badge']}"
                                             )
-                                            ui.label(relative_time).classes("text-[10px] text-slate-400")
-                                            ui.label(f"• {created_time}").classes("text-[9px] text-slate-400 hidden sm:inline")
+                                            ui.label(relative_time).classes("text-xs text-slate-400 font-medium")
+                                            ui.label(f"• {created_time}").classes("text-xs text-slate-400 font-mono hidden sm:inline")
 
                                         with ui.element("div").classes(
-                                            "p-3 text-xs leading-relaxed bg-white text-slate-800 border border-slate-200/90 rounded-2xl rounded-tl-xs shadow-2xs whitespace-pre-wrap break-words font-normal"
+                                            "p-3.5 text-sm leading-relaxed bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-tl-xs shadow-2xs whitespace-pre-wrap break-words font-normal"
                                         ):
                                             ui.label(content_txt)
 
             except Exception as exc:
                 messages_container.clear()
                 with messages_container:
-                    ui.label(f"Lỗi: {exc}").classes("text-xs text-red-600")
+                    ui.label(f"Lỗi tải tin nhắn: {exc}").classes("text-xs text-red-600")
 
         ui.timer(0.1, reload_comments, once=True)

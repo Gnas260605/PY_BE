@@ -31,5 +31,15 @@ class AuthService:
     def is_authenticated(self) -> bool:
         return auth_context.is_authenticated()
 
+    async def get_me(self) -> dict[str, Any]:
+        return await http_client.get("/auth/me")
+
+    async def change_password(self, current_password: str, new_password: str) -> dict[str, Any]:
+        response = await http_client.patch(
+            "/auth/change-password",
+            data={"current_password": current_password, "new_password": new_password},
+        )
+        return response
+
 
 auth_service = AuthService()

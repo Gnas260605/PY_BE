@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 # pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, Query, status, BackgroundTasks, UploadFile, File
+from fastapi.responses import FileResponse
 
 from app.core.auth import get_current_user, require_roles
 from app.core.errors import BadRequestError
@@ -41,7 +42,9 @@ from app.tickets.service import (
     update_ticket_status,
     list_ticket_attachments,
     upload_ticket_attachment,
+    get_ticket_attachment_file,
 )
+
 
 
 router = APIRouter()
@@ -252,3 +255,23 @@ def upload_ticket_attachment_route(
     current_user: dict = Depends(get_current_user),
 ) -> TicketAttachmentResponse:
     return upload_ticket_attachment(ticket_id, file, current_user=current_user)
+
+
+@router.get(
+    "/tickets/{ticket_id}/attachments/{attachment_id}/download",
+    dependencies=[Depends(require_roles("USER", "TECHNICIAN", "ADMIN"))],
+)
+def download_ticket_attachment_route(
+    ticket_id: int,
+    attachment_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> FileResponse:
+    file_path, file_name, file_type = get_ticket_attachment_file(
+        ticket_id, attachment_id, current_user=current_user
+    )
+    return FileResponse(
+        path=file_path,
+        filename=file_name,
+        media_type=file_type or "application/octet-stream",
+    )
+

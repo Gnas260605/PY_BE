@@ -65,6 +65,8 @@ def render_create_ticket_view() -> None:
                     return
 
                 try:
+                    submit_btn.props("loading")
+                    toast.info("Đang khởi tạo yêu cầu hỗ trợ...")
                     res = await ticket_service.create_ticket(
                         {
                             "title": title.value.strip(),
@@ -75,6 +77,7 @@ def render_create_ticket_view() -> None:
                         }
                     )
                     new_ticket_id = res.get("id")
+                    toast.success(f"Tạo yêu cầu #{new_ticket_id} thành công!")
                     toast.show_popup(
                         title="Gửi yêu cầu hỗ trợ thành công!",
                         message=f"Yêu cầu sự cố của bạn đã được tạo thành công với mã #{new_ticket_id}. Kỹ thuật viên sẽ tiếp nhận và xử lý trong thời gian sớm nhất.",
@@ -89,10 +92,12 @@ def render_create_ticket_view() -> None:
                         type="error",
                         detail=str(exc),
                     )
+                finally:
+                    submit_btn.props(remove="loading")
 
             with ui.row().classes("w-full justify-end gap-3 mt-4 pt-4 border-t border-slate-100"):
                 ui.button("Hủy", on_click=lambda: ui.navigate.to("/user/tickets")).props("flat color=slate-600")
-                ui.button("Gửi yêu cầu hỗ trợ", icon="send", on_click=submit).props("color=primary unelevated").classes("px-5 py-2")
+                submit_btn = ui.button("Gửi yêu cầu hỗ trợ", icon="send", on_click=submit).props("color=primary unelevated").classes("px-5 py-2")
 
         ui.timer(0.1, load_devices, once=True)
 

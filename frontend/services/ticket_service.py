@@ -117,9 +117,13 @@ class TicketService:
         service_cache.clear()
         return response
 
+    async def download_attachment(self, ticket_id: int, attachment_id: int) -> bytes:
+        return await http_client.download_file(f"/tickets/{ticket_id}/attachments/{attachment_id}/download")
+
     @staticmethod
     def next_statuses(current_status: str | None) -> list[str]:
         return NEXT_STATUSES.get(current_status or "", [])
 
 
 ticket_service = TicketService()
+

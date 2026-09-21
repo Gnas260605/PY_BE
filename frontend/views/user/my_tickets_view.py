@@ -39,12 +39,21 @@ def render_my_tickets_view() -> None:
             ).props(PROPS_BUTTON_PRIMARY).classes("px-4 py-2 font-bold shadow-xs")
 
         # 2. Filters Toolbar
+        status_options = {
+            "ALL": "Tất cả trạng thái",
+            TicketStatus.OPEN.value: "Chờ tiếp nhận (Open)",
+            TicketStatus.ASSIGNED.value: "Đã phân công (Assigned)",
+            TicketStatus.IN_PROGRESS.value: "Đang xử lý (In Progress)",
+            TicketStatus.RESOLVED.value: "Đã giải quyết (Resolved)",
+            TicketStatus.CLOSED.value: "Đã đóng (Closed)",
+        }
         with ui.card().classes("w-full p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs mb-3"):
             with ui.row().classes("w-full gap-3 items-end flex-wrap"):
                 keyword = ui.input(placeholder="Tìm kiếm theo tiêu đề sự cố...").props("outlined dense clearable debounce=300").classes("flex-1 min-w-[220px]")
-                status_filter = ui.select(["ALL", *[item.value for item in TicketStatus]], value="ALL", label="Trạng thái").props("outlined dense").classes("w-44")
+                status_filter = ui.select(status_options, value="ALL", label="Trạng thái").props("outlined dense").classes("w-56")
 
                 async def handle_manual_refresh() -> None:
+                    toast.info("Đang làm mới danh sách yêu cầu...")
                     tickets_list_refresh.refresh(is_loading=True)
                     await fetch_and_refresh()
                     toast.success("Đã làm mới danh sách yêu cầu!")
@@ -61,7 +70,10 @@ def render_my_tickets_view() -> None:
                 return
 
             if state["error"]:
-                ui.label(f"Lỗi tải dữ liệu: {state['error']}").classes("text-sm text-red-600")
+                with ui.card().classes("w-full p-6 rounded-xl bg-red-50 border border-red-200 text-center items-center gap-2"):
+                    ui.icon("error", size="2rem").classes("text-red-500")
+                    ui.label(f"Lỗi tải dữ liệu: {state['error']}").classes("text-sm font-semibold text-red-700")
+                    ui.button("Thử lại", icon="refresh", on_click=lambda: fetch_and_refresh()).props("outline dense size=sm color=red-700")
                 return
 
             tickets = state["tickets"]
@@ -82,8 +94,8 @@ def render_my_tickets_view() -> None:
                         tck_id = int(tck.get("id"))
                         cat_label = CATEGORY_LABELS.get(tck.get("category"), "Sự cố kỹ thuật")
                         with ui.card().classes(
-                            f"w-full {STYLE_CARD} gap-2 hover:border-slate-300"
-                        ):
+                            f"w-full {STYLE_CARD} gap-2 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all duration-150"
+                        ).on("click", lambda tck_id=tck_id: ui.navigate.to(f"/tickets/{tck_id}")):
                             with ui.row().classes("w-full justify-between items-start gap-3"):
                                 with ui.column().classes("gap-1 flex-1 min-w-[240px]"):
                                     with ui.row().classes("items-center gap-2 flex-wrap"):

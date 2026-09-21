@@ -480,13 +480,18 @@ def render_dashboard_view() -> None:
                         with ui.column().classes("w-full divide-y divide-slate-100"):
                             for tck in urgent_tickets[:5]:
                                 tck_id = tck.get("id")
-                                with ui.row().classes("w-full justify-between items-center py-2.5 hover:bg-slate-50 px-2 rounded-lg gap-2"):
+                                with ui.row().classes("w-full justify-between items-center py-2.5 hover:bg-slate-50 px-2 rounded-lg gap-2 cursor-pointer transition-colors").on("click", lambda tid=tck_id: ui.navigate.to(f"/tickets/{tid}")):
                                     with ui.column().classes("gap-0.5 flex-1 min-w-0"):
                                         ui.label(f"#TK-{tck_id:04d} · {tck.get('title', '-')}").classes("text-xs font-bold text-slate-900 truncate")
                                         ui.label(format_datetime(tck.get("created_at"))).classes("text-[10px] text-slate-400")
                                     with ui.row().classes("items-center gap-1.5"):
                                         priority_badge(tck.get("priority"))
                                         status_badge(tck.get("status"))
+                                        ui.button(
+                                            "Xem chi tiết",
+                                            icon="arrow_forward",
+                                            on_click=lambda tid=tck_id: ui.navigate.to(f"/tickets/{tid}"),
+                                        ).props("flat dense size=xs color=primary").classes("text-xs font-semibold")
 
         ui.timer(0.05, lambda: load_admin_data(), once=True)
 

@@ -1,3 +1,4 @@
+import asyncio
 from nicegui import ui
 
 from common.components import toast
@@ -33,18 +34,22 @@ def render_login_view() -> None:
                 if not username.value or not password.value:
                     toast.warning("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.")
                     return
+                btn_login.props("loading")
                 try:
                     await auth_service.login(username.value, password.value)
-                    toast.success("Đăng nhập thành công.")
-                    cur_u = auth_service.current_user()
-                    if cur_u and cur_u.get("vai_tro") == "USER":
+                    cur_u = auth_service.current_user() or {}
+                    user_name = cur_u.get("ho_ten") or username.value
+                    toast.success(f"Đăng nhập thành công! Chào mừng {user_name}.")
+                    await asyncio.sleep(0.7)
+                    if cur_u.get("vai_tro") == "USER":
                         ui.navigate.to("/user/tickets")
                     else:
                         ui.navigate.to("/dashboard")
                 except Exception as exc:
+                    btn_login.props(remove="loading")
                     toast.error(str(exc))
 
-            ui.button("Đăng nhập", on_click=submit).classes("w-full mt-2 py-2.5").props("color=primary unelevated")
+            btn_login = ui.button("Đăng nhập", on_click=submit).classes("w-full mt-2 py-2.5").props("color=primary unelevated")
 
             # Demo Accounts Helper
             with ui.column().classes("w-full mt-6 pt-4 border-t border-slate-100 items-center gap-2"):

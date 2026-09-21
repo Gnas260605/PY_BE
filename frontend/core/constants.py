@@ -58,6 +58,11 @@ ERROR_MESSAGES = {
     "INVALID_STATUS_TRANSITION": "Không thể chuyển trạng thái theo yêu cầu.",
     "INVALID_INPUT": "Dữ liệu nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
     "DEVICE_IN_USE": "Không thể xóa thiết bị đang được liên kết với Ticket đang mở.",
+    "FILE_TOO_LARGE": "Dung lượng tệp vượt quá giới hạn cho phép (tối đa 10MB).",
+    "INVALID_FILE_TYPE": "Định dạng tệp không được hỗ trợ. Vui lòng chọn tệp ảnh hoặc tài liệu thông dụng.",
+    "RATE_LIMIT_EXCEEDED": "Bạn đã gửi yêu cầu quá nhanh hoặc thử đăng nhập sai quá số lần cho phép. Vui lòng thử lại sau 1 phút.",
+    "ATTACHMENT_NOT_FOUND": "Không tìm thấy tệp đính kèm.",
+    "FILE_NOT_FOUND": "Tệp tin không tồn tại trên hệ thống lưu trữ.",
     "SERVER_ERROR": "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.",
     "CONNECTION_ERROR": "Không thể kết nối đến Backend Server (8000). Vui lòng kiểm tra lại dịch vụ Backend!"
 }

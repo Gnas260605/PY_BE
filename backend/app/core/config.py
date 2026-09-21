@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     smtp_password: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_PASSWORD"))
     smtp_from: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_FROM"))
 
+    max_upload_size_bytes: int = Field(default=10 * 1024 * 1024)  # 10 MB
+    allowed_upload_extensions: set[str] = Field(
+        default_factory=lambda: {
+            "png", "jpg", "jpeg", "gif", "webp",
+            "pdf", "doc", "docx", "xls", "xlsx", "txt", "zip"
+        }
+    )
+
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
