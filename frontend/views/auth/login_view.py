@@ -64,7 +64,7 @@ def render_login_view() -> None:
             "flex-1 flex items-center justify-center p-3 sm:p-6 w-full max-w-5xl mx-auto"
         ):
             with ui.element("div").classes(
-                "w-full max-w-[1020px] mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden grid grid-cols-1 lg:grid-cols-[42%_58%]"
+                "w-full max-w-[1000px] mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden grid grid-cols-1 lg:grid-cols-[40%_60%]"
             ):
                 # -----------------------------------------------------------------
                 # LEFT PANEL: Enterprise Brand & Infrastructure Trust
@@ -97,16 +97,16 @@ def render_login_view() -> None:
                                 )
 
                         # Headline & Description
-                        with ui.column().classes("gap-1.5 pt-1"):
+                        with ui.column().classes("gap-2 pt-1"):
                             ui.label("Hệ thống Quản trị Sự cố & Dịch vụ CNTT").classes(
                                 "text-xl sm:text-2xl font-black text-white leading-tight tracking-tight"
                             )
                             ui.label(
-                                "Tiếp nhận, phân công và theo dõi yêu cầu hỗ trợ CNTT tập trung trong toàn doanh nghiệp."
+                                "Tiếp nhận, phân công và tự động hóa theo dõi yêu cầu hỗ trợ CNTT tập trung trong toàn doanh nghiệp."
                             ).classes("text-xs text-slate-300 leading-relaxed font-normal max-w-sm")
 
-                        # Deliverables Checklist
-                        with ui.column().classes("gap-3 pt-2 text-xs text-slate-300"):
+                        # Strategic Deliverables Checklist
+                        with ui.column().classes("gap-3.5 pt-2 text-xs text-slate-300"):
                             deliverables = [
                                 ("verified", "Tiếp nhận & điều phối sự cố", "Phân loại luồng ticket theo mức độ khẩn cấp (P1 - P4)."),
                                 ("timer", "Theo dõi SLA & tiến độ xử lý", "Cập nhật trạng thái thời gian thực và thông báo đa kênh."),
@@ -313,42 +313,42 @@ def render_login_view() -> None:
                                             )
                                         )
 
-                                    # 1-Click Demo Quick Switcher Cards
+                                    # 1-Click Demo Quick Switcher Cards (Clean, spacious, zero text overlap)
                                     with ui.element("div").classes(
-                                        "p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2 mt-2"
+                                        "w-full p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2 mt-2"
                                     ):
-                                        with ui.row().classes("w-full justify-between items-center"):
+                                        with ui.row().classes("w-full justify-between items-center no-wrap"):
                                             ui.label("TÀI KHOẢN TRẢI NGHIỆM DEMO (1-CLICK):").classes(
                                                 "text-[10px] font-bold text-slate-400 tracking-wider"
                                             )
                                             with ui.element("span").classes(
-                                                "text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-600"
+                                                "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600"
                                             ):
                                                 ui.label("Sandbox")
 
-                                        with ui.element("div").classes("grid grid-cols-3 gap-2 w-full"):
+                                        with ui.element("div").classes("grid grid-cols-3 gap-2.5 w-full"):
                                             demo_configs = [
-                                                ("Admin", "admin", "Admin@123", "Quản trị", "shield_person", "text-purple-600"),
-                                                ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600"),
-                                                ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600"),
+                                                ("Admin", "admin", "Admin@123", "Quản trị", "shield_person", "text-purple-600", "hover:border-purple-300 hover:bg-purple-50/40"),
+                                                ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600", "hover:border-blue-300 hover:bg-blue-50/40"),
+                                                ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600", "hover:border-emerald-300 hover:bg-emerald-50/40"),
                                             ]
-                                            for role_name, username, pwd, role_desc, icon_n, icon_c in demo_configs:
+                                            for role_name, username, pwd, role_desc, icon_n, icon_c, hover_s in demo_configs:
                                                 def make_demo_handler(u=username, p=pwd, r=role_name):
                                                     return lambda: (
                                                         u_input.set_value(u),
                                                         p_input.set_value(p),
                                                         state.update({"error_msg": ""}),
                                                         inline_alert.classes("hidden", remove="flex"),
-                                                        toast.info(f"Đã chọn hồ sơ {r}: {u}")
+                                                        toast.info(f"Đã chọn hồ sơ demo {r}: {u}")
                                                     )
 
                                                 with ui.element("button").classes(
-                                                    "p-2 rounded-lg bg-white border border-slate-200/90 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-center flex flex-col items-center justify-center gap-0.5 shadow-2xs group cursor-pointer"
+                                                    f"w-full py-2.5 px-1 rounded-xl bg-white border border-slate-200 {hover_s} transition-all flex flex-col items-center justify-center gap-1 shadow-2xs cursor-pointer select-none"
                                                 ).on("click", make_demo_handler()):
-                                                    with ui.row().classes("items-center gap-1 font-bold text-xs text-slate-800"):
-                                                        ui.icon(icon_n, size="14px").classes(icon_c)
-                                                        ui.label(role_name)
-                                                    ui.label(role_desc).classes("text-[10px] text-slate-400 font-medium")
+                                                    with ui.row().classes("items-center justify-center gap-1.5 no-wrap"):
+                                                        ui.icon(icon_n, size="15px").classes(f"{icon_c} shrink-0")
+                                                        ui.label(role_name).classes("font-bold text-xs text-slate-800 leading-none")
+                                                    ui.label(role_desc).classes("text-[10px] text-slate-400 font-medium leading-none")
 
                                 else:
                                     # =========================================
