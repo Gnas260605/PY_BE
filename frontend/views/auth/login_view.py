@@ -105,30 +105,8 @@ def render_login_view() -> None:
                                 "Tiếp nhận, phân công và theo dõi yêu cầu hỗ trợ CNTT tập trung trong toàn doanh nghiệp."
                             ).classes("text-xs text-slate-300 leading-relaxed font-normal max-w-sm")
 
-                        # SLA Capability Ring Badge
-                        with ui.element("div").classes(
-                            "p-3.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center justify-between gap-3"
-                        ):
-                            with ui.column().classes("gap-0.5"):
-                                ui.label("CAM KẾT CHẤT LƯỢNG SLA").classes(
-                                    "text-[10px] font-bold uppercase tracking-wider text-blue-300"
-                                )
-                                ui.label("99.85% Đạt mục tiêu").classes("text-sm font-bold text-white")
-                                ui.label("MTTR trung bình: 18 phút (P1/P2)").classes("text-[11px] text-slate-400")
-
-                            # SVG Ring Progress
-                            ui.html(
-                                '<div class="w-12 h-12 relative flex items-center justify-center shrink-0">'
-                                '<svg class="w-12 h-12 -rotate-90" viewBox="0 0 48 48">'
-                                '<circle cx="24" cy="24" r="18" fill="transparent" stroke="rgba(255,255,255,0.15)" stroke-width="3.5"></circle>'
-                                '<circle cx="24" cy="24" r="18" fill="transparent" stroke="#38bdf8" stroke-dasharray="113" stroke-dashoffset="10" stroke-linecap="round" stroke-width="3.5"></circle>'
-                                '</svg>'
-                                '<span class="absolute text-[10px] text-white font-bold">98.5%</span>'
-                                '</div>'
-                            )
-
                         # Deliverables Checklist
-                        with ui.column().classes("gap-3 pt-1 text-xs text-slate-300"):
+                        with ui.column().classes("gap-3 pt-2 text-xs text-slate-300"):
                             deliverables = [
                                 ("verified", "Tiếp nhận & điều phối sự cố", "Phân loại luồng ticket theo mức độ khẩn cấp (P1 - P4)."),
                                 ("timer", "Theo dõi SLA & tiến độ xử lý", "Cập nhật trạng thái thời gian thực và thông báo đa kênh."),
