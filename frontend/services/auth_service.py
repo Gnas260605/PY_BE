@@ -21,6 +21,28 @@ class AuthService:
         service_cache.clear()
         return response
 
+    async def register(
+        self,
+        *,
+        username: str,
+        password: str,
+        ho_ten: str,
+        email: str | None = None,
+    ) -> dict[str, Any]:
+        response = await http_client.post(
+            "/register",
+            data={
+                "username": username.strip(),
+                "password": password,
+                "ho_ten": ho_ten.strip(),
+                "email": email.strip() if email else None,
+            },
+            auth_required=False,
+        )
+        auth_context.set_session(response["access_token"], response["user"])
+        service_cache.clear()
+        return response
+
     def logout(self) -> None:
         auth_context.clear_session()
         service_cache.clear()

@@ -7,12 +7,14 @@ from app.auth.schemas import (
     LoginRequest,
     LoginResponse,
     LoginUserResponse,
+    RegisterRequest,
 )
 from app.core.errors import BadRequestError, NotFoundError, UnauthorizedError
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.connection import connection_scope
 from app.users import repository as users_repository
-from app.users.service import authenticate_user
+from app.users.schemas import CreateUserRequest
+from app.users.service import authenticate_user, create_user
 
 
 logger = logging.getLogger(__name__)
@@ -68,3 +70,25 @@ def change_password(
 
     logger.info("PASSWORD_CHANGED user_id=%s", user_id)
     return ChangePasswordResponse(status="ok")
+
+
+def register(payload: RegisterRequest) -> LoginResponse:
+    user_req = CreateUserRequest(
+        username=payload.username,
+        password=payload.password,
+        ho_ten=payload.ho_ten,
+        email=payload.email,
+        vai_tro="USER",
+    )
+    user = create_user(user_req)
+    access_token = create_access_token(
+        user_id=int(user["id"]),
+        username=str(user["username"]),
+        role=str(user["vai_tro"]),
+    )
+    return LoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=LoginUserResponse(**user),
+    )
+

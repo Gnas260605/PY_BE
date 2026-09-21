@@ -58,3 +58,34 @@ class ChangePasswordRequest(BaseModel):
 
 class ChangePasswordResponse(BaseModel):
     status: str
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8, max_length=255)
+    ho_ten: str = Field(min_length=2, max_length=100)
+    email: str | None = Field(default=None, max_length=120)
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("username must not be blank")
+        return normalized
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_bcrypt_password_input(value)
+
+    @field_validator("ho_ten")
+    @classmethod
+    def validate_ho_ten(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("ho_ten must not be blank")
+        return normalized
+
