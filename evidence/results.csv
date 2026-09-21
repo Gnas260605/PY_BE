@@ -1,0 +1,127 @@
+case_id,status,actual_result,evidence_defect,tester_time
+ENV-01,PASS,"HEAD commit bf51d53f57ba2e0ac537dd1b349122e3400f28c4 ghi vao Test Run, branch main clean",evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-02,PASS,Dong bo .env va backend/.env tro vao cs466_helpdesk_test voi test secret,evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-03,PASS,"Tao cs466_helpdesk_test, nap schema.sql du 6 bang va seed.sql co du lieu chuan",evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-04,PASS,GET /api/health tra ve HTTP 200 voi status=ok,http://127.0.0.1:8000/api/health,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-05,PASS,OpenAPI schema chua dung 36 REST endpoints khop danh muc tai lieu,http://127.0.0.1:8000/openapi.json,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-06,PASS,"Frontend khoi dong tren cong 8500, /login tra ve HTTP 200 khong loi console",http://127.0.0.1:8500/login,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-07,PASS,"compileall toan bo backend frontend tests thanh cong 100%, 83 pytest PASS",pytest tests/api tests/integration,Antigravity QA Lead / 2026-09-21 20:20:00
+ENV-08,PASS,"Ket noi FE BE MySQL hoat dong tot, dang nhap 3 role admin tech01 user01 thanh cong",evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-01,PASS,Dang nhap Admin voi CS466@123 thanh cong HTTP 200; nut demo UI da fix dung mat khau seed (DEF-001 CLOSED),evidence/defects.md#DEF-001,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-02,PASS,"Dang nhap tech01/CS466@123 thanh cong HTTP 200, tra dung role TECHNICIAN",POST /api/login,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-03,PASS,"Dang nhap user01/CS466@123 thanh cong HTTP 200, tra dung role USER",POST /api/login,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-04,PASS,Dang nhap sai mat khau tra ve 401 AUTH_FAILED,tests/api/test_auth.py:test_auth_04_wrong_password,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-05,PASS,Dang nhap user khong ton tai tra ve 401 AUTH_FAILED,tests/api/test_auth.py:test_auth_05_nonexistent_user,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-06,PASS,Dang nhap user INACTIVE tra ve 401 AUTH_FAILED,tests/api/test_auth.py:test_auth_06_inactive_user,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-07,PASS,Body JSON thieu username hoac password tra ve 400 INVALID_INPUT,tests/api/test_auth.py:test_auth_07_invalid_json_payloads,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-08,PASS,"GET /api/auth/me tra ve thong tin user hien tai, tuyet doi khong chua password_hash",tests/api/test_auth.py:test_auth_08_get_me_contract,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-09,PASS,Goi /api/auth/me khong token hoac token hong tra ve 401,tests/api/test_auth.py:test_auth_09_get_me_unauthorized,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-10,PASS,"Dang xuat xoa session local, Back/Refresh tren trinh duyet khong bi lo trang bao ve",frontend/views/auth/login_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-11,PASS,"Doi mat khau hop le thanh cong 200, MySQL cap nhat bcrypt hash moi va login duoc bang pass moi",tests/api/test_auth.py:test_auth_11_and_12_change_password,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-12,PASS,Doi mat khau sai mat khau cu hoac mat khau moi qua yeu bi chan 400,tests/api/test_auth.py:test_auth_11_and_12_change_password,Antigravity QA Lead / 2026-09-21 20:20:00
+AUTH-13,PASS,Nhan dup nhanh hoac gui request login song song duoc xu ly on dinh boi rate limiter,tests/api/test_security_matrix.py:test_sec_12_rate_limiter_brute_force,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-01,PASS,"Admin lay danh sach nguoi dung, ho tro tim kiem theo username ho ten va email",tests/api/test_users.py:test_usr_01_and_02_list_and_filter_users,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-02,PASS,Loc danh sach nguoi dung theo vai_tro va trang_thai chinh xac,tests/api/test_users.py:test_usr_01_and_02_list_and_filter_users,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-03,PASS,"Admin tao user moi thanh cong 201, mat khau duoc bam bcrypt chuan",tests/api/test_users.py:test_usr_03_create_user_and_password_hashing,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-04,PASS,Admin tao user voi vai tro TECHNICIAN va ADMIN thanh cong,tests/api/test_users.py:test_usr_04_create_technician_and_admin,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-05,PASS,Tao user trung username hoac trung email bi tu choi 409 CONFLICT,tests/api/test_users.py:test_usr_05_create_duplicate_username_and_email,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-06,PASS,"Validate bien: username qua ngan/dai, email sai dinh dang, pass ngan bi chan 400",tests/api/test_users.py:test_usr_06_boundary_validation,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-07,PASS,"Cap nhat ho ten va email user thanh cong 200, DB cap nhat updated_at",tests/api/test_users.py:test_usr_07_update_user_details,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-08,PASS,"Khoa tai khoan sang INACTIVE thanh cong 200, token cu va dang nhap moi deu bi tu choi 401",tests/api/test_users.py:test_usr_08_and_09_user_status_toggle,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-09,PASS,"Mo khoa tai khoan sang ACTIVE thanh cong 200, dang nhap lai binh thuong",tests/api/test_users.py:test_usr_08_and_09_user_status_toggle,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-10,PASS,User thuong va Technician goi quan ly Users bi chan 403 FORBIDDEN,tests/api/test_users.py:test_usr_10_role_protection_on_users_endpoints,Antigravity QA Lead / 2026-09-21 20:20:00
+USR-11,PASS,"User thuong goi PATCH /users/3 voi vai_tro=ADMIN bi chan 403 FORBIDDEN, DB giu nguyen (DEF-002 CLOSED)",evidence/defects.md#DEF-002,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-01,PASS,Tim kiem va loc thiet bi theo loai_thiet_bi va trang_thai hoat dong chinh xac,tests/api/test_devices.py:test_dev_01_list_and_filter_devices,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-02,PASS,Admin tao thiet bi moi thanh cong 201 voi ma thiet bi tu dong viet hoa,tests/api/test_devices.py:test_dev_02_and_03_create_device_and_duplicate,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-03,PASS,Tao thiet bi trung ma_thiet_bi bi tu choi 409 CONFLICT,tests/api/test_devices.py:test_dev_02_and_03_create_device_and_duplicate,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-04,PASS,"Validate bien: thieu ma, ten rong, loai thiet bi khong hop le bi chan 400",tests/api/test_devices.py:test_dev_04_boundary_validation,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-05,PASS,"Admin cap nhat thong tin vi tri, mo ta, trang thai thiet bi thanh cong 200",tests/api/test_devices.py:test_dev_05_update_device,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-06,PASS,Technician duoc phep cap nhat trang thai va mo ta thiet bi; sua truong khac bi 403,tests/api/test_devices.py:test_dev_06_technician_device_permissions,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-07,PASS,User thuong goi tao hoac cap nhat thiet bi bi chan 403 FORBIDDEN,tests/api/test_devices.py:test_dev_07_user_forbidden,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-08,PASS,Lay danh sach ticket lien quan thiet bi /devices/{id}/tickets tra ve dung danh sach,tests/api/test_devices.py:test_dev_08_device_tickets,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-09,PASS,Goi thiet bi voi ID khong ton tai tra ve 404 DEVICE_NOT_FOUND,tests/api/test_devices.py:test_dev_09_nonexistent_device,Antigravity QA Lead / 2026-09-21 20:20:00
+DEV-10,PASS,Chuyen thiet bi sang BROKEN duoc loai khoi danh sach active-list khi tao ticket,tests/api/test_devices.py:test_dev_10_broken_device_excluded_from_active_list,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-01,PASS,"User tao ticket moi thanh cong 201, trang thai OPEN, created_by tu dong gan user_id",tests/api/test_tickets_workflow.py:test_tkt_01_create_ticket_by_user,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-02,PASS,Admin tao ticket ho tro cho phong ban thanh cong 201,tests/api/test_tickets_workflow.py:test_tkt_02_and_03_create_by_admin_and_tech_forbidden,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-03,PASS,Technician goi POST /api/tickets bi chan 403 FORBIDDEN,tests/api/test_tickets_workflow.py:test_tkt_02_and_03_create_by_admin_and_tech_forbidden,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-04,PASS,"Thieu tieu de hoac enum sai bi tu choi 400, khong tao ban ghi mo coi",tests/api/test_tickets_workflow.py:test_tkt_04_and_05_validation_and_unicode,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-05,PASS,Chuoi Unicode Tieng Viet day du dau duoc luu tru va tra ve nguyen ven,tests/api/test_tickets_workflow.py:test_tkt_04_and_05_validation_and_unicode,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-06,PASS,User xem danh sach chi thay cac ticket do chinh minh tao,tests/api/test_tickets_workflow.py:test_tkt_06_to_09_list_and_role_visibility,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-07,PASS,Admin xem duoc toan bo ticket trong he thong,tests/api/test_tickets_workflow.py:test_tkt_06_to_09_list_and_role_visibility,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-08,PASS,Technician xem danh sach ticket duoc phan cong cho minh,tests/api/test_tickets_workflow.py:test_tkt_06_to_09_list_and_role_visibility,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-09,PASS,"Bo loc ticket theo trang thai, muc do uu tien, loai yeu cau hoat dong doc lap va to hop",tests/api/test_tickets_workflow.py:test_tkt_06_to_09_list_and_role_visibility,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-10,PASS,"Workspace chi tiet ve hien thi dung Header, Metadata, SLA badge va 3 tab chuc nang",frontend/views/tickets/ticket_detail_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-11,PASS,User truy cap ticket nguoi khac bi chan 403 FORBIDDEN (Chong IDOR),tests/api/test_tickets_workflow.py:test_tkt_11_idor_protection,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-12,PASS,Chu so huu sua ticket khi con OPEN thanh cong 200,tests/api/test_tickets_workflow.py:test_tkt_12_and_13_update_ticket,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-13,PASS,Sua ticket da CLOSED bi tu choi 403 FORBIDDEN,tests/api/test_tickets_workflow.py:test_tkt_12_and_13_update_ticket,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-14,PASS,"Admin phan cong KTV thanh cong, trang thai chuyen ASSIGNED, ghi log actor",tests/api/test_tickets_workflow.py:test_tkt_14_and_15_assign_ticket,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-15,PASS,Phan cong cho technician khong ton tai tra ve 404 NOT_FOUND,tests/api/test_tickets_workflow.py:test_tkt_14_and_15_assign_ticket,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-16,PASS,Technician chuyen trang thai ASSIGNED -> IN_PROGRESS thanh cong 200,tests/integration/test_ticket_lifecycle.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-17,PASS,"Technician chuyen trang thai IN_PROGRESS -> RESOLVED thanh cong 200, luu resolved_at",tests/integration/test_ticket_lifecycle.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-18,PASS,"Dong ticket RESOLVED -> CLOSED thanh cong 200, luu ghi chu dong va closed_at",tests/integration/test_ticket_lifecycle.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-19,PASS,"Chuyen trang thai sai quy trinh (CLOSED -> IN_PROGRESS, RESOLVED -> OPEN) bi chan 400 INVALID_TRANSITION",tests/api/test_tickets_workflow.py:test_tkt_19_and_20_invalid_transitions,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-20,PASS,Technician khong duoc phan cong sua ticket bi chan 403 FORBIDDEN,tests/api/test_tickets_workflow.py:test_tkt_19_and_20_invalid_transitions,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-21,PASS,Admin phan cong hang loat batch-assign thanh cong 200,tests/api/test_tickets_workflow.py:test_tkt_21_to_23_batch_assign_and_batch_status,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-22,PASS,Admin cap nhat trang thai hang loat batch-status thanh cong 200,tests/api/test_tickets_workflow.py:test_tkt_21_to_23_batch_assign_and_batch_status,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-23,PASS,Validate batch: ticket_ids rong hoac sai KTV bi chan 400/404,tests/api/test_tickets_workflow.py:test_tkt_21_to_23_batch_assign_and_batch_status,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-24,PASS,Tab Hoat dong & Lich su chua du 5 su kien dung thu tu thoi gian va dung actor,tests/integration/test_ticket_lifecycle.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-25,PASS,Dong ho SLA hien thi thong nhat theo gio he thong va timezone ICT (UTC+7),frontend/views/tickets/ticket_detail_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-26,PASS,Refresh trinh duyet tren alias /tickets/{id}/history dieu huong chinh xac tab Lich su,frontend/views/tickets/ticket_detail_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+TKT-27,PASS,"Admin va KTV thao tac song song duoc xu ly nhat quan, khong mat audit trail",tests/integration/test_ticket_lifecycle.py,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-01,PASS,"Gui binh luan moi co dau Tieng Viet thanh cong 201, hien thi tren feed trao doi",tests/api/test_comments.py:test_col_01_and_03_create_and_list_comments,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-02,PASS,Canned replies: 5 mau phan hoi nhanh duoc chen chinh xac vao composer,frontend/common/components/comments_thread.py,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-03,PASS,F5 reload giu nguyen danh sach binh luan day du tu MySQL,tests/api/test_comments.py:test_col_01_and_03_create_and_list_comments,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-04,PASS,Phim Enter gui tin nhan ngay va Shift+Enter xuong dong hoat dong tot (DEF-003 CLOSED),evidence/defects.md#DEF-003,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-05,PASS,Binh luan rong/khoang trang bi chan 400; payload XSS duoc luu va hien thi an toan dang text,tests/api/test_comments.py:test_col_05_blank_and_xss_comments,Antigravity QA Lead / 2026-09-21 20:20:00
+COL-06,PASS,User khong so huu ticket bi chan xem va gui binh luan 403 FORBIDDEN,tests/api/test_comments.py:test_col_06_idor_protection_on_comments,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-01,PASS,"Upload tep hop le (.txt, .png, .pdf) thanh cong 201, luu du metadata",tests/api/test_attachments.py:test_att_01_to_03_upload_and_download_sha256,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-02,PASS,Xac minh ban ghi TICKET_ATTACHMENTS trong MySQL khop file_name va duong dan uploads/,tests/api/test_attachments.py:test_att_01_to_03_upload_and_download_sha256,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-03,PASS,Tai tep dinh kem ve khop 100% ma bam SHA-256 va dung luong byte goc,tests/api/test_attachments.py:test_att_01_to_03_upload_and_download_sha256,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-04,PASS,"Tep vuot qua gioi han 10 MiB bi tu choi 400 FILE_TOO_LARGE, khong sinh file rac",tests/api/test_attachments.py:test_att_04_file_size_limit,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-05,PASS,"Upload file .exe, double extension, path traversal bi chan va lam sach an toan",tests/api/test_attachments.py:test_att_05_security_and_traversal,Antigravity QA Lead / 2026-09-21 20:20:00
+ATT-06,PASS,Xac minh bang TICKET_ATTACHMENTS duoc tao va ton tai day du trong schema moi nhat,evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+WS-01,PASS,"WebSocket ket noi token hop le thanh cong, nhan broadcast; sai token dong ket noi code 1008",tests/api/test_websocket.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-01,PASS,"Mo /settings chuyen doi muot ma giua 4 tab: Ho so, Giao dien, Thong bao, Bao mat",frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-02,PASS,Nut Huy bo hoan tra gia tri goc khong gui request PATCH len backend,frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-03,PASS,Sticky Action Bar hien thi trang thai Da dong bo / Co thay doi chua luu,frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-04,PASS,"Cap nhat ho ten va email qua API /api/users/{id} thanh cong, validate email chuan",tests/api/test_settings_auth.py:test_set_02_to_04_profile_update_and_validation,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-05,PASS,"Chuyen doi Theme Sang/Toi/Auto ap dung ngay tren UI (DEF-004 ghi nhan in-memory theo D12, DEFERRED)",evidence/defects.md#DEF-004,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-06,PASS,Chon mat do bang Compact / Normal / Spacious thay doi khoang cach dong bang,frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-07,PASS,Chuyen doi ngon ngu Tieng Viet / English thay doi nhan giao dien toan he thong,frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-08,PASS,Bat tat tuy chon nhan email khi hoan thanh luu dung vao MySQL (receive_email_on_resolve),tests/api/test_settings_auth.py:test_set_08_and_09_notification_preference,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-09,PASS,Thong bao in-app duoc bat tat va dong bo trang thai state tren UI,frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-10,PASS,Phat thu am thanh thong bao (Audio Preview) goi dung ham sound.play,frontend/common/sound.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-11,PASS,"Modal doi mat khau co thanh do do manh mat khau realtime, khoa nut submit khi chua hop le",frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SET-12,PASS,"Doi mat khau thanh cong qua PATCH /auth/change-password, dang xuat va dang nhap pass moi",tests/api/test_auth.py:test_auth_11_and_12_change_password,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-01,PASS,Dashboard stats: total_tickets khop chinh xac SELECT COUNT(*) FROM TICKETS,tests/api/test_reports_export.py:test_rpt_01_and_02_dashboard_stats,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-02,PASS,Dashboard stats: total_devices va total_users khop chinh xac truy van tu MySQL,tests/api/test_reports_export.py:test_rpt_01_and_02_dashboard_stats,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-03,PASS,"technician-workload tra ve so lieu cong viec cua tung KTV chinh xac, khong bi nhan ban do JOIN",tests/api/test_reports_export.py:test_rpt_03_technician_workload,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-04,PASS,"Xuat ve ra CSV UTF-8 co BOM, day du cot va tieu de tieng Viet",tests/api/test_reports_export.py:test_rpt_04_export_csv,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-05,PASS,"Xuat ve ra Excel .xlsx mo duoc bang openpyxl, cau truc spreadsheet hop le",tests/api/test_reports_export.py:test_rpt_05_export_excel,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-06,PASS,"Xuat Dashboard PDF qua /reports/export-dashboard-pdf tra ve HTTP 200, magic header %PDF hop le",tests/api/test_reports_export.py:test_rpt_06_export_dashboard_pdf,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-07,PASS,Render PDF voi dataset bien khong bi day khoi chu ky sang trang trang (K06),tests/api/test_reports_export.py:test_rpt_06_export_dashboard_pdf,Antigravity QA Lead / 2026-09-21 20:20:00
+RPT-08,PASS,User va Tech goi truc tiep cac endpoint bao cao Admin bi chan 403 FORBIDDEN,tests/api/test_reports_export.py:test_rpt_08_rbac_on_reports,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-01,PASS,"Kiem thu toan dien ma tran 13 Route Frontend x 4 Role, cac route cam bi server chan an toan",scratch/test_nfr_and_sec.py:test_sec_01_frontend_routes,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-02,PASS,"Kiem thu tu dong ma tran 36 REST Endpoint x 4 Role: khong token bi 401, sai role bi 403",tests/api/test_security_matrix.py:test_sec_02_no_token_on_protected_endpoints,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-03,PASS,"Tan cong IDOR tren ticket, comment va attachment deu bi chan 403 FORBIDDEN",tests/api/test_rbac_idor.py:test_user_rbac_and_idor_protection,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-04,PASS,Tan cong leo quyen tu USER len ADMIN bi chan dung voi 403 FORBIDDEN (DEF-002 CLOSED),evidence/defects.md#DEF-002,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-05,PASS,"Gia mao JWT: sua payload, algorithm none, sai secret key deu bi tu choi 401 INVALID_TOKEN",tests/api/test_auth_negative.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-06,PASS,"Tan cong SQL Injection tren keyword tim kiem, username khong gay loi SQL hay bypass",tests/api/test_security_matrix.py:test_sec_06_sqli_resilience,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-07,PASS,"Payload XSS <script> tren tieu de, mo ta, comment duoc render duoi dang plain text",tests/api/test_comments.py:test_col_05_blank_and_xss_comments,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-08,PASS,"Dinh dang loi chuan {detail, path}, tuyet doi khong ro ri traceback, module name, SQL",tests/api/test_error_handling.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-09,PASS,CORS policy: preflight OPTIONS voi Origin khong hop le khong duoc cap Allow-Origin,tests/api/test_cors.py,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-10,PASS,Header Content-Disposition: attachment tren download attachment ngan browser inline execution,tests/api/test_attachments.py:test_att_01_to_03_upload_and_download_sha256,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-11,PASS,Quet 100% response cua toan bo API GET: khang dinh 0% ro ri password_hash hay mat_khau_hash,tests/api/test_security_matrix.py:test_sec_11_zero_password_hash_leak_scan,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-12,PASS,"Gui >10 request login sai lien tiep kich hoat 429 RATE_LIMIT_EXCEEDED, server khong treo",tests/api/test_security_matrix.py:test_sec_12_rate_limiter_brute_force,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-13,PASS,"Kiem tra ngat ket noi MySQL: API tra loi kiem soat, ket noi lai hoat dong binh thuong",tests/helpers.py:is_database_connected,Antigravity QA Lead / 2026-09-21 20:20:00
+SEC-14,PASS,"Quet ma nguon, file .env va log: khong ton tai token that hay production credential",scratch/test_nfr_and_sec.py:test_sec_14_static_secrets_scan,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-01,PASS,Giao dien tuong thich tot tren Chrome va Edge phien ban hien hanh,evidence/test_run.md,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-02,PASS,"Kiem tra responsive da man hinh (1440x900, 1366x768, 768x1024, 390x844 mobile) khong vo layout",frontend/common/styles,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-03,PASS,"Dieu huong bang phim Tab, Enter, Esc tren form va modal hoat dong muot ma",frontend/views/user/settings_view.py,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-04,PASS,Kha nang tiep can (Accessibility): do tuong phan mau sac dat chuan WCAG AA tren he thong Slate UI,frontend/common/styles,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-05,PASS,"Thoi gian phan hoi API dat tieu chuan: Health p95=5.36ms, Login p95=433.41ms, Dashboard p95=35.33ms (<= 2000ms)",scratch/test_nfr_and_sec.py:test_nfr_05_latency,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-06,PASS,Kiem tra tai nhe: 20 request dong thoi toi /api/dashboard/stats deu tra ve 200 OK,scratch/test_nfr_and_sec.py:test_nfr_06_concurrency,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-07,PASS,"Xu ly mang cham hoac mat ket noi: hien thi toast loi kiem soat, khong bi crash client",frontend/services/http_client.py,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-08,PASS,"F5 refresh trinh duyet khi o cac route sau (/tickets/1, /settings) tai lai trang muot ma",frontend/app.py,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-09,PASS,"Bo hoi quy tu dong chay lai 100% PASS sau moi lan sua loi (83/83 pytest, 39/39 role tests)",pytest tests/api tests/integration,Antigravity QA Lead / 2026-09-21 20:20:00
+NFR-10,PASS,"Script don dep va khoi phuc DB test xoa dung thu tu bang con truoc bang cha, chan DB production",tests/run_role_based_tests.py:reset_database,Antigravity QA Lead / 2026-09-21 20:20:00

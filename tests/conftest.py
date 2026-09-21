@@ -34,6 +34,26 @@ except ImportError:
     from run_role_based_tests import reset_database, ensure_test_database  # type: ignore
 
 
+@pytest.fixture(scope="session", autouse=True)
+def guard_test_database() -> None:
+    """R01 Guard: Verify connected database ends with _test."""
+    try:
+        from app.db.connection import connection_scope
+    except ImportError:
+        from backend.app.db.connection import connection_scope
+
+    try:
+        with connection_scope() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DATABASE()")
+            db_name = cursor.fetchone()[0]
+    except Exception as e:
+        pytest.exit(f"R01/ENV ERROR: Cannot connect to MySQL test database: {e}", returncode=2)
+
+    if not db_name or not str(db_name).strip().lower().endswith("_test"):
+        pytest.exit(f"R01 VIOLATION: Database '{db_name}' does not end with _test! Refusing to run tests.", returncode=2)
+
+
 @pytest.fixture(scope="session")
 def client() -> TestClient:
     return TestClient(app)

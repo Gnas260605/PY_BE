@@ -50,6 +50,8 @@ def reset_database():
     with connection_scope() as conn:
         cursor = conn.cursor()
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+        cursor.execute("TRUNCATE TABLE TICKET_ATTACHMENTS;")
+        cursor.execute("TRUNCATE TABLE TICKET_COMMENTS;")
         cursor.execute("TRUNCATE TABLE TICKET_HISTORY;")
         cursor.execute("TRUNCATE TABLE TICKETS;")
         cursor.execute("TRUNCATE TABLE DEVICES;")
@@ -245,25 +247,25 @@ def run_all_tests():
 
     # 1.5 Create User
     res_create_user = admin_tracker.run_test(
-        "ADM-05", "Tạo User mới (user02)", "POST", "/api/users",
+        "ADM-05", "Tạo User mới (user_adm_test)", "POST", "/api/users",
         headers=admin_headers, expected_status=201,
         json_body={
-            "username": "user02",
+            "username": "user_adm_test",
             "password": "CS466@123",
             "ho_ten": "Nguyễn Văn B",
-            "email": "user02@cs466.local",
+            "email": "user_adm_test@cs466.local",
             "vai_tro": "USER"
         },
         description="Tạo người dùng mới với mật khẩu bcrypt, không trả về password_hash"
     )
-    created_user_id = res_create_user["response_body"].get("id", 4)
+    created_user_id = res_create_user["response_body"].get("id", 8)
 
     # 1.6 Duplicate Username
     admin_tracker.run_test(
         "ADM-06", "Tạo User trùng Username (Expect 409)", "POST", "/api/users",
         headers=admin_headers, expected_status=409,
         json_body={
-            "username": "user02",
+            "username": "user_adm_test",
             "password": "CS466@123",
             "ho_ten": "Nguyen Van B Trùng",
             "email": "diff_email@cs466.local",
@@ -285,7 +287,7 @@ def run_all_tests():
         headers=admin_headers, expected_status=200,
         json_body={
             "ho_ten": "Nguyễn Văn B (Kế Toán Trưởng)",
-            "email": "ketoan_b@cs466.local",
+            "email": "user_adm_updated@cs466.local",
             "vai_tro": "USER"
         },
         description="Cập nhật họ tên và email của user"
@@ -302,7 +304,7 @@ def run_all_tests():
     # 1.10 Try login deactivated user
     admin_tracker.run_test(
         "ADM-10", "Đăng nhập bằng tài khoản INACTIVE (Expect 401)", "POST", "/api/login",
-        expected_status=401, json_body={"username": "user02", "password": "CS466@123"},
+        expected_status=401, json_body={"username": "user_adm_test", "password": "CS466@123"},
         description="Tài khoản INACTIVE không được phép đăng nhập"
     )
 
@@ -316,10 +318,10 @@ def run_all_tests():
 
     # 1.12 Create Device
     res_create_dev = admin_tracker.run_test(
-        "ADM-12", "Thêm thiết bị mới (PC-002)", "POST", "/api/devices",
+        "ADM-12", "Thêm thiết bị mới (PC-999)", "POST", "/api/devices",
         headers=admin_headers, expected_status=201,
         json_body={
-            "ma_thiet_bi": "PC-002",
+            "ma_thiet_bi": "PC-999",
             "ten_thiet_bi": "Máy tính phòng Kế Toán 02",
             "loai_thiet_bi": "COMPUTER",
             "vi_tri": "Phòng Kế Toán - Tầng 2",
@@ -328,14 +330,14 @@ def run_all_tests():
         },
         description="Admin thêm thiết bị mới vào hệ thống"
     )
-    created_device_id = res_create_dev["response_body"].get("id", 4)
+    created_device_id = res_create_dev["response_body"].get("id", 8)
 
     # 1.13 Duplicate Device Code
     admin_tracker.run_test(
         "ADM-13", "Thêm thiết bị trùng Mã (Expect 409)", "POST", "/api/devices",
         headers=admin_headers, expected_status=409,
         json_body={
-            "ma_thiet_bi": "PC-002",
+            "ma_thiet_bi": "PC-999",
             "ten_thiet_bi": "Máy tính phòng Marketing",
             "loai_thiet_bi": "COMPUTER",
             "vi_tri": "Phòng Marketing"
@@ -375,9 +377,9 @@ def run_all_tests():
         description="Admin có quyền xem mọi ticket của toàn bộ người dùng"
     )
 
-    # 1.18 Assign Technician to Ticket 1
+    # 1.18 Assign Technician to Ticket 2
     admin_tracker.run_test(
-        "ADM-18", "Admin gán Kỹ thuật viên cho Ticket", "PATCH", "/api/tickets/1/assign",
+        "ADM-18", "Admin gán Kỹ thuật viên cho Ticket", "PATCH", "/api/tickets/2/assign",
         headers=admin_headers, expected_status=200,
         json_body={"technician_id": 2},
         description="Gán ticket cho tech01, tự động chuyển OPEN -> ASSIGNED và ghi log history"
@@ -385,7 +387,7 @@ def run_all_tests():
 
     # 1.19 Assign Invalid User (Expect 400)
     admin_tracker.run_test(
-        "ADM-19", "Gán User không phải Kỹ thuật viên (Expect 400)", "PATCH", "/api/tickets/1/assign",
+        "ADM-19", "Gán User không phải Kỹ thuật viên (Expect 400)", "PATCH", "/api/tickets/2/assign",
         headers=admin_headers, expected_status=400,
         json_body={"technician_id": 3},
         description="User có role USER không thể được gán làm kỹ thuật viên"
@@ -517,7 +519,7 @@ def run_all_tests():
 
     # 3.5 Ticket Lifecycle: Move to IN_PROGRESS
     tech_tracker.run_test(
-        "TEC-05", "Đổi trạng thái Ticket: ASSIGNED -> IN_PROGRESS", "PATCH", "/api/tickets/1/status",
+        "TEC-05", "Đổi trạng thái Ticket: ASSIGNED -> IN_PROGRESS", "PATCH", "/api/tickets/2/status",
         headers=tech_headers, expected_status=200,
         json_body={"status": "IN_PROGRESS"},
         description="Kỹ thuật viên bắt đầu xử lý sự cố"
@@ -525,7 +527,7 @@ def run_all_tests():
 
     # 3.6 Ticket Lifecycle: Move to RESOLVED
     tech_tracker.run_test(
-        "TEC-06", "Đổi trạng thái Ticket: IN_PROGRESS -> RESOLVED", "PATCH", "/api/tickets/1/status",
+        "TEC-06", "Đổi trạng thái Ticket: IN_PROGRESS -> RESOLVED", "PATCH", "/api/tickets/2/status",
         headers=tech_headers, expected_status=200,
         json_body={"status": "RESOLVED"},
         description="Kỹ thuật viên hoàn tất khắc phục sự cố"
@@ -533,7 +535,7 @@ def run_all_tests():
 
     # 3.7 Invalid Lifecycle Transition (Negative Test)
     tech_tracker.run_test(
-        "TEC-07", "Chuyển trạng thái sai quy trình (RESOLVED -> OPEN Expect 400)", "PATCH", "/api/tickets/1/status",
+        "TEC-07", "Chuyển trạng thái sai quy trình (RESOLVED -> OPEN Expect 400)", "PATCH", "/api/tickets/2/status",
         headers=tech_headers, expected_status=400,
         json_body={"status": "OPEN"},
         description="Không cho phép chuyển lùi từ RESOLVED về OPEN"
@@ -541,7 +543,7 @@ def run_all_tests():
 
     # 3.8 Close Ticket
     tech_tracker.run_test(
-        "TEC-08", "Đóng Ticket đã giải quyết (RESOLVED -> CLOSED)", "PATCH", "/api/tickets/1/close",
+        "TEC-08", "Đóng Ticket đã giải quyết (RESOLVED -> CLOSED)", "PATCH", "/api/tickets/2/close",
         headers=tech_headers, expected_status=200,
         json_body={"note": "Đã thay adapter nguồn màn hình mới, thiết bị hoạt động tốt."},
         description="Đóng ticket hoàn tất và lưu ghi chú đóng"
@@ -549,7 +551,7 @@ def run_all_tests():
 
     # 3.9 Audit Full Ticket History
     tech_tracker.run_test(
-        "TEC-09", "Kiểm tra toàn bộ Lịch sử chu trình xử lý Ticket", "GET", "/api/tickets/1/history",
+        "TEC-09", "Kiểm tra toàn bộ Lịch sử chu trình xử lý Ticket", "GET", "/api/tickets/2/history",
         headers=tech_headers, expected_status=200,
         description="Xác nhận đủ 5 sự kiện: CREATED -> ASSIGNED -> IN_PROGRESS -> RESOLVED -> CLOSED"
     )

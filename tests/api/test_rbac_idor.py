@@ -85,7 +85,7 @@ def test_technician_rbac_and_field_permissions(
     # 1. Blocked Admin Routes -> 403
     assert client.get("/api/users", headers=tech_headers).status_code == 403
     assert client.post("/api/devices", headers=tech_headers, json={"ma_thiet_bi": "DEV-T"}).status_code == 403
-    assert client.patch("/api/tickets/1/assign", headers=tech_headers, json={"technician_id": 2}).status_code == 403
+    assert client.patch("/api/tickets/5/assign", headers=tech_headers, json={"technician_id": 5}).status_code == 403
 
     # 2. Technician can view devices
     res_devs = client.get("/api/devices", headers=tech_headers)

@@ -55,6 +55,8 @@ def get_user_route(user_id: int) -> dict:
 def update_user_route(user_id: int, payload: UpdateUserRequest, current_user: dict = Depends(get_current_user)) -> dict:
     if current_user["vai_tro"] != "ADMIN" and current_user["id"] != user_id:
         raise ForbiddenError("FORBIDDEN")
+    if current_user["vai_tro"] != "ADMIN" and payload.vai_tro is not None:
+        raise ForbiddenError("FORBIDDEN")
     return update_user(user_id, payload)
 
 

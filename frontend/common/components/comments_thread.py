@@ -97,14 +97,6 @@ def comments_thread(
 
             # Multiline Composer
             with ui.row().classes("w-full gap-2.5 items-end no-wrap"):
-                text_input = (
-                    ui.textarea(
-                        placeholder="Nhập nội dung trao đổi với người dùng hoặc ghi chú kỹ thuật... (Enter để gửi, Shift+Enter xuống dòng)",
-                    )
-                    .props("outlined autogrow rows=2")
-                    .classes("flex-1 text-sm bg-white rounded-xl")
-                )
-
                 async def send_comment() -> None:
                     content = (text_input.value or "").strip()
                     if not content:
@@ -125,6 +117,15 @@ def comments_thread(
                         )
                     finally:
                         send_btn.props(remove="loading")
+
+                text_input = (
+                    ui.textarea(
+                        placeholder="Nhập nội dung trao đổi với người dùng hoặc ghi chú kỹ thuật... (Enter để gửi, Shift+Enter xuống dòng)",
+                    )
+                    .props("outlined autogrow rows=2")
+                    .classes("flex-1 text-sm bg-white rounded-xl")
+                    .on("keydown.enter.exact.prevent", send_comment)
+                )
 
                 send_btn = (
                     ui.button("Gửi", icon="send", on_click=send_comment)
