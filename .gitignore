@@ -27,7 +27,9 @@ backend/.env
 
 # Local runtime logs
 *.log
+logs/*.log
 backend/*.log
+!perl/samples/*.log
 
 # Temporary test artifacts
 backend/role_recheck_summary.json

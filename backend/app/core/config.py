@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     app_host: str = "127.0.0.1"
     app_port: int = 8000
     log_level: str = "INFO"
+    log_to_file: bool = Field(default=False, validation_alias=AliasChoices("LOG_TO_FILE"))
+    log_file: str = Field(default="logs/backend.log", validation_alias=AliasChoices("LOG_FILE"))
     mysql_host: str = Field(
         default="127.0.0.1",
         validation_alias=AliasChoices("MYSQL_HOST", "DB_HOST"),

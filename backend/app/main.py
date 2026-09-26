@@ -18,7 +18,7 @@ from app.users.routes import router as users_router
 
 
 settings = get_settings()
-configure_logging(settings.log_level)
+configure_logging(settings.log_level, settings.log_to_file, settings.log_file)
 
 app = FastAPI(title=settings.app_name)
 register_exception_handlers(app)
