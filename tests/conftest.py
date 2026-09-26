@@ -81,3 +81,12 @@ def db_reset() -> Generator[None, None, None]:
         ensure_test_database()
         reset_database()
     yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def db_session_reset() -> Generator[None, None, None]:
+    """Ensure the reachable `_test` database matches the current schema before pytest runs."""
+    if is_database_connected():
+        ensure_test_database()
+        reset_database()
+    yield

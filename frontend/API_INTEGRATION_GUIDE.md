@@ -24,6 +24,8 @@ Mật khẩu mặc định cho tất cả các tài khoản demo: **`CS466@123`*
 ### 2.1. Đính kèm Token xác thực
 Khi người dùng đăng nhập thành công qua `POST /api/login`, backend trả về `access_token`. Lưu token này vào `localStorage` hoặc `sessionStorage` và gửi kèm trong header của mọi request yêu cầu xác thực:
 
+> Luu y: frontend NiceGUI hien tai luu session trong `app.storage.user` thong qua `frontend/core/auth_context.py`. Khong ghi JWT, Authorization header, hoac URL WebSocket co token ra console/log.
+
 ```javascript
 const token = localStorage.getItem("access_token");
 const headers = {
@@ -586,8 +588,7 @@ import { authApi, usersApi, devicesApi, ticketsApi } from "./api.js";
 async function handleLogin() {
   try {
     const result = await authApi.login("admin", "CS466@123");
-    console.log("Token:", result.access_token);
-    console.log("User:", result.user);
+    console.log("Dang nhap thanh cong:", result.user);
     window.location.href = "/pages/dashboard.html";
   } catch (error) {
     alert("Đăng nhập thất bại: " + error.message);

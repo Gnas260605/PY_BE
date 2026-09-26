@@ -35,31 +35,50 @@ def ensure_test_database() -> None:
         raise RuntimeError("REFUSING_TO_RESET_NON_TEST_DATABASE")
 
 
-def strip_use_statement(sql_text: str) -> str:
+def strip_database_directives(sql_text: str) -> str:
+    sql_text = re.sub(
+        r"CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+cs466_helpdesk\s+CHARACTER\s+SET\s+utf8mb4\s+COLLATE\s+utf8mb4_unicode_ci\s*;",
+        "",
+        sql_text,
+        flags=re.IGNORECASE,
+    )
     return re.sub(r"USE\s+cs466_helpdesk\s*;", "", sql_text, flags=re.IGNORECASE)
+
+
+def execute_sql_script(cursor, sql_text: str) -> None:
+    for statement in sql_text.split(";"):
+        stmt = statement.strip()
+        if stmt:
+            cursor.execute(stmt)
 
 
 def reset_database():
     """Reset database to initial seed state before running tests."""
     ensure_test_database()
+    schema_path = os.path.join(ROOT_DIR, "database", "schema.sql")
     seed_path = os.path.join(ROOT_DIR, "database", "seed.sql")
 
+    with open(schema_path, "r", encoding="utf-8") as f:
+        schema_sql = strip_database_directives(f.read())
     with open(seed_path, "r", encoding="utf-8") as f:
-        seed_sql = strip_use_statement(f.read())
+        seed_sql = strip_database_directives(f.read())
 
     with connection_scope() as conn:
         cursor = conn.cursor()
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-        cursor.execute("TRUNCATE TABLE TICKET_HISTORY;")
-        cursor.execute("TRUNCATE TABLE TICKETS;")
-        cursor.execute("TRUNCATE TABLE DEVICES;")
-        cursor.execute("TRUNCATE TABLE USERS;")
+        for table in (
+            "TICKET_ATTACHMENTS",
+            "TICKET_COMMENTS",
+            "TICKET_HISTORY",
+            "TICKETS",
+            "DEVICES",
+            "USERS",
+        ):
+            cursor.execute(f"DROP TABLE IF EXISTS {table};")
         cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
-        for statement in seed_sql.split(";"):
-            stmt = statement.strip()
-            if stmt:
-                cursor.execute(stmt)
+        execute_sql_script(cursor, schema_sql)
+        execute_sql_script(cursor, seed_sql)
         conn.commit()
 
 
