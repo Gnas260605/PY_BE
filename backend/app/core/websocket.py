@@ -15,7 +15,7 @@ class ConnectionManager:
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
-        logger.info(f"WebSocket connected for user_id={user_id}")
+        logger.info("WEBSOCKET_CONNECTED user_id=%s", user_id)
 
     def disconnect(self, websocket: WebSocket, user_id: int):
         if user_id in self.active_connections:
@@ -23,7 +23,7 @@ class ConnectionManager:
                 self.active_connections[user_id].remove(websocket)
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
-        logger.info(f"WebSocket disconnected for user_id={user_id}")
+        logger.info("WEBSOCKET_DISCONNECTED user_id=%s", user_id)
 
     async def send_personal_message(self, message: dict, user_id: int):
         if user_id in self.active_connections:
@@ -32,8 +32,12 @@ class ConnectionManager:
             for connection in self.active_connections[user_id]:
                 try:
                     await connection.send_json(message)
-                except Exception as e:
-                    logger.error(f"Error sending message to user {user_id}: {e}")
+                except Exception as exc:
+                    logger.error(
+                        "WEBSOCKET_SEND_FAILED user_id=%s error_type=%s",
+                        user_id,
+                        type(exc).__name__,
+                    )
                     failed_connections.append(connection)
             
             for failed in failed_connections:
@@ -45,8 +49,12 @@ class ConnectionManager:
             for connection in connections:
                 try:
                     await connection.send_json(message)
-                except Exception as e:
-                    logger.error(f"Error broadcasting message to user {user_id}: {e}")
+                except Exception as exc:
+                    logger.error(
+                        "WEBSOCKET_BROADCAST_FAILED user_id=%s error_type=%s",
+                        user_id,
+                        type(exc).__name__,
+                    )
                     failed_connections.append(connection)
                     
             for failed in failed_connections:

@@ -86,7 +86,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def mysql_error_handler(
         request: Request, exc: mysql.connector.Error
     ) -> JSONResponse:
-        logger.exception("Unhandled database error on %s", request.url.path)
+        logger.exception("UNHANDLED_DB_EXCEPTION path=%s", request.url.path)
         return JSONResponse(
             status_code=500,
             content={
@@ -99,7 +99,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def unhandled_exception_handler(
         request: Request, exc: Exception
     ) -> JSONResponse:
-        logger.exception("Unhandled application error on %s", request.url.path)
+        logger.exception("UNHANDLED_EXCEPTION path=%s", request.url.path)
         return JSONResponse(
             status_code=500,
             content={

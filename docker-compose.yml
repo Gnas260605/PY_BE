@@ -13,6 +13,8 @@ services:
       APP_HOST: ${APP_HOST:-0.0.0.0}
       APP_PORT: ${APP_PORT:-8000}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_TO_FILE: ${LOG_TO_FILE:-false}
+      LOG_FILE: ${LOG_FILE:-logs/backend.log}
       MYSQL_HOST: ${MYSQL_HOST:-mysql}
       MYSQL_PORT: ${MYSQL_PORT:-3306}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-cs466_helpdesk}

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 async def send_telegram_message(message: str) -> None:
     settings = get_settings()
     if not settings.telegram_bot_token or not settings.telegram_chat_id:
-        logger.warning("Telegram config missing, skipping notification.")
+        logger.warning("TELEGRAM_CONFIG_MISSING")
         return
 
     url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
@@ -22,14 +22,14 @@ async def send_telegram_message(message: str) -> None:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=payload, timeout=10.0)
             response.raise_for_status()
-            logger.info("Telegram notification sent successfully.")
-    except Exception as e:
-        logger.error(f"Failed to send Telegram notification: {e}")
+            logger.info("TELEGRAM_NOTIFICATION_SENT")
+    except Exception as exc:
+        logger.error("TELEGRAM_NOTIFICATION_FAILED error_type=%s", type(exc).__name__)
 
 def send_email_notification(to_email: str, subject: str, content: str) -> None:
     settings = get_settings()
     if not all([settings.smtp_host, settings.smtp_port, settings.smtp_user, settings.smtp_password, settings.smtp_from]):
-        logger.warning("SMTP config missing, skipping email notification.")
+        logger.warning("SMTP_CONFIG_MISSING")
         return
 
     msg = EmailMessage()
@@ -43,6 +43,6 @@ def send_email_notification(to_email: str, subject: str, content: str) -> None:
             server.starttls()
             server.login(settings.smtp_user, settings.smtp_password)
             server.send_message(msg)
-            logger.info(f"Email notification sent to {to_email}")
-    except Exception as e:
-        logger.error(f"Failed to send email notification: {e}")
+            logger.info("EMAIL_NOTIFICATION_SENT recipient=%s", to_email)
+    except Exception as exc:
+        logger.error("EMAIL_NOTIFICATION_FAILED error_type=%s", type(exc).__name__)

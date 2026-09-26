@@ -2,11 +2,14 @@ package CS466::LogAnalyzer;
 
 use strict;
 use warnings;
+use CS466::Config;
 use CS466::LogParser;
 
 sub new {
-    my ($class) = @_;
+    my ($class, %args) = @_;
+    my $config = $args{config} || CS466::Config->defaults;
     return bless {
+        config                => $config,
         total_logs            => 0,
         events                => {},
         levels                => { map { $_ => 0 } qw(DEBUG INFO WARNING ERROR CRITICAL) },
@@ -61,15 +64,18 @@ sub summary {
 
 sub _record_failed_login {
     my ($self, $event, $username) = @_;
+    my $threshold = int($self->{config}{brute_force_threshold} || 5);
+    $threshold = 5 if $threshold < 1;
+
     push @{ $self->{_failed_attempts}{$username} }, $event;
     my @recent = @{ $self->{_failed_attempts}{$username} };
-    @recent = @recent > 5 ? @recent[-5 .. -1] : @recent;
+    @recent = @recent > $threshold ? @recent[-$threshold .. -1] : @recent;
     $self->{_failed_attempts}{$username} = \@recent;
 
-    return unless @recent >= 5;
+    return unless @recent >= $threshold;
     my $bucket = substr($event->{timestamp}, 0, 16);
     my $same_bucket = grep { substr($_->{timestamp}, 0, 16) eq $bucket } @recent;
-    return unless $same_bucket >= 5;
+    return unless $same_bucket >= $threshold;
 
     my $already_reported = grep {
         $_->{username} eq $username && substr($_->{timestamp}, 0, 16) eq $bucket
@@ -80,7 +86,7 @@ sub _record_failed_login {
         timestamp => $event->{timestamp},
         event     => 'POSSIBLE_BRUTE_FORCE',
         username  => $username,
-        reason    => '5_or_more_login_failed_in_same_minute',
+        reason    => $threshold . '_or_more_login_failed_in_same_minute',
     };
 }
 

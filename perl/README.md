@@ -17,6 +17,7 @@ The backend keeps the existing Python logging format. Perl reads those backend l
 
 - Perl 5
 - Core Perl modules used by this implementation: `strict`, `warnings`, `Getopt::Long`, `FindBin`, `File::Path`, `File::Spec`, `File::Temp`, `Test::More`
+- JSON config uses core module `JSON::PP`.
 - No external CPAN dependency is required.
 
 Check Perl version:
@@ -64,6 +65,7 @@ Supported contract events:
 
 - `LOGIN_SUCCESS`
 - `LOGIN_FAILED`
+- `PASSWORD_CHANGED`
 - `USER_CREATED`
 - `USER_UPDATED`
 - `USER_STATUS_CHANGED`
@@ -75,6 +77,21 @@ Supported contract events:
 - `TICKET_ASSIGNED`
 - `TICKET_STATUS_CHANGED`
 - `TICKET_CLOSED`
+- `TICKET_BATCH_ASSIGNED`
+- `TICKET_BATCH_STATUS_CHANGED`
+- `TICKET_COMMENT_CREATED`
+- `WEBSOCKET_CONNECTED`
+- `WEBSOCKET_DISCONNECTED`
+- `WEBSOCKET_SEND_FAILED`
+- `WEBSOCKET_BROADCAST_FAILED`
+- `TELEGRAM_CONFIG_MISSING`
+- `TELEGRAM_NOTIFICATION_SENT`
+- `TELEGRAM_NOTIFICATION_FAILED`
+- `SMTP_CONFIG_MISSING`
+- `EMAIL_NOTIFICATION_SENT`
+- `EMAIL_NOTIFICATION_FAILED`
+- `UNHANDLED_DB_EXCEPTION`
+- `UNHANDLED_EXCEPTION`
 
 Unknown events are preserved and marked as `UNKNOWN` internally. Malformed lines are counted but do not crash the parser.
 
@@ -111,7 +128,8 @@ timestamp,level,logger,event,user_id,ticket_id,device_id,username,role,status,me
 
 ```powershell
 perl perl/bin/analyze_logs.pl `
-  --input perl/samples/backend_sample.log
+  --input perl/samples/backend_sample.log `
+  --config perl/config/perl.json
 ```
 
 Console output includes login counts, ticket counts, warning/error counts, and possible brute-force warnings.
@@ -121,7 +139,8 @@ Console output includes login counts, ticket counts, warning/error counts, and p
 ```powershell
 perl perl/bin/generate_report.pl `
   --input perl/samples/backend_sample.log `
-  --output perl/reports
+  --output perl/reports `
+  --config perl/config/perl.json
 ```
 
 Generated files:
@@ -154,4 +173,4 @@ Then run the FastAPI app as usual. File logs use a 10 MB rotation size and 5 bac
 - If an input file is missing, the CLI exits with a non-zero status.
 - If CSV fields contain commas or quotes, the report generator escapes them.
 - If logs contain malformed lines, check the parser stats printed by `parse_logs.pl`.
-- If no security warnings appear, confirm at least 5 `LOGIN_FAILED` events for the same username occur in the same minute.
+- If no security warnings appear, confirm the configured `brute_force_threshold` number of `LOGIN_FAILED` events for the same username occur in the same minute.

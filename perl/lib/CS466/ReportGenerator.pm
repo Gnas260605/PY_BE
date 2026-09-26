@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use File::Path qw(make_path);
 use File::Spec;
+use CS466::Config;
 use CS466::LogAnalyzer;
 use CS466::LogParser;
 
@@ -57,9 +58,10 @@ sub generate_reports {
     my ($class, %args) = @_;
     my $input      = $args{input} or die "input is required";
     my $output_dir = $args{output} || 'perl/reports';
+    my $config     = $args{config} || CS466::Config->defaults;
 
     make_path($output_dir) unless -d $output_dir;
-    my $analyzer = CS466::LogAnalyzer->new;
+    my $analyzer = CS466::LogAnalyzer->new(config => $config);
     my $summary = $analyzer->analyze_file($input);
 
     my $summary_path = File::Spec->catfile($output_dir, 'summary.csv');
