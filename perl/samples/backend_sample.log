@@ -4,6 +4,7 @@
 2026-09-26 08:00:04,103 INFO app.users.service LOGIN_FAILED username=ghost reason=invalid_password password=[fake-password]
 2026-09-26 08:00:05,104 INFO app.users.service LOGIN_FAILED username=ghost reason=invalid_password authorization="Bearer fake.token.value"
 2026-09-26 08:00:06,105 INFO app.users.service LOGIN_FAILED username=ghost reason=invalid_password access_token=fake-access-token
+2026-09-26 08:00:07,106 INFO app.users.service LOGIN_FAILED username=ghost reason=invalid_password token=fake-token api_key=fake-api-key
 2026-09-26 08:01:00,001 INFO app.users.service USER_CREATED user_id=8 username=user02 role=USER
 2026-09-26 08:01:03,001 INFO app.users.service USER_UPDATED user_id=8 fields=email,ho_ten
 2026-09-26 08:01:05,001 INFO app.users.service USER_STATUS_CHANGED user_id=8 status=ACTIVE
@@ -23,6 +24,9 @@
 2026-09-26 08:07:10,001 INFO app.tickets.service TICKET_COMMENT_CREATED ticket_id=42 user_id=8
 2026-09-26 08:07:15,001 INFO app.core.websocket WEBSOCKET_CONNECTED user_id=8
 2026-09-26 08:07:20,001 ERROR app.core.errors UNHANDLED_EXCEPTION path=/api/tickets
+Traceback (most recent call last):
+  File "app/tickets/service.py", line 1, in demo
+ValueError: sample exception password=fake-secret
 malformed line without normal logging columns
 2026-09-26 08:08:00,001 INFO app.users.service LOGIN_SUCCESS user_id=2 username=tech01 role=TECHNICIAN
 2026-09-26 08:09:00,001 DEBUG app.health.service HEALTH_CHECK status=ok

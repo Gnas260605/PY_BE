@@ -134,6 +134,19 @@ perl perl/bin/analyze_logs.pl `
 
 Console output includes login counts, ticket counts, warning/error counts, and possible brute-force warnings.
 
+`perl/config/perl.json` controls brute-force detection:
+
+```json
+{
+  "brute_force_threshold": 5,
+  "brute_force_window_seconds": 60,
+  "output_dir": "perl/output",
+  "reports_dir": "perl/reports"
+}
+```
+
+Detection uses a rolling time window based on parsed timestamps, so attempts crossing a calendar minute boundary still count when they occur inside the configured number of seconds.
+
 ## Generate Reports
 
 ```powershell
@@ -172,5 +185,5 @@ Then run the FastAPI app as usual. File logs use a 10 MB rotation size and 5 bac
 - If `perl` is not recognized, install Perl and ensure it is available in `PATH`.
 - If an input file is missing, the CLI exits with a non-zero status.
 - If CSV fields contain commas or quotes, the report generator escapes them.
-- If logs contain malformed lines, check the parser stats printed by `parse_logs.pl`.
-- If no security warnings appear, confirm the configured `brute_force_threshold` number of `LOGIN_FAILED` events for the same username occur in the same minute.
+- If logs contain malformed lines, check parser stats printed by `parse_logs.pl`, especially `malformed` and `continuation_lines`.
+- If no security warnings appear, confirm the configured `brute_force_threshold` number of `LOGIN_FAILED` events for the same username occur inside `brute_force_window_seconds`.

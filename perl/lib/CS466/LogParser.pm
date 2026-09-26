@@ -41,11 +41,13 @@ my %KNOWN_EVENTS = map { $_ => 1 } qw(
 sub new {
     my ($class) = @_;
     return bless {
+        last_event => undef,
         stats => {
-            parsed        => 0,
-            malformed     => 0,
-            unknown_event => 0,
-            total_lines    => 0,
+            parsed             => 0,
+            malformed          => 0,
+            continuation_lines => 0,
+            unknown_event      => 0,
+            total_lines        => 0,
         },
     }, $class;
 }
@@ -87,6 +89,10 @@ sub parse_line {
       $line =~ /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2},\d{3})\s+([A-Z]+)\s+(\S+)\s+(.+)$/;
 
     if (!defined $message) {
+        if (_is_continuation_line($line, $self->{last_event})) {
+            $self->{stats}{continuation_lines}++;
+            return;
+        }
         $self->{stats}{malformed}++;
         return;
     }
@@ -105,7 +111,7 @@ sub parse_line {
     $self->{stats}{unknown_event}++ if $event_type eq 'UNKNOWN';
     $self->{stats}{parsed}++;
 
-    return {
+    my $parsed_event = {
         timestamp  => $timestamp,
         level      => $level,
         logger     => $logger,
@@ -114,6 +120,8 @@ sub parse_line {
         metadata   => $metadata,
         message    => $safe_message,
     };
+    $self->{last_event} = $parsed_event;
+    return $parsed_event;
 }
 
 sub _parse_metadata {
@@ -134,6 +142,18 @@ sub _coerce_value {
     return $value unless defined $value;
     return int($value) if $value =~ /^-?\d+$/;
     return $value;
+}
+
+sub _is_continuation_line {
+    my ($line, $last_event) = @_;
+    return 0 unless defined $line && defined $last_event;
+    return 0 unless ($last_event->{event} || q{}) =~ /(?:EXCEPTION|FAILED)$/ || ($last_event->{level} || q{}) =~ /^(ERROR|CRITICAL)$/;
+
+    return 1 if $line =~ /^\s+/;
+    return 1 if $line =~ /^Traceback \(most recent call last\):/;
+    return 1 if $line =~ /^During handling of the above exception/;
+    return 1 if $line =~ /^[A-Za-z_][A-Za-z0-9_.]*(Error|Exception|Warning):/;
+    return 0;
 }
 
 1;

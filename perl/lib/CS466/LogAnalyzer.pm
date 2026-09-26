@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use CS466::Config;
 use CS466::LogParser;
+use Time::Local qw(timelocal);
 
 sub new {
     my ($class, %args) = @_;
@@ -66,27 +67,36 @@ sub _record_failed_login {
     my ($self, $event, $username) = @_;
     my $threshold = int($self->{config}{brute_force_threshold} || 5);
     $threshold = 5 if $threshold < 1;
+    my $window_seconds = int($self->{config}{brute_force_window_seconds} || 60);
+    $window_seconds = 60 if $window_seconds < 1;
+    my $event_epoch = _timestamp_epoch($event->{timestamp});
+    return unless defined $event_epoch;
+    $event->{_epoch} = $event_epoch;
 
     push @{ $self->{_failed_attempts}{$username} }, $event;
-    my @recent = @{ $self->{_failed_attempts}{$username} };
-    @recent = @recent > $threshold ? @recent[-$threshold .. -1] : @recent;
+    my @recent = grep {
+        defined $_->{_epoch} && ($event_epoch - $_->{_epoch}) <= $window_seconds
+    } @{ $self->{_failed_attempts}{$username} };
     $self->{_failed_attempts}{$username} = \@recent;
 
     return unless @recent >= $threshold;
-    my $bucket = substr($event->{timestamp}, 0, 16);
-    my $same_bucket = grep { substr($_->{timestamp}, 0, 16) eq $bucket } @recent;
-    return unless $same_bucket >= $threshold;
+    my $window_start = $recent[0]->{_epoch};
+    my $window_end = $event_epoch;
 
     my $already_reported = grep {
-        $_->{username} eq $username && substr($_->{timestamp}, 0, 16) eq $bucket
+        $_->{username} eq $username
+          && $_->{window_start_epoch} == $window_start
+          && $_->{window_end_epoch} == $window_end
     } @{ $self->{security_events} };
     return if $already_reported;
 
     push @{ $self->{security_events} }, {
-        timestamp => $event->{timestamp},
-        event     => 'POSSIBLE_BRUTE_FORCE',
-        username  => $username,
-        reason    => $threshold . '_or_more_login_failed_in_same_minute',
+        timestamp          => $event->{timestamp},
+        event              => 'POSSIBLE_BRUTE_FORCE',
+        username           => $username,
+        reason             => $threshold . '_or_more_login_failed_within_' . $window_seconds . '_seconds',
+        window_start_epoch => $window_start,
+        window_end_epoch   => $window_end,
     };
 }
 
@@ -99,6 +109,14 @@ sub _top_logger {
         }
     }
     return { logger => $top, count => $count };
+}
+
+sub _timestamp_epoch {
+    my ($timestamp) = @_;
+    my ($year, $mon, $day, $hour, $min, $sec) =
+      $timestamp =~ /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),\d{3}$/;
+    return unless defined $sec;
+    return timelocal($sec, $min, $hour, $day, $mon - 1, $year);
 }
 
 1;

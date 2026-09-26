@@ -12,6 +12,8 @@ our @SENSITIVE_FIELDS = qw(
   jwt
   jwt_secret
   secret
+  token
+  api_key
 );
 
 sub is_sensitive_key {
@@ -45,6 +47,7 @@ sub redact_text {
     return $text unless defined $text;
 
     my $result = $text;
+    $result =~ s/\b(Authorization:\s*Bearer)\s+[A-Za-z0-9._~+\/=-]+/$1 [REDACTED]/gi;
     $result =~ s/\b(Bearer)\s+[A-Za-z0-9._~+\/=-]+/$1 [REDACTED]/gi;
     for my $field (@SENSITIVE_FIELDS) {
         $result =~ s/\b($field)=("[^"]*"|'[^']*'|\S+)/$1=[REDACTED]/gi;

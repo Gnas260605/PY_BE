@@ -67,6 +67,17 @@ Messages such as `WebSocket connected for user_id=...` or `Unhandled application
 - Khong log password hoac password hash
 - Khong expose raw SQL error trong HTTP response
 - Authorization header phai duoc redact trong test evidence
+- Perl redacts sensitive fields such as `password`, `password_hash`, `authorization`, `access_token`, `refresh_token`, `jwt`, `jwt_secret`, `secret`, `token`, and `api_key`.
+
+## Traceback handling
+
+Python `logger.exception(...)` can emit traceback continuation lines after the structured event line. Perl does not count those continuation lines as malformed logs. Parser stats include:
+
+- `total_lines`
+- `parsed`
+- `malformed`
+- `continuation_lines`
+- `unknown_event`
 
 ## Perl integration note
 
@@ -82,3 +93,7 @@ LOG_FILE=logs/backend.log
 ```
 
 Default sample values are documented in `.env.example` and forwarded by `docker-compose.yml`.
+
+## WebSocket token note
+
+The current WebSocket endpoint authenticates with `?token=...` because browser WebSocket APIs do not support custom Authorization headers in the same way as HTTP requests. Do not log WebSocket URLs or tokens. Treat query-string tokens as sensitive runtime data.

@@ -14,12 +14,15 @@ print {$fh} "2026-09-26 08:00:00,001 INFO app.users.service LOGIN_SUCCESS user_i
 print {$fh} "2026-09-26 08:00:01,001 INFO app.users.service USER_CREATED user_id=2 username=\"nguyen, van a\" role=USER\n";
 print {$fh} "2026-09-26 08:00:02,001 INFO app.tickets.service TICKET_CREATED ticket_id=42 user_id=2\n";
 print {$fh} "2026-09-26 08:00:03,001 ERROR app.core.errors UNHANDLED_EXCEPTION path=/api/tickets\n";
+print {$fh} "Traceback (most recent call last):\n";
+print {$fh} "  File \"demo.py\", line 1, in <module>\n";
 close $fh;
 
 my $csv = File::Spec->catfile($tmp, 'logs.csv');
 my $stats = CS466::ReportGenerator->export_logs_csv(input => $log, output => $csv);
 ok(-f $csv, 'CSV generation');
 is($stats->{parsed}, 4, 'CSV parsed count');
+is($stats->{continuation_lines}, 2, 'CSV export tracks traceback continuation');
 
 open my $csv_fh, '<:encoding(UTF-8)', $csv or die $!;
 my $content = do { local $/; <$csv_fh> };
