@@ -9,22 +9,173 @@ from common.components.empty_state import empty_state
 from common.components.layout import app_shell
 from common.components.loading import loading_spinner
 from common.formatters import format_datetime
+from core.i18n import get_lang
 from services.log_analytics_service import log_analytics_service
 
 
-ARTIFACT_LABELS = {
-    "logs_csv": "Parsed logs CSV",
-    "parser_stats": "Parser stats JSON",
-    "summary_csv": "Summary CSV",
-    "security_csv": "Security events CSV",
-    "report_txt": "Text report",
+TEXT = {
+    "vi": {
+        "forbidden": "Bạn không có quyền xem Log Analytics.",
+        "home": "Trang chủ",
+        "admin_section": "Quản trị tài nguyên",
+        "title": "Phân tích log Perl",
+        "subtitle": "Theo dõi kết quả parser/analyzer Perl từ structured log của backend.",
+        "refresh": "Tải lại",
+        "download_report": "Tải báo cáo",
+        "parsed_logs": "Log đã phân tích",
+        "parsed_logs_sub": "Dòng log hợp lệ",
+        "malformed": "Sai định dạng",
+        "malformed_sub": "Dòng sai contract",
+        "unknown_event": "Event chưa nhận diện",
+        "unknown_event_sub": "Event chưa có trong danh sách",
+        "continuation": "Dòng tiếp nối",
+        "continuation_sub": "Dòng traceback/stack trace",
+        "artifact_ready": "Artifact đã sẵn sàng",
+        "artifact_missing": "Chưa có report runtime",
+        "source": "Nguồn log mẫu",
+        "updated": "Cập nhật",
+        "top_events": "Event xuất hiện nhiều nhất",
+        "top_events_sub": "Tính từ file CSV log đã parse hoặc file summary.",
+        "no_events": "Chưa có event",
+        "no_events_sub": "Hãy sinh report Perl để xem phân bố event.",
+        "security_alerts": "Cảnh báo bảo mật",
+        "security_alerts_sub": "Các cảnh báo brute-force hoặc bất thường từ Perl analyzer.",
+        "alerts": "cảnh báo",
+        "no_alerts": "Không có cảnh báo",
+        "no_alerts_sub": "Analyzer chưa phát hiện brute-force trong artifact hiện tại.",
+        "unknown_user": "không rõ user",
+        "report_preview": "Xem nhanh báo cáo console",
+        "report_preview_sub": "Nội dung rút gọn từ `perl/reports/report.txt`.",
+        "no_report": "Chưa có report.txt",
+        "no_report_sub": "Chạy generator Perl để sinh báo cáo text.",
+        "loading": "Đang tải dữ liệu phân tích log Perl...",
+        "load_error": "Lỗi tải Log Analytics",
+        "download_ok": "Đã tải artifact Log Analytics.",
+        "download_error_title": "Lỗi tải artifact",
+        "download_error_msg": "Không thể tải file Log Analytics từ máy chủ.",
+    },
+    "en": {
+        "forbidden": "You are not allowed to view Log Analytics.",
+        "home": "Home",
+        "admin_section": "Resource Administration",
+        "title": "Perl Log Analytics",
+        "subtitle": "Inspect Perl parser/analyzer results from backend structured logs.",
+        "refresh": "Refresh",
+        "download_report": "Download report",
+        "parsed_logs": "Parsed logs",
+        "parsed_logs_sub": "Valid log lines",
+        "malformed": "Malformed",
+        "malformed_sub": "Contract violations",
+        "unknown_event": "Unknown events",
+        "unknown_event_sub": "Events not yet mapped",
+        "continuation": "Continuation",
+        "continuation_sub": "Traceback/stack-trace lines",
+        "artifact_ready": "Artifacts are ready",
+        "artifact_missing": "No runtime report yet",
+        "source": "Sample log source",
+        "updated": "Updated",
+        "top_events": "Top events",
+        "top_events_sub": "Calculated from parsed logs CSV or summary CSV.",
+        "no_events": "No events yet",
+        "no_events_sub": "Generate the Perl report to inspect event distribution.",
+        "security_alerts": "Security alerts",
+        "security_alerts_sub": "Brute-force or anomaly alerts detected by the Perl analyzer.",
+        "alerts": "alerts",
+        "no_alerts": "No alerts",
+        "no_alerts_sub": "The analyzer has not detected brute-force activity in the current artifact.",
+        "unknown_user": "unknown user",
+        "report_preview": "Console report preview",
+        "report_preview_sub": "Short excerpt from `perl/reports/report.txt`.",
+        "no_report": "No report.txt yet",
+        "no_report_sub": "Run the Perl generator to create a text report.",
+        "loading": "Loading Perl log analytics...",
+        "load_error": "Failed to load Log Analytics",
+        "download_ok": "Log Analytics artifact downloaded.",
+        "download_error_title": "Artifact download failed",
+        "download_error_msg": "Unable to download the Log Analytics file from the server.",
+    },
 }
+
+ARTIFACT_LABELS = {
+    "vi": {
+        "logs_csv": "CSV log đã parse",
+        "parser_stats": "JSON thống kê parser",
+        "summary_csv": "CSV tổng hợp",
+        "security_csv": "CSV cảnh báo bảo mật",
+        "report_txt": "Báo cáo text",
+    },
+    "en": {
+        "logs_csv": "Parsed logs CSV",
+        "parser_stats": "Parser stats JSON",
+        "summary_csv": "Summary CSV",
+        "security_csv": "Security events CSV",
+        "report_txt": "Text report",
+    },
+}
+
+EVENT_LABELS = {
+    "vi": {
+        "LOGIN_FAILED": "Đăng nhập thất bại",
+        "LOGIN_SUCCESS": "Đăng nhập thành công",
+        "USER_CREATED": "Tạo người dùng",
+        "DEVICE_CREATED": "Tạo thiết bị",
+        "TICKET_CREATED": "Tạo ticket",
+        "TICKET_STATUS_CHANGED": "Đổi trạng thái ticket",
+        "UNHANDLED_EXCEPTION": "Lỗi hệ thống chưa xử lý",
+        "POSSIBLE_BRUTE_FORCE": "Nghi vấn brute-force",
+    },
+    "en": {
+        "LOGIN_FAILED": "Login failed",
+        "LOGIN_SUCCESS": "Login succeeded",
+        "USER_CREATED": "User created",
+        "DEVICE_CREATED": "Device created",
+        "TICKET_CREATED": "Ticket created",
+        "TICKET_STATUS_CHANGED": "Ticket status changed",
+        "UNHANDLED_EXCEPTION": "Unhandled exception",
+        "POSSIBLE_BRUTE_FORCE": "Possible brute-force",
+    },
+}
+
+
+def _lang() -> str:
+    return "en" if get_lang() == "en" else "vi"
+
+
+def _txt(key: str) -> str:
+    lang = _lang()
+    return TEXT[lang].get(key) or TEXT["vi"].get(key) or key
+
+
+def _artifact_label(key: str | None) -> str:
+    lang = _lang()
+    if not key:
+        return "-"
+    return ARTIFACT_LABELS[lang].get(key) or ARTIFACT_LABELS["vi"].get(key) or key
+
+
+def _event_label(event: str | None) -> str:
+    lang = _lang()
+    if not event:
+        return "-"
+    label = EVENT_LABELS[lang].get(event) or EVENT_LABELS["vi"].get(event)
+    return f"{label} ({event})" if label else event
+
+
+def _reason_text(reason: str | None) -> str:
+    if not reason:
+        return "-"
+    if reason.endswith("_or_more_login_failed_within_60_seconds"):
+        threshold = reason.split("_", 1)[0]
+        if _lang() == "en":
+            return f"Detected at least {threshold} failed login attempts within 60 seconds."
+        return f"Phát hiện ít nhất {threshold} lần đăng nhập thất bại trong 60 giây."
+    return reason.replace("_", " ")
 
 
 def render_log_analytics_view() -> None:
     def content(user: dict) -> None:
         if user.get("vai_tro") != "ADMIN":
-            ui.label("Bạn không có quyền xem Log Analytics.").classes("text-red-600 font-bold p-6")
+            ui.label(_txt("forbidden")).classes("text-red-600 font-bold p-6")
             return
 
         state: dict[str, Any] = {"summary": None, "loading": True, "error": None}
@@ -32,19 +183,19 @@ def render_log_analytics_view() -> None:
         with ui.row().classes("w-full justify-between items-center pb-2 border-b border-slate-200 mb-2.5 flex-wrap gap-2"):
             with ui.column().classes("gap-0.5"):
                 with ui.row().classes("items-center gap-1.5 text-xs text-slate-500 font-medium"):
-                    ui.label("Trang chủ")
+                    ui.label(_txt("home"))
                     ui.icon("chevron_right", size="12px").classes("text-slate-400")
-                    ui.label("Quản trị tài nguyên")
+                    ui.label(_txt("admin_section"))
                     ui.icon("chevron_right", size="12px").classes("text-slate-400")
                     ui.label("Log Analytics").classes("text-slate-900 font-semibold")
-                ui.label("Perl Log Analytics").classes("text-xl font-bold text-slate-900 tracking-tight")
-                ui.label("Theo dõi kết quả parser/analyzer Perl từ structured log của backend.").classes("text-xs text-slate-500")
+                ui.label(_txt("title")).classes("text-xl font-bold text-slate-900 tracking-tight")
+                ui.label(_txt("subtitle")).classes("text-xs text-slate-500")
 
             with ui.row().classes("items-center gap-2"):
-                ui.button("Tải lại", icon="refresh", on_click=lambda: refresh()).props(
+                ui.button(_txt("refresh"), icon="refresh", on_click=lambda: refresh()).props(
                     "outline color=slate-700 dense size=sm"
                 ).classes("h-9 px-3.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 shadow-2xs hover:bg-slate-50")
-                ui.button("Tải report", icon="article", on_click=lambda: download_artifact("report_txt")).props(
+                ui.button(_txt("download_report"), icon="article", on_click=lambda: download_artifact("report_txt")).props(
                     "color=primary unelevated dense size=sm"
                 ).classes("h-9 px-4 text-xs font-bold rounded-lg shadow-2xs")
 
@@ -81,13 +232,13 @@ def render_log_analytics_view() -> None:
                             with ui.element("div").classes(f"w-10 h-10 rounded-lg border flex items-center justify-center {status_class}"):
                                 ui.icon(status_icon).classes("text-xl")
                             with ui.column().classes("gap-0.5"):
-                                ui.label("Artifact trạng thái sẵn sàng" if generated else "Chưa có report runtime").classes("text-sm font-bold text-slate-900")
-                                ui.label(f"Nguồn log mẫu: {summary.get('source_log') or '-'} · Cập nhật: {format_datetime(summary.get('generated_at'))}").classes("text-xs text-slate-500")
+                                ui.label(_txt("artifact_ready") if generated else _txt("artifact_missing")).classes("text-sm font-bold text-slate-900")
+                                ui.label(f"{_txt('source')}: {summary.get('source_log') or '-'} · {_txt('updated')}: {format_datetime(summary.get('generated_at'))}").classes("text-xs text-slate-500")
                         with ui.row().classes("items-center gap-2"):
                             for artifact in artifacts:
                                 if artifact.get("exists"):
                                     ui.button(
-                                        artifact.get("label") or ARTIFACT_LABELS.get(artifact.get("key"), artifact.get("key")),
+                                        _artifact_label(artifact.get("key")),
                                         icon="download",
                                         on_click=lambda key=artifact.get("key"): download_artifact(key),
                                     ).props("outline dense size=sm color=slate-700").classes("text-xs")
@@ -95,10 +246,10 @@ def render_log_analytics_view() -> None:
         def render_summary(summary: dict[str, Any]) -> None:
             kpi_container.clear()
             with kpi_container:
-                render_kpi("Parsed logs", summary.get("total_logs", 0), "Dòng log hợp lệ", "segment", "blue")
-                render_kpi("Malformed", summary.get("malformed"), "Dòng sai contract", "report_problem", "amber")
-                render_kpi("Unknown event", summary.get("unknown_event"), "Event chưa map", "help", "rose")
-                render_kpi("Continuation", summary.get("continuation_lines"), "Traceback lines", "subject", "emerald")
+                render_kpi(_txt("parsed_logs"), summary.get("total_logs", 0), _txt("parsed_logs_sub"), "segment", "blue")
+                render_kpi(_txt("malformed"), summary.get("malformed"), _txt("malformed_sub"), "report_problem", "amber")
+                render_kpi(_txt("unknown_event"), summary.get("unknown_event"), _txt("unknown_event_sub"), "help", "rose")
+                render_kpi(_txt("continuation"), summary.get("continuation_lines"), _txt("continuation_sub"), "subject", "emerald")
 
             render_status(summary)
             content_container.clear()
@@ -113,10 +264,10 @@ def render_log_analytics_view() -> None:
             with ui.element("div").classes("rounded-lg bg-white border border-slate-200 shadow-2xs overflow-hidden"):
                 with ui.row().classes("w-full justify-between items-center p-3 border-b border-slate-100"):
                     with ui.column().classes("gap-0"):
-                        ui.label("Top events").classes("text-sm font-bold text-slate-900")
-                        ui.label("Tính từ parsed logs CSV hoặc summary CSV.").classes("text-[11px] text-slate-500")
+                        ui.label(_txt("top_events")).classes("text-sm font-bold text-slate-900")
+                        ui.label(_txt("top_events_sub")).classes("text-[11px] text-slate-500")
                 if not events:
-                    empty_state("Chưa có event", "Hãy sinh report Perl để xem phân bố event.", "analytics")
+                    empty_state(_txt("no_events"), _txt("no_events_sub"), "analytics")
                 else:
                     with ui.column().classes("w-full divide-y divide-slate-100"):
                         max_count = max((item.get("count", 0) for item in events), default=1)
@@ -125,7 +276,7 @@ def render_log_analytics_view() -> None:
                             width = max(4, int((count / max_count) * 100))
                             with ui.column().classes("w-full gap-1 p-3"):
                                 with ui.row().classes("w-full justify-between items-center"):
-                                    ui.label(item.get("event") or "-").classes("text-xs font-bold text-slate-800")
+                                    ui.label(_event_label(item.get("event"))).classes("text-xs font-bold text-slate-800")
                                     ui.label(str(count)).classes("text-xs font-bold text-slate-500")
                                 with ui.element("div").classes("w-full h-1.5 rounded-full bg-slate-100 overflow-hidden"):
                                     ui.element("div").classes("h-full rounded-full bg-blue-500").style(f"width: {width}%")
@@ -135,11 +286,11 @@ def render_log_analytics_view() -> None:
             with ui.element("div").classes("rounded-lg bg-white border border-slate-200 shadow-2xs overflow-hidden"):
                 with ui.row().classes("w-full justify-between items-center p-3 border-b border-slate-100"):
                     with ui.column().classes("gap-0"):
-                        ui.label("Security alerts").classes("text-sm font-bold text-slate-900")
-                        ui.label("Các cảnh báo brute-force hoặc bất thường từ Perl analyzer.").classes("text-[11px] text-slate-500")
-                    ui.label(f"{len(events)} alerts").classes("text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100")
+                        ui.label(_txt("security_alerts")).classes("text-sm font-bold text-slate-900")
+                        ui.label(_txt("security_alerts_sub")).classes("text-[11px] text-slate-500")
+                    ui.label(f"{len(events)} {_txt('alerts')}").classes("text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-100")
                 if not events:
-                    empty_state("Không có cảnh báo", "Analyzer chưa phát hiện brute-force trong artifact hiện tại.", "verified")
+                    empty_state(_txt("no_alerts"), _txt("no_alerts_sub"), "verified")
                 else:
                     with ui.column().classes("w-full divide-y divide-slate-100 max-h-80 overflow-y-auto"):
                         for event in events:
@@ -147,8 +298,8 @@ def render_log_analytics_view() -> None:
                                 with ui.element("div").classes("w-9 h-9 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0"):
                                     ui.icon("shield").classes("text-lg")
                                 with ui.column().classes("gap-0.5 min-w-0"):
-                                    ui.label(f"{event.get('event') or '-'} · {event.get('username') or 'unknown'}").classes("text-xs font-bold text-slate-800")
-                                    ui.label(event.get("reason") or "-").classes("text-[11px] text-slate-500")
+                                    ui.label(f"{_event_label(event.get('event'))} · {event.get('username') or _txt('unknown_user')}").classes("text-xs font-bold text-slate-800")
+                                    ui.label(_reason_text(event.get("reason"))).classes("text-[11px] text-slate-500")
                                     ui.label(event.get("timestamp") or "-").classes("text-[10px] text-slate-400 font-mono")
 
         def render_report_excerpt(summary: dict[str, Any]) -> None:
@@ -156,10 +307,10 @@ def render_log_analytics_view() -> None:
             with ui.element("div").classes("w-full rounded-lg bg-white border border-slate-200 shadow-2xs overflow-hidden"):
                 with ui.row().classes("w-full justify-between items-center p-3 border-b border-slate-100"):
                     with ui.column().classes("gap-0"):
-                        ui.label("Console report preview").classes("text-sm font-bold text-slate-900")
-                        ui.label("Nội dung rút gọn từ `perl/reports/report.txt`.").classes("text-[11px] text-slate-500")
+                        ui.label(_txt("report_preview")).classes("text-sm font-bold text-slate-900")
+                        ui.label(_txt("report_preview_sub")).classes("text-[11px] text-slate-500")
                 if not excerpt:
-                    empty_state("Chưa có report.txt", "Chạy generator Perl để sinh báo cáo text.", "article")
+                    empty_state(_txt("no_report"), _txt("no_report_sub"), "article")
                 else:
                     ui.markdown(f"```text\n{excerpt}\n```").classes("w-full text-xs p-3 bg-slate-950 text-slate-100 overflow-x-auto")
 
@@ -167,7 +318,7 @@ def render_log_analytics_view() -> None:
             state["loading"] = True
             content_container.clear()
             with content_container:
-                loading_spinner("Đang tải Perl log analytics...")
+                loading_spinner(_txt("loading"))
             try:
                 state["summary"] = await log_analytics_service.get_summary()
                 state["error"] = None
@@ -178,7 +329,7 @@ def render_log_analytics_view() -> None:
                 status_container.clear()
                 content_container.clear()
                 with content_container:
-                    ui.label(f"Lỗi tải Log Analytics: {exc}").classes("text-sm text-red-600")
+                    ui.label(f"{_txt('load_error')}: {exc}").classes("text-sm text-red-600")
             finally:
                 state["loading"] = False
 
@@ -195,9 +346,9 @@ def render_log_analytics_view() -> None:
                     "report_txt": "perl_report.txt",
                 }.get(key, f"{key}.txt")
                 ui.download(payload, filename)
-                toast.success("Đã tải artifact Log Analytics.")
+                toast.success(_txt("download_ok"))
             except Exception as exc:
-                toast.show_popup("Lỗi tải artifact", "Không thể tải file Log Analytics từ máy chủ.", type="error", detail=str(exc))
+                toast.show_popup(_txt("download_error_title"), _txt("download_error_msg"), type="error", detail=str(exc))
 
         ui.timer(0.1, refresh, once=True)
 
