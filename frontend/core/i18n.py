@@ -11,6 +11,7 @@ DICTIONARY: dict[str, dict[str, str]] = {
         "nav_dispatch": "Giám sát sự cố",
         "nav_devices": "Danh mục thiết bị",
         "nav_users": "Quản lý người dùng",
+        "nav_log_analytics": "Log Analytics",
         "nav_my_tickets": "Yêu cầu của tôi",
         "nav_create_ticket": "Tạo yêu cầu hỗ trợ",
         "nav_device_lookup": "Tra cứu thiết bị",
@@ -244,6 +245,7 @@ DICTIONARY: dict[str, dict[str, str]] = {
         "nav_dispatch": "Ticket Monitoring",
         "nav_devices": "Device Inventory",
         "nav_users": "User Management",
+        "nav_log_analytics": "Log Analytics",
         "nav_my_tickets": "My Tickets",
         "nav_create_ticket": "Create Ticket",
         "nav_device_lookup": "Device Lookup",
@@ -566,4 +568,3 @@ def get_ticket_desc(desc: str | None) -> str:
     if get_lang() == "en":
         return TICKET_DESC_TRANSLATIONS.get(desc.strip(), desc)
     return desc
-

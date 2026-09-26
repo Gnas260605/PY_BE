@@ -426,6 +426,49 @@ Response `201`:
 }
 ```
 
+### Perl log analytics
+
+#### `GET /log-analytics/summary`
+
+Roles: `ADMIN`
+
+Response `200`:
+
+```json
+{
+  "source_log": "perl/samples/backend_sample.log",
+  "generated": true,
+  "generated_at": "2026-09-26T09:20:00",
+  "total_logs": 24,
+  "malformed": 1,
+  "unknown_event": 0,
+  "continuation_lines": 3,
+  "metrics": [
+    { "metric": "total_logs", "value": 24 }
+  ],
+  "top_events": [
+    { "event": "LOGIN_FAILED", "count": 5 }
+  ],
+  "security_events": [],
+  "report_excerpt": "=== CS466 HELP DESK LOG ANALYSIS ===",
+  "artifacts": []
+}
+```
+
+#### `GET /log-analytics/download/{artifact_key}`
+
+Roles: `ADMIN`
+
+Safe artifact keys:
+
+- `logs_csv`
+- `parser_stats`
+- `summary_csv`
+- `security_csv`
+- `report_txt`
+
+Response `200`: file download.
+
 ## Response models
 
 ### `UserResponse`

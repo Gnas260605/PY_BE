@@ -29,6 +29,7 @@ backend/.env
 *.log
 logs/*.log
 backend/*.log
+backend/uploads/
 !perl/samples/*.log
 
 # Temporary test artifacts

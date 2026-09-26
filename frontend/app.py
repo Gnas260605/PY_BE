@@ -15,6 +15,7 @@ app.add_static_files('/sounds', 'static/sounds')
 
 from core.config import config
 from views.admin.device_mgmt_view import render_device_mgmt_view
+from views.admin.log_analytics_view import render_log_analytics_view
 from views.admin.ticket_dispatch_view import render_ticket_dispatch_view
 from views.admin.user_mgmt_view import render_user_mgmt_view
 from views.auth.login_view import render_login_view
@@ -40,6 +41,11 @@ def dashboard_page() -> None:
 @ui.page("/admin/users")
 def admin_users_page() -> None:
     render_user_mgmt_view()
+
+
+@ui.page("/admin/log-analytics")
+def admin_log_analytics_page() -> None:
+    render_log_analytics_view()
 
 
 @ui.page("/admin/devices")

@@ -1,0 +1,3 @@
+timestamp,event,username,reason
+"2026-09-26 08:00:06,105",POSSIBLE_BRUTE_FORCE,ghost,5_or_more_login_failed_within_60_seconds
+"2026-09-26 08:00:07,106",POSSIBLE_BRUTE_FORCE,ghost,5_or_more_login_failed_within_60_seconds

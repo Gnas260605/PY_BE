@@ -1,0 +1,8 @@
+metric,value
+total_logs,32
+login_success,2
+login_failed,6
+ticket_created,2
+ticket_closed,1
+warning,1
+error,2

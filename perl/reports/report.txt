@@ -1,0 +1,20 @@
+=== CS466 HELP DESK LOG ANALYSIS ===
+
+Total logs: 32
+
+LOGIN
+Success: 2
+Failed: 6
+
+TICKETS
+Created: 2
+Assigned: 1
+Closed: 1
+
+ERRORS
+WARNING: 1
+ERROR: 2
+CRITICAL: 1
+
+SECURITY
+Possible brute-force: 2

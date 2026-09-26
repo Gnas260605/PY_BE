@@ -100,6 +100,8 @@ perl perl/bin/analyze_logs.pl --input perl/samples/backend_sample.log --config p
 perl perl/bin/generate_report.pl --input perl/samples/backend_sample.log --output perl/reports --config perl/config/perl.json
 ```
 
+The Admin frontend includes `Log Analytics` for viewing generated Perl artifacts. Generate the CSV/report files first with the commands above, then open `http://127.0.0.1:8500/admin/log-analytics` as an admin user.
+
 ## Run Tests
 
 Python:

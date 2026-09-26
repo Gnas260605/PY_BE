@@ -1,0 +1,33 @@
+timestamp,level,logger,event,user_id,ticket_id,device_id,username,role,status,message
+"2026-09-26 08:00:00,001",INFO,app.users.service,LOGIN_SUCCESS,1,,,admin,ADMIN,,user_id=1 username=admin role=ADMIN
+"2026-09-26 08:00:02,101",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=user_not_found
+"2026-09-26 08:00:03,102",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=invalid_password
+"2026-09-26 08:00:04,103",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=invalid_password password=[REDACTED]
+"2026-09-26 08:00:05,104",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=invalid_password authorization=[REDACTED]
+"2026-09-26 08:00:06,105",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=invalid_password access_token=[REDACTED]
+"2026-09-26 08:00:07,106",INFO,app.users.service,LOGIN_FAILED,,,,ghost,,,username=ghost reason=invalid_password token=[REDACTED] api_key=[REDACTED]
+"2026-09-26 08:01:00,001",INFO,app.users.service,USER_CREATED,8,,,user02,USER,,user_id=8 username=user02 role=USER
+"2026-09-26 08:01:03,001",INFO,app.users.service,USER_UPDATED,8,,,,,,"user_id=8 fields=email,ho_ten"
+"2026-09-26 08:01:05,001",INFO,app.users.service,USER_STATUS_CHANGED,8,,,,,ACTIVE,user_id=8 status=ACTIVE
+"2026-09-26 08:02:00,001",INFO,app.devices.service,DEVICE_CREATED,,,5,,,,device_id=5 code=PC-005
+"2026-09-26 08:02:10,001",INFO,app.devices.service,DEVICE_UPDATED,,,5,,ADMIN,,"device_id=5 role=ADMIN fields=trang_thai,mo_ta"
+"2026-09-26 08:03:00,001",INFO,app.tickets.service,TICKET_CREATED,8,42,,,,,ticket_id=42 user_id=8 priority=HIGH
+"2026-09-26 08:03:10,001",INFO,app.tickets.service,TICKET_UPDATED,,42,,,,,"ticket_id=42 fields=title,description"
+"2026-09-26 08:03:20,001",INFO,app.tickets.service,TICKET_CLASSIFIED,,42,,,,,"ticket_id=42 fields=category,priority"
+"2026-09-26 08:03:30,001",INFO,app.tickets.service,TICKET_ASSIGNED,,42,,,,,ticket_id=42 technician_id=2 admin_id=1
+"2026-09-26 08:04:00,001",INFO,app.tickets.service,TICKET_STATUS_CHANGED,2,42,,,,IN_PROGRESS,ticket_id=42 old=ASSIGNED new=IN_PROGRESS user_id=2
+"2026-09-26 08:05:00,001",INFO,app.tickets.service,TICKET_STATUS_CHANGED,2,42,,,,RESOLVED,ticket_id=42 old=IN_PROGRESS new=RESOLVED user_id=2
+"2026-09-26 08:06:00,001",INFO,app.tickets.service,TICKET_CLOSED,2,42,,,,,ticket_id=42 user_id=2
+"2026-09-26 08:06:30,001",WARNING,app.core.notifications,SMTP_CONFIG_MISSING,,,,,,,
+"2026-09-26 08:06:40,001",ERROR,app.core.notifications,TELEGRAM_NOTIFICATION_FAILED,,,,,,,error_type=ConnectError
+"2026-09-26 08:07:00,001",INFO,app.auth.service,PASSWORD_CHANGED,8,,,,,,user_id=8
+"2026-09-26 08:07:05,001",INFO,app.tickets.service,TICKET_BATCH_ASSIGNED,,,,,,,count=2 technician_id=2 admin_id=1
+"2026-09-26 08:07:10,001",INFO,app.tickets.service,TICKET_COMMENT_CREATED,8,42,,,,,ticket_id=42 user_id=8
+"2026-09-26 08:07:15,001",INFO,app.core.websocket,WEBSOCKET_CONNECTED,8,,,,,,user_id=8
+"2026-09-26 08:07:20,001",ERROR,app.core.errors,UNHANDLED_EXCEPTION,,,,,,,path=/api/tickets
+"2026-09-26 08:08:00,001",INFO,app.users.service,LOGIN_SUCCESS,2,,,tech01,TECHNICIAN,,user_id=2 username=tech01 role=TECHNICIAN
+"2026-09-26 08:09:00,001",DEBUG,app.health.service,HEALTH_CHECK,,,,,,ok,status=ok
+"2026-09-26 08:10:00,001",INFO,app.users.service,USER_CREATED,9,,,"nguyen, van a",USER,,"user_id=9 username=""nguyen, van a"" role=USER"
+"2026-09-26 08:11:00,001",INFO,app.tickets.service,TICKET_CREATED,9,43,,,,,"ticket_id=43 user_id=9 priority=URGENT message=""May in loi, can ho tro"""
+"2026-09-26 08:12:00,001",CRITICAL,app.core.errors,UNHANDLED_EXCEPTION,,,,,,,path=/api/tickets
+"2026-09-26 08:13:00,001",INFO,app.devices.service,DEVICE_CREATED,,,6,,,,device_id=6 code=PRN-001 secret=[REDACTED]

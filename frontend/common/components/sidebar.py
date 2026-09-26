@@ -18,6 +18,7 @@ def get_role_sections(role: str) -> list[tuple[str, list[tuple[str, str, str]]]]
                 [
                     (t("nav_devices"), "/admin/devices", "devices"),
                     (t("nav_users"), "/admin/users", "manage_accounts"),
+                    (t("nav_log_analytics"), "/admin/log-analytics", "analytics"),
                 ],
             ),
             (
