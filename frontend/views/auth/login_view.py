@@ -328,7 +328,7 @@ def render_login_view() -> None:
 
                                         with ui.element("div").classes("grid grid-cols-3 gap-2.5 w-full"):
                                             demo_configs = [
-                                                ("Admin", "admin", "Admin@123", "Quản trị", "admin_panel_settings", "text-purple-600", "hover:border-purple-300 hover:bg-purple-50/50"),
+                                                ("Admin", "admin", "CS466@123", "Quản trị", "admin_panel_settings", "text-purple-600", "hover:border-purple-300 hover:bg-purple-50/50"),
                                                 ("Tech", "tech01", "CS466@123", "Kỹ thuật", "build", "text-blue-600", "hover:border-blue-300 hover:bg-blue-50/50"),
                                                 ("User", "user01", "CS466@123", "Người dùng", "person", "text-emerald-600", "hover:border-emerald-300 hover:bg-emerald-50/50"),
                                             ]
